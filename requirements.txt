@@ -1,0 +1,8 @@
+click
+requests
+pandas
+pydantic
+python-decouple
+tabulate
+httpx
+stringcase
