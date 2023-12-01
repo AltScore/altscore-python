@@ -10,7 +10,7 @@ from dateutil.parser import parse
 
 
 class CreateExecutionDTO(BaseModel):
-    workflow_id: Optional[str] = Field(alias="workflowID", default=None)
+    workflow_id: Optional[str] = Field(alias="workflowId", default=None)
     workflow_alias: Optional[str] = Field(alias="workflowAlias", default=None)
     workflow_version: Optional[str] = Field(alias="workflowVersion", default=None)
 
@@ -21,13 +21,13 @@ class CreateExecutionDTO(BaseModel):
 
 
 class ExecutionAPIDTO(BaseModel):
-    id: Optional[str] = Field(alias="ID")
-    principal_id: str = Field(alias="principalID")
-    workflow_id: str = Field(alias="workflowID")
+    id: Optional[str] = Field(alias="id")
+    principal_id: str = Field(alias="principalId")
+    workflow_id: str = Field(alias="workflowId")
     workflow_alias: str = Field(alias="workflowAlias")
     workflow_version: str = Field(alias="workflowVersion")
-    batch_id: Optional[str] = Field(alias="batchID")
-    billable_id: Optional[str] = Field(alias="billableID")
+    batch_id: Optional[str] = Field(alias="batchId")
+    billable_id: Optional[str] = Field(alias="billableId")
     status: Optional[str] = Field(alias="status", default=None)
     is_success: Optional[bool] = Field(alias="isSuccess", default=None)
     is_billable: Optional[bool] = Field(alias="isBillable", default=None)
@@ -41,9 +41,9 @@ class ExecutionAPIDTO(BaseModel):
 
 
 class ExecutionOutputDataAPIDTO(BaseModel):
-    id: Optional[str] = Field(alias="ID")
-    billable_id: Optional[str] = Field(alias="billableID")
-    workflow_id: str = Field(alias="workflowID")
+    id: Optional[str] = Field(alias="id")
+    billable_id: Optional[str] = Field(alias="billableId")
+    workflow_id: str = Field(alias="workflowId")
     workflow_alias: str = Field(alias="workflowAlias")
     workflow_version: str = Field(alias="workflowVersion")
     status: Optional[str] = Field(alias="status", default=None)

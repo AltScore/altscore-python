@@ -5,7 +5,7 @@ from typing import Optional, Dict, List
 
 
 class FormTemplateAPIDTO(BaseModel):
-    id: str = Field(alias="ID")
+    id: str = Field(alias="id")
     tenant: str = Field(alias="tenant")
     template_slug: str = Field(alias="templateSlug")
     label: Optional[str] = Field(alias="templateLabel", default=None)

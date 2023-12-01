@@ -5,8 +5,8 @@ from typing import Optional, Dict
 
 
 class AddressAPIDTO(BaseModel):
-    id: str = Field(alias="ID")
-    borrower_id: str = Field(alias="borrowerID")
+    id: str = Field(alias="id")
+    borrower_id: str = Field(alias="borrowerId")
     label: Optional[str] = Field(alias="label")
     street1: str = Field(alias="street1")
     street2: Optional[str] = Field(alias="street2", default=None)
@@ -73,7 +73,7 @@ class AddressAPIDTO(BaseModel):
 
 
 class CreateAddressAPIDTO(BaseModel):
-    borrower_id: str = Field(alias="borrowerID")
+    borrower_id: str = Field(alias="borrowerId")
     label: Optional[str] = Field(alias="label")
     street1: str = Field(alias="street1")
     street2: Optional[str] = Field(alias="street2", default=None)
@@ -97,7 +97,7 @@ class CreateAddressAPIDTO(BaseModel):
 
 
 class UpdateAddressDTO(BaseModel):
-    borrower_id: str = Field(alias="borrowerID")
+    borrower_id: str = Field(alias="borrowerId")
     label: Optional[str] = Field(alias="label", default=None)
     street1: Optional[str] = Field(alias="street1", default=None)
     street2: Optional[str] = Field(alias="street2", default=None)

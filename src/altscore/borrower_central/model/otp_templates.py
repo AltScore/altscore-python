@@ -5,7 +5,7 @@ from typing import Optional, Dict
 
 
 class OTPTemplateAPIDTO(BaseModel):
-    id: str = Field(alias="ID")
+    id: str = Field(alias="id")
     channel: str = Field(alias="channel")
     label: str = Field(alias="label")
     lang: Optional[str] = Field(alias="lang")

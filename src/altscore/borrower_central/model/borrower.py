@@ -17,9 +17,9 @@ import datetime as dt
 
 
 class BorrowerAPIDTO(BaseModel):
-    id: str = Field(alias="ID")
+    id: str = Field(alias="id")
     persona: str = Field(alias="persona")
-    form_id: Optional[str] = Field(alias="formID", default=None)
+    form_id: Optional[str] = Field(alias="formId", default=None)
     label: Optional[str] = Field(alias="label")
     tags: List[str] = Field(alias="tags", default=[])
     created_at: str = Field(alias="createdAt")
@@ -210,7 +210,7 @@ class BorrowersAsyncModule:
                 timeout=120
             )
             raise_for_status_improved(response)
-            return response.json()["ID"]
+            return response.json()["id"]
 
     async def patch(self, resource_id: str, patch_data: dict):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
@@ -221,7 +221,7 @@ class BorrowersAsyncModule:
                 timeout=120
             )
             raise_for_status_improved(response)
-            return await self.retrieve(response.json()["ID"])
+            return await self.retrieve(response.json()["id"])
 
     async def delete(self, resource_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
@@ -266,7 +266,7 @@ class BorrowersSyncModule:
                 timeout=120
             )
             raise_for_status_improved(response)
-            return response.json()["ID"]
+            return response.json()["id"]
 
     def patch(self, resource_id: str, patch_data: dict):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
@@ -277,7 +277,7 @@ class BorrowersSyncModule:
                 timeout=120
             )
             raise_for_status_improved(response)
-            return self.retrieve(response.json()["ID"])
+            return self.retrieve(response.json()["id"])
 
     def delete(self, resource_id: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:

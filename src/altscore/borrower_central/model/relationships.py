@@ -5,9 +5,9 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
 
 
 class RelationshipAPIDTO(BaseModel):
-    id: str = Field(alias="ID")
-    borrower_id: str = Field(alias="borrowerID")
-    contact_id: str = Field(alias="contactID")
+    id: str = Field(alias="id")
+    borrower_id: str = Field(alias="borrowerId")
+    contact_id: str = Field(alias="contactId")
     priority: int = Field(alias="priority")
     is_active: bool = Field(alias="isActive")
     is_legal_representative: bool = Field(alias="isLegalRepresentative")
@@ -23,8 +23,8 @@ class RelationshipAPIDTO(BaseModel):
 
 
 class CreateRelationshipDTO(BaseModel):
-    borrower_id: str = Field(alias="borrowerID")
-    contact_id: str = Field(alias="contactID")
+    borrower_id: str = Field(alias="borrowerId")
+    contact_id: str = Field(alias="contactId")
     priority: Optional[int] = Field(alias="priority", default=None)
     relationship: str = Field(alias="relationship")
     is_legal_representative: Optional[bool] = Field(alias="isLegalRepresentative")

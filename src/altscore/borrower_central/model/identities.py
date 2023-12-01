@@ -5,8 +5,8 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
 
 
 class IdentityAPIDTO(BaseModel):
-    id: str = Field(alias="ID")
-    borrower_id: str = Field(alias="borrowerID")
+    id: str = Field(alias="id")
+    borrower_id: str = Field(alias="borrowerId")
     key: str = Field(alias="key")
     label: Optional[str] = Field(alias="label")
     value: Optional[str] = Field(alias="value")
@@ -23,7 +23,7 @@ class IdentityAPIDTO(BaseModel):
 
 
 class CreateIdentityDTO(BaseModel):
-    borrower_id: str = Field(alias="borrowerID")
+    borrower_id: str = Field(alias="borrowerId")
     key: str = Field(alias="key")
     value: Optional[str] = Field(alias="value")
     tags: List[str] = Field(alias="tags", default=[])

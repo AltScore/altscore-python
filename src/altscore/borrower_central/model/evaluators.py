@@ -7,7 +7,7 @@ from altscore.common.http_errors import raise_for_status_improved
 
 
 class EvaluatorAPIDTO(BaseModel):
-    id: str = Field(alias="ID")
+    id: str = Field(alias="id")
     alias: str = Field(alias="alias")
     version: str = Field(alias="version")
     label: Optional[str] = Field(alias="label")

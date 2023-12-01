@@ -5,8 +5,8 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
 
 
 class BorrowerFieldAPIDTO(BaseModel):
-    id: str = Field(alias="ID")
-    borrower_id: str = Field(alias="borrowerID")
+    id: str = Field(alias="id")
+    borrower_id: str = Field(alias="borrowerId")
     key: str = Field(alias="key")
     label: str = Field(alias="label")
     value: Any = Field(alias="value")
@@ -23,9 +23,9 @@ class BorrowerFieldAPIDTO(BaseModel):
 
 
 class CreateBorrowerFieldDTO(BaseModel):
-    borrower_id: str = Field(alias="borrowerID")
-    form_id: Optional[str] = Field(alias="formID", default=None)
-    reference_id: Optional[str] = Field(alias="referenceID", default=None)
+    borrower_id: str = Field(alias="borrowerId")
+    form_id: Optional[str] = Field(alias="formId", default=None)
+    reference_id: Optional[str] = Field(alias="referenceId", default=None)
     key: str = Field(alias="key")
     value: str = Field(alias="value")
     data_type: str = Field(alias="dataType")
@@ -38,9 +38,9 @@ class CreateBorrowerFieldDTO(BaseModel):
 
 
 class UpdateBorrowerFieldDTO(BaseModel):
-    borrower_id: str = Field(alias="borrowerID")
-    form_id: Optional[str] = Field(alias="formID", default=None)
-    reference_id: Optional[str] = Field(alias="referenceID", default=None)
+    borrower_id: str = Field(alias="borrowerId")
+    form_id: Optional[str] = Field(alias="formId", default=None)
+    reference_id: Optional[str] = Field(alias="referenceId", default=None)
     value: Optional[str] = Field(alias="value")
     data_type: Optional[str] = Field(alias="dataType")
     tags: List[str] = Field(alias="tags", default=[])

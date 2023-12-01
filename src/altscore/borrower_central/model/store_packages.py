@@ -7,9 +7,9 @@ from pydantic import BaseModel, Field
 
 
 class PackageAPIDTO(BaseModel):
-    id: str = Field(alias="ID")
-    borrower_id: str = Field(alias="borrowerID")
-    source_id: Optional[str] = Field(alias="sourceID", default=None)
+    id: str = Field(alias="id")
+    borrower_id: str = Field(alias="borrowerId")
+    source_id: Optional[str] = Field(alias="sourceId", default=None)
     content_type: Optional[str] = Field(alias="contentType", default=None)
     alias: Optional[str] = Field(alias="alias", default=None)
     label: Optional[str] = Field(alias="label", default=None)
@@ -24,8 +24,8 @@ class PackageAPIDTO(BaseModel):
 
 
 class CreatePackageDTO(BaseModel):
-    borrower_id: str = Field(alias="borrowerID")
-    source_id: Optional[str] = Field(alias="sourceID", default=None)
+    borrower_id: str = Field(alias="borrowerId")
+    source_id: Optional[str] = Field(alias="sourceId", default=None)
     alias: Optional[str] = Field(alias="alias", default=None)
     label: Optional[str] = Field(alias="label", default=None)
     content_type: Optional[str] = Field(alias="contentType", default=None)

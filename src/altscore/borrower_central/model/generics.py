@@ -163,7 +163,7 @@ class GenericSyncModule:
                 timeout=120
             )
             raise_for_status_improved(response)
-            return response.json()["ID"]
+            return response.json()["id"]
 
     def patch(self, resource_id: str, patch_data: Dict):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
@@ -174,7 +174,7 @@ class GenericSyncModule:
                 timeout=120
             )
             raise_for_status_improved(response)
-            return self.retrieve(response.json()["ID"])
+            return self.retrieve(response.json()["id"])
 
     def delete(self, resource_id: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
@@ -247,7 +247,7 @@ class GenericAsyncModule:
                 timeout=120
             )
             raise_for_status_improved(response)
-            return response.json()["ID"]
+            return response.json()["id"]
 
     async def patch(self, resource_id: str, patch_data: Dict):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
@@ -258,7 +258,7 @@ class GenericAsyncModule:
                 timeout=120
             )
             raise_for_status_improved(response)
-            return await self.retrieve(response.json()["ID"])
+            return await self.retrieve(response.json()["id"])
 
     async def delete(self, resource_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:

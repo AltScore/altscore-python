@@ -5,18 +5,18 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
 
 
 class AuthorizationAPIDTO(BaseModel):
-    id: str = Field(alias="ID")
+    id: str = Field(alias="id")
     tenant: str = Field(alias="tenant")
-    form_id: Optional[str] = Field(alias="formID")
+    form_id: Optional[str] = Field(alias="formId")
     key: str = Field(alias="key")
     label: str = Field(alias="label")
     identity_key: str = Field(alias="identityKey")
     identity_value: str = Field(alias="identityValue")
-    borrower_id: Optional[str] = Field(alias="borrowerID")
+    borrower_id: Optional[str] = Field(alias="borrowerId")
     expires_at: Optional[str] = Field(alias="expiresAt")
     ip_address: Optional[str] = Field(alias="ipAddress")
     policy_link: Optional[str] = Field(alias="policyLink")
-    external_id: Optional[str] = Field(alias="externalID", default=None)
+    external_id: Optional[str] = Field(alias="externalId", default=None)
     tags: List[str] = Field(alias="tags", default=[])
     authorized_at: Optional[str] = Field(alias="authorizedAt")
     created_at: str = Field(alias="createdAt")
@@ -32,12 +32,12 @@ class AuthorizationAPIDTO(BaseModel):
 
 
 class CreateAuthorizationDTO(BaseModel):
-    borrower_id: Optional[str] = Field(alias="borrowerID", default=None)
-    form_id: Optional[str] = Field(alias="formID", default=None)
+    borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
+    form_id: Optional[str] = Field(alias="formId", default=None)
     ip_address: Optional[str] = Field(alias="ipAddress", default=None, hidden=True)
     key: str = Field(alias="key")
     policy_link: Optional[str] = Field(alias="policyLink")
-    external_id: Optional[str] = Field(alias="externalID")
+    external_id: Optional[str] = Field(alias="externalId")
     identity_key: str = Field(alias="identityKey")
     identity_value: str = Field(alias="identityValue")
     tags: List[str] = Field(alias="tags", default=[])

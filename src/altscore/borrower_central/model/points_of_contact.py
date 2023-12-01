@@ -5,11 +5,11 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
 
 
 class PointOfContactAPIDTO(BaseModel):
-    id: str = Field(alias="ID")
+    id: str = Field(alias="id")
     label: Optional[str] = Field(alias="label")
     contact_method: str = Field(alias="contactMethod")
     value: str = Field(alias="value")
-    borrower_id: str = Field(alias="borrowerID")
+    borrower_id: str = Field(alias="borrowerId")
     is_verified: Optional[bool] = Field(alias="isVerified", default=False)
     priority: Optional[int] = Field(alias="priority", default=None)
     verified_at: Optional[str] = Field(alias="verifiedAt", default=None)
@@ -24,7 +24,7 @@ class PointOfContactAPIDTO(BaseModel):
 
 
 class CreatePointOfContactDTO(BaseModel):
-    borrower_id: str = Field(alias="borrowerID")
+    borrower_id: str = Field(alias="borrowerId")
     label: Optional[str] = Field(alias="label", default=None)
     contact_method: str = Field(alias="contactMethod")
     value: str = Field(alias="value", default=None)

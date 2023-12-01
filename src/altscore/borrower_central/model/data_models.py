@@ -5,7 +5,7 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
 
 
 class DataModelAPIDTO(BaseModel):
-    id: str = Field(alias="ID")
+    id: str = Field(alias="id")
     path: str = Field(alias="path")
     key: str = Field(alias="key")
     label: str = Field(alias="label")

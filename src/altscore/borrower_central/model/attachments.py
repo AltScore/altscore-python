@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any
 
 
 class Attachment(BaseModel):
-    id: str = Field(alias="ID")
+    id: str = Field(alias="id")
     url: Optional[str] = Field(alias="url", default=None)
     file_extension: Optional[str] = Field(alias="fileExtension", default=None)
     metadata: Optional[Dict[str, Any]] = Field(alias="metadata")

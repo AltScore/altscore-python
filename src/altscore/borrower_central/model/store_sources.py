@@ -7,7 +7,7 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
 
 
 class SourceAPIDTO(BaseModel):
-    id: str = Field(alias="ID")
+    id: str = Field(alias="id")
     label: Optional[str] = Field(alias="label")
     tags: List[str] = Field(alias="tags", default=[])
     content_type: str = Field(alias="contentType")
@@ -83,7 +83,7 @@ class SourcesSyncModule(GenericSyncModule):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return response.json()["ID"]
+            return response.json()["id"]
 
 
 class SourcesAsyncModule(GenericAsyncModule):
@@ -109,4 +109,4 @@ class SourcesAsyncModule(GenericAsyncModule):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return response.json()["ID"]
+            return response.json()["id"]
