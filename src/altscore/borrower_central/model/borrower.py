@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 import httpx
+from altscore.borrower_central.helpers import build_headers
 from altscore.borrower_central.model.identities import IdentitySync, IdentityAsync
 from altscore.borrower_central.model.documents import DocumentSync, DocumentAsync, DocumentsAsyncModule, \
     DocumentsSyncModule
@@ -199,7 +200,7 @@ class BorrowersAsyncModule:
         self.altscore_client = altscore_client
 
     def build_headers(self):
-        return {"API-KEY": self.altscore_client.api_key}
+        return build_headers(self)
 
     async def create(self, new_entity_data: dict):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
@@ -255,7 +256,7 @@ class BorrowersSyncModule:
         self.altscore_client = altscore_client
 
     def build_headers(self):
-        return {"API-KEY": self.altscore_client.api_key}
+        return build_headers(self)
 
     def create(self, new_entity_data: dict):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:

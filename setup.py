@@ -4,7 +4,7 @@ long_description = ""
 
 setup(
     name="altscore",
-    version="0.1.0",
+    version="0.1.1",
     description="Python SDK for AltScore. It provides a simple interface to the AltScore API.",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
@@ -14,6 +14,11 @@ setup(
     author="AltScore",
     author_email="developers@altscore.ai",
     license="MIT",
+    entry_points={
+        'console_scripts': [
+            'altscore-tui = tui.app:main',  # Adjust the path and function
+        ],
+    },
     classifiers=[
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
@@ -23,14 +28,14 @@ setup(
     install_requires=[
         "click",
         "requests",
-        "pandas",
         "pydantic<=1.10.12",
-        "tabulate",
         "httpx",
         "stringcase"
     ],
     extras_require={
-        "dev": ["pytest>=7.0", "twine>=4.0.2"],
+        "dev": ["pytest>=7.0", "twine>=4.0.2", "textual", "pandas", "tabulate"],
+        "data-tools": ["pandas", "tabulate"],
+        "cli": ["textual", "pandas", "tabulate"],
     },
     python_requires=">=3.8",
 )

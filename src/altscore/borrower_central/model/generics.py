@@ -1,6 +1,6 @@
 import httpx
 from pydantic import BaseModel, Field
-
+from altscore.borrower_central.helpers import build_headers
 from altscore.borrower_central.model.attachments import Attachment, AttachmentInput
 from altscore.common.http_errors import raise_for_status_improved
 from typing import Dict
@@ -137,7 +137,7 @@ class GenericSyncModule:
         self.resource = resource.strip("/")
 
     def build_headers(self):
-        return {"API-KEY": self.altscore_client.api_key}
+        return build_headers(self)
 
     def retrieve(self, resource_id: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
@@ -219,7 +219,7 @@ class GenericAsyncModule:
         self.resource = resource.strip("/")
 
     def build_headers(self):
-        return {"API-KEY": self.altscore_client.api_key}
+        return build_headers(self)
 
     async def retrieve(self, resource_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
