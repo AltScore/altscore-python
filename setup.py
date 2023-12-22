@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-long_description = ""
+long_description = "Python SDK for AltScore"
 
 setup(
     name="altscore",
