@@ -3,8 +3,6 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Union
-import numpy as np
-import pandas as pd
 import httpx
 from pydantic import BaseModel, validator, Field
 from altscore.altdata.model.common_schemas import SourceConfig
@@ -70,6 +68,7 @@ class BatchStatus(BaseModel):
         return json.dumps(r, indent=4, ensure_ascii=False)
 
     def print_source_stats(self):
+        import pandas as pd
         df = pd.DataFrame([e.dict() for e in self.source_stats])
         print(df.to_markdown())
 
@@ -82,7 +81,7 @@ class BatchSyncModule:
     def build_headers(self):
         return {"API-KEY": self.altscore_client.api_key}
 
-    def new_batch_from_dataframe(self, df: pd.DataFrame, label: str,
+    def new_batch_from_dataframe(self, df, label: str,
                                  sources_config: List[SourceConfig]):
         with httpx.Client(base_url=self.altscore_client._altdata_base_url) as client:
             payload = df_to_batch_payload(df=df, label=label, sources_config=sources_config)
@@ -195,7 +194,8 @@ class BatchSync(BatchBase):
                 "sourceDataExportUrl") != "", "Failed to parse response, contact support or update SDK"
             self.data.export_urls = data
 
-    def export_to_dataframe(self) -> pd.DataFrame:
+    def export_to_dataframe(self):
+        import pandas as pd
         if self.export_urls is None:
             self._get_export_urls()
         return pd.read_csv(
@@ -212,6 +212,7 @@ class BatchSync(BatchBase):
 
 
 def df_to_batch_payload(df, label, sources_config):
+    import numpy as np
     data = df.replace({np.nan: None})
     base_64 = df_to_base64(data)
     sources_config_obj = [SourceConfig.parse_obj(x) for x in sources_config]
