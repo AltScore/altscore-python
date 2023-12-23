@@ -56,6 +56,16 @@ class BorrowerSignUpResponse(BaseModel):
         allow_population_by_alias = True
 
 
+class IdentityLookupResponse(BaseModel):
+    borrower_id: str = Field(alias="borrowerId")
+    points_of_contact: List[Dict] = Field(alias="pointsOfContact")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
 class FormSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, data: Dict):
@@ -87,6 +97,36 @@ class FormsSyncModule(GenericSyncModule):
                 form_token=response.headers.get("Authorization").split(" ")[1]
             )
 
+    def query_identity_lookup(self, tenant: str, key: str, value: str, form_id: str):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                f"/v1/{self.resource}/queries/identity-lookup",
+                params={
+                    "key": key,
+                    "value": value,
+                    "form-id": form_id,
+                    "tenant": tenant
+                },
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return IdentityLookupResponse.parse_obj(response.json())
+
+    def query_entity_value(self, borrower_id: str, entity_type: str, key: str):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                f"/v1/{self.resource}/queries/entity-value",
+                params={
+                    "borrower-id": borrower_id,
+                    "key": key,
+                    "entity-type": entity_type,
+                },
+                headers=self.build_headers(),
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return response.json().get("value")
+
 
 class FormsAsyncModule(GenericAsyncModule):
 
@@ -106,3 +146,33 @@ class FormsAsyncModule(GenericAsyncModule):
                 borrower_id=response.json().get("borrowerId"),
                 form_token=response.headers.get("Authorization").split(" ")[1]
             )
+
+    async def query_identity_lookup(self, tenant: str, key: str, value: str, form_id: str):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                f"/v1/{self.resource}/queries/identity-lookup",
+                params={
+                    "key": key,
+                    "value": value,
+                    "form-id": form_id,
+                    "tenant": tenant
+                },
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return IdentityLookupResponse.parse_obj(response.json())
+
+    async def query_entity_value(self, borrower_id: str, entity_type: str, key: str):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                f"/v1/{self.resource}/queries/entity-value",
+                params={
+                    "borrower-id": borrower_id,
+                    "key": key,
+                    "entity-type": entity_type,
+                },
+                headers=self.build_headers(),
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return response.json().get("value")

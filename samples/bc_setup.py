@@ -2,7 +2,7 @@ from altscore import AltScore
 from decouple import config
 
 altscore = AltScore(api_key=config("ALTSCORE_API_KEY"), environment="staging")
-
+# %%
 data_models = [
     {
         "key": "privacy_policy",
@@ -20,18 +20,8 @@ data_models = [
         "entityType": "authorization"
     },
     {
-        "key": "wp_onboarding_current_step",
+        "key": "_whatsapp_onboarding_current_step",
         "label": "Paso actual de Onboarding WhatsApp (1-6)",
-        "entityType": "borrower_field"
-    },
-    {
-        "key": "wp_customer_id",
-        "label": "WhatsApp Customer ID",
-        "entityType": "borrower_field"
-    },
-    {
-        "key": "wp_customer_phone",
-        "label": "Número de WhatsApp",
         "entityType": "borrower_field"
     },
     {
@@ -62,7 +52,13 @@ data_models = [
         "label": "Pasaporte",
         "entityType": "identity",
         "priority": 4
-    }
+    },
+    {
+        "key": "_whatsapp_customer_id",
+        "label": "WhatsApp Customer ID",
+        "entityType": "identity",
+        "priority": -1
+    },
 ]
 for data_model in data_models:
     try:
@@ -70,3 +66,26 @@ for data_model in data_models:
     except Exception as e:
         print(e)
         pass
+
+# %%
+borrower = altscore.borrower_central.borrowers.create({
+    "label": "Nueva tienda",
+    "persona": "individual"
+})
+# %%
+altscore.borrower_central.identities.create(
+    {
+        "borrowerId": borrower,
+        "key": "rfc",
+        "value": "XAXX010101000"
+    }
+)
+#%%
+altscore.borrower_central.identities.create(
+    {
+        "borrowerId": borrower,
+        "key": "_whatsapp_customer_id",
+        "value": "1234"
+    }
+)
+# %%

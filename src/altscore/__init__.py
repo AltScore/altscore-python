@@ -39,7 +39,7 @@ def borrower_sign_up_with_form(
         tenant: str,
         environment: str = "production",
         async_mode: bool = False
-) -> (AltScore, str):
+) -> (AltScore, str, str, str):
     client = AltScore(tenant=tenant, environment=environment)
     form_id = client.borrower_central.forms.create({
         "templateSlug": template_slug,
@@ -58,4 +58,4 @@ def borrower_sign_up_with_form(
         environment=environment,
         async_mode=async_mode
     )
-    return altscore_module, new_borrower.borrower_id
+    return altscore_module, new_borrower.borrower_id, form_id
