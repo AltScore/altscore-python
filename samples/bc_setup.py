@@ -84,8 +84,9 @@ altscore.borrower_central.identities.create(
 altscore.borrower_central.identities.create(
     {
         "borrowerId": borrower,
-        "key": "_whatsapp_customer_id",
-        "value": "1234"
-    }
+        "key": "rfc",
+        "value": "YYYY010101000"
+    },
+    update_if_exists=True
 )
 # %%

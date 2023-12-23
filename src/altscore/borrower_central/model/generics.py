@@ -154,7 +154,7 @@ class GenericSyncModule:
                 )
             return None
 
-    def create(self, new_entity_data: Dict) -> str:
+    def create(self, new_entity_data: Dict, update_if_exists: bool = False) -> str:
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
                 f"/v1/{self.resource}",
@@ -162,10 +162,17 @@ class GenericSyncModule:
                 json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
                 timeout=120
             )
+            if response.status_code == 409 and update_if_exists:
+                data = response.json()
+                if data.get("code") == "DuplicateError":
+                    duplicate_id = data.get("details", {}).get("duplicateId", None)
+                    if duplicate_id:
+                        return self.patch(duplicate_id, new_entity_data)
+
             raise_for_status_improved(response)
             return response.json()["id"]
 
-    def patch(self, resource_id: str, patch_data: Dict):
+    def patch(self, resource_id: str, patch_data: Dict) -> str:
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.patch(
                 f"/v1/{self.resource}/{resource_id}",
@@ -174,7 +181,7 @@ class GenericSyncModule:
                 timeout=120
             )
             raise_for_status_improved(response)
-            return self.retrieve(response.json()["id"])
+            return resource_id
 
     def delete(self, resource_id: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
@@ -238,7 +245,7 @@ class GenericAsyncModule:
                 raise Exception("Unauthorized, check your API key")
             return None
 
-    async def create(self, new_entity_data: Dict) -> str:
+    async def create(self, new_entity_data: Dict, update_if_exists: bool = False) -> str:
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
                 f"/v1/{self.resource}",
@@ -246,10 +253,17 @@ class GenericAsyncModule:
                 json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
                 timeout=120
             )
+            if response.status_code == 409 and update_if_exists:
+                if response.status_code == 409 and update_if_exists:
+                    data = response.json()
+                    if data.get("code") == "DuplicateError":
+                        duplicate_id = data.get("details", {}).get("duplicateId", None)
+                        if duplicate_id:
+                            return await self.patch(duplicate_id, new_entity_data)
             raise_for_status_improved(response)
             return response.json()["id"]
 
-    async def patch(self, resource_id: str, patch_data: Dict):
+    async def patch(self, resource_id: str, patch_data: Dict) -> str:
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.patch(
                 f"/v1/{self.resource}/{resource_id}",
@@ -258,7 +272,7 @@ class GenericAsyncModule:
                 timeout=120
             )
             raise_for_status_improved(response)
-            return await self.retrieve(response.json()["id"])
+            return resource_id
 
     async def delete(self, resource_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
