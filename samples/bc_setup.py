@@ -15,7 +15,7 @@ data_models = [
         "entityType": "authorization"
     },
     {
-        "key": "bureau_query",
+        "key": "bureau_authorization",
         "label": "Autorización para consulta de Buró",
         "entityType": "authorization"
     },
