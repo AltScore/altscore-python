@@ -1,9 +1,13 @@
 from altscore import AltScore
 from decouple import config
 
-altscore = AltScore(api_key=config("ALTSCORE_API_KEY"), environment="staging")
+altscore = AltScore(api_key=config("ALTSCORE_API_KEY"), environment="sandbox")
 # %%
-borrower = altscore.borrower_central.borrowers.retrieve("48b8c289-b5c0-4cd4-a2d4-78489144067b")
+b1 = altscore.borrower_central.borrowers.retrieve("e7b20bd9-53ba-4a9f-8206-cc13f8b25739")
+i1 = b1.get_identities()
+print(i1[1])
+#%%
+borrower = altscore.borrower_central.borrowers.find_one_by_identity("full_name", "Joaquin Davalos")
 # %%
 documents = borrower.get_documents()
 attachments = documents[0].get_attachments()

@@ -76,6 +76,11 @@ class GenericSyncResource(GenericBase):
                 raise_for_status_improved(response)
                 self.content = response.text
 
+    def __str__(self):
+        return str(self.data)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.data.id})"
 
 class GenericAsyncResource(GenericBase):
 
@@ -123,6 +128,9 @@ class GenericAsyncResource(GenericBase):
                 )
                 raise_for_status_improved(response)
                 self.content = response.text
+
+    def __str__(self):
+        return str(self.data)
 
 
 class GenericSyncModule:

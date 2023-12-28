@@ -59,6 +59,7 @@ class BorrowerBase:
     def __init__(self, base_url):
         self.base_url = base_url
 
+
     def _authorizations(
             self, borrower_id: str, sort_by: Optional[str] = None, key: Optional[str] = None,
             per_page: Optional[int] = None, page: Optional[int] = None, sort_direction: Optional[str] = None
@@ -234,10 +235,10 @@ class BorrowersAsyncModule:
             raise_for_status_improved(response)
             return None
 
-    async def retrieve(self, borrower_id: str):
+    async def retrieve(self, resource_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
-                f"/v1/borrowers/{borrower_id}",
+                f"/v1/borrowers/{resource_id}",
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -247,6 +248,31 @@ class BorrowersAsyncModule:
                     header_builder=self.build_headers,
                     data=BorrowerAPIDTO.parse_obj(response.json())
                 )
+            return None
+
+    async def find_one_by_identity(self, identity_key: str, identity_value: str):
+        """
+        Exact match by identity
+        """
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            identities_found_request = await client.get(
+                f"/v1/identities",
+                params={
+                    "key": identity_key,
+                    "value": identity_value,
+                    "per-page": 1,
+                    "page": 1
+                },
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            if identities_found_request.status_code == 200:
+                identities_found_data = identities_found_request.json()
+                if len(identities_found_data) == 0:
+                    return None
+                else:
+                    if identities_found_data[0]["value"] == identity_value:
+                        return await self.retrieve(identities_found_data[0]["borrowerId"])
             return None
 
 
@@ -305,6 +331,31 @@ class BorrowersSyncModule:
                 )
             elif response.status_code in [403, 401]:
                 raise Exception("Unauthorized, check your API key")
+            return None
+
+    def find_one_by_identity(self, identity_key: str, identity_value: str):
+        """
+        Exact match by identity
+        """
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            identities_found_request = client.get(
+                f"/v1/identities",
+                params={
+                    "key": identity_key,
+                    "value": identity_value,
+                    "per-page": 1,
+                    "page": 1
+                },
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            if identities_found_request.status_code == 200:
+                identities_found_data = identities_found_request.json()
+                if len(identities_found_data) == 0:
+                    return None
+                else:
+                    if identities_found_data[0]["value"] == identity_value:
+                        return self.retrieve(identities_found_data[0]["borrowerId"])
             return None
 
 
@@ -451,6 +502,12 @@ class BorrowerAsync(BorrowerBase):
                 data=package_data
             ) for package_data in data]
 
+    def __str__(self):
+        return str(self.data)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.data.id})"
+
 
 class BorrowerSync(BorrowerBase):
     data: BorrowerAPIDTO
@@ -594,3 +651,9 @@ class BorrowerSync(BorrowerBase):
                 header_builder=self._header_builder,
                 data=package_data
             ) for package_data in data]
+
+    def __str__(self):
+        return str(self.data)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.data.id})"

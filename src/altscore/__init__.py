@@ -21,6 +21,9 @@ class AltScore:
             self.borrower_central = BorrowerCentralSync(self)
             self.altdata = AltdataSync(self)
 
+    def __repr__(self):
+        return f"AltScore({self.tenant}, {self.environment})"
+
     @property
     def _borrower_central_base_url(self):
         if self.environment == "production":
