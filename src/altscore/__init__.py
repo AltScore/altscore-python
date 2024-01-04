@@ -60,7 +60,8 @@ class AltScore:
     def partner_id(self) -> Optional[str]:
         if self._partner_id is None:
             if self._async_mode:
-                partner_id = asyncio.run(self.cms.partners.me()).data.partner_id
+                partner = asyncio.run(self.cms.partners.me())
+                partner_id = partner.data.partner_id
             else:
                 partner_id = self.cms.partners.me().data.partner_id
             self._partner_id = partner_id
