@@ -5,6 +5,7 @@ from altscore.common.http_errors import raise_for_status_improved
 from altscore.cms.helpers import build_headers
 from altscore.cms.model.credit_account import CreditAccountSync, CreditAccountAsync, CreditAccountAPIDTO
 import datetime as dt
+import asyncio
 
 
 class ClientAPIDTO(BaseModel):
@@ -198,6 +199,49 @@ class ClientsAsyncModule:
                 data=ClientAPIDTO.parse_obj(response.json())
             )
 
+    async def retrieve_many(self, limit=100, offset=0):
+        """
+        Retrieves many clients paginated
+        """
+        async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
+            response = await client.get(
+                f"/v2/clients?limit={limit}&offset={offset}",
+                params={
+                    "limit": limit,
+                    "offset": offset
+                },
+                headers=self.build_headers(),
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return [
+                ClientAsync(
+                    base_url=self.altscore_client._cms_base_url,
+                    header_builder=self.build_headers,
+                    data=ClientAPIDTO.parse_obj(item)
+                ) for item in response.json()
+            ]
+
+    async def retrieve_all(self):
+        """
+        Retrieves all clients
+        """
+        async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
+            response = await client.get(
+                f"/v2/clients",
+                headers=self.build_headers(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            total_count = int(response.headers["x-total-count"])
+
+        clients = []
+        for offset in range(0, total_count, 100):
+            clients.append(self.retrieve_many(limit=100, offset=offset))
+        clients = await asyncio.gather(*clients)
+        clients = [item for sublist in clients for item in sublist]
+        return clients
+
 
 class ClientsSyncModule:
 
@@ -239,3 +283,43 @@ class ClientsSyncModule:
                 header_builder=self.build_headers,
                 data=ClientAPIDTO.parse_obj(response.json())
             )
+
+    def retrieve_many(self, limit=100, offset=0):
+        """
+        Retrieves many clients paginated
+        """
+        with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
+            response = client.get(
+                f"/v2/clients?limit={limit}&offset={offset}",
+                params={
+                    "limit": limit,
+                    "offset": offset
+                },
+                headers=self.build_headers(),
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return [
+                ClientSync(
+                    base_url=self.altscore_client._cms_base_url,
+                    header_builder=self.build_headers,
+                    data=ClientAPIDTO.parse_obj(item)
+                ) for item in response.json()
+            ]
+
+    def retrieve_all(self):
+        """
+        Retrieves all clients by taking account of x-total-count header
+        """
+        with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
+            response = client.get(
+                f"/v2/clients",
+                headers=self.build_headers(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            total_count = int(response.headers["x-total-count"])
+            clients = []
+            for offset in range(0, total_count, 100):
+                clients += self.retrieve_many(limit=100, offset=offset)
+            return clients

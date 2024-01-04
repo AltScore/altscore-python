@@ -10,8 +10,8 @@ class Money(BaseModel):
 
 
 class Reservation(BaseModel):
-    id: str
-    type: str
+    id: Optional[str] = Field(alias="id", default=None)
+    type: Optional[str] = Field(alias="type", default=None)
     amount: Money
     status: str
     created_at: str = Field(alias="createdAt")
