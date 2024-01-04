@@ -126,7 +126,7 @@ class ClientsAsyncModule:
             raise_for_status_improved(response)
             return response.json()["clientId"]
 
-    async def retrieve(self, client_identifier: str) -> ClientAsync:
+    async def retrieve(self, client_identifier: str) -> Optional[ClientAsync]:
         """
         Retrieves a Client Object using a client identifier.
         The identifier can be the clientId, taxId or externalId (needs the X-Partner-Id header)
@@ -137,6 +137,8 @@ class ClientsAsyncModule:
                 headers=self.build_headers(),
                 timeout=120
             )
+            if response.status_code == 404:
+                return None
             raise_for_status_improved(response)
             return ClientAsync(
                 base_url=self.altscore_client._cms_base_url,
@@ -166,7 +168,7 @@ class ClientsSyncModule:
             raise_for_status_improved(response)
             return response.json()["clientId"]
 
-    def retrieve(self, client_identifier: str) -> ClientSync:
+    def retrieve(self, client_identifier: str) -> Optional[ClientSync]:
         """
         Retrieves a Client Object using a client identifier.
         The identifier can be the clientId, taxId or externalId (needs the X-Partner-Id header)
@@ -177,6 +179,8 @@ class ClientsSyncModule:
                 headers=self.build_headers(),
                 timeout=120
             )
+            if response.status_code == 404:
+                return None
             raise_for_status_improved(response)
             return ClientSync(
                 base_url=self.altscore_client._cms_base_url,
