@@ -70,6 +70,27 @@ class CreditAccountAsync:
         self._header_builder = header_builder
         self.data = data
 
+    async def update(self, amount: str, currency: str, reason: str) -> None:
+        """
+        Updates credit account with the given amount and currency, and the reason for the update.
+        It will replace the data in the object with the response from the API.
+        """
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.patch(
+                f"/v2/clients/{self.data.client_id}/credit-accounts/{self.data.product_family}",
+                json={
+                    "assigned": {
+                        "amount": amount,
+                        "currency": currency,
+                    },
+                    "reason": reason,
+                },
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            self.data = CreditAccountAPIDTO.parse_obj(response.json())
+
     def __str__(self):
         return str(self.data)
 
