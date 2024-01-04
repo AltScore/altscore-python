@@ -63,14 +63,14 @@ class ClientAsync(ClientBase):
         self._header_builder = header_builder
         self.data = data
 
-    async def get_credit_account(self, product_family: str) -> CreditAccountSync:
+    async def get_credit_account(self, product_family: str) -> CreditAccountAsync:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url = self._credit_accounts(self.data.id, product_family=product_family)
             response = await client.get(
                 url,
                 headers=self._header_builder()
             )
-            return CreditAccountSync(
+            return CreditAccountAsync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
                 data=CreditAccountAPIDTO.parse_obj(response.json())
