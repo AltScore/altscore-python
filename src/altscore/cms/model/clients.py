@@ -76,6 +76,32 @@ class ClientAsync(ClientBase):
                 data=CreditAccountAPIDTO.parse_obj(response.json())
             )
 
+    async def enable(self):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            url = f"{self.base_url}/v2/clients/{self.data.id}/status"
+            response = await client.put(
+                url,
+                json={
+                    "status": "enabled"
+                },
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
+            self.data = ClientAPIDTO.parse_obj(response.json())
+
+    async def disable(self):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            url = f"{self.base_url}/v2/clients/{self.data.id}/status"
+            response = await client.put(
+                url,
+                json={
+                    "status": "disabled"
+                },
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
+            self.data = ClientAPIDTO.parse_obj(response.json())
+
     def __str__(self):
         return str(self.data)
 
@@ -103,6 +129,32 @@ class ClientSync(ClientBase):
                 header_builder=self._header_builder,
                 data=CreditAccountAPIDTO.parse_obj(response.json())
             )
+
+    def enable(self):
+        with httpx.Client(base_url=self.base_url) as client:
+            url = f"{self.base_url}/v2/clients/{self.data.id}/status"
+            response = client.put(
+                url,
+                json={
+                    "status": "enabled"
+                },
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
+            self.data = ClientAPIDTO.parse_obj(response.json())
+
+    def disable(self):
+        with httpx.Client(base_url=self.base_url) as client:
+            url = f"{self.base_url}/v2/clients/{self.data.id}/status"
+            response = client.put(
+                url,
+                json={
+                    "status": "disabled"
+                },
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
+            self.data = ClientAPIDTO.parse_obj(response.json())
 
 
 class ClientsAsyncModule:
