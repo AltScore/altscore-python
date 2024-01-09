@@ -22,7 +22,7 @@ class CreateExecutionDTO(BaseModel):
 
 class ExecutionAPIDTO(BaseModel):
     id: Optional[str] = Field(alias="id")
-    principal_id: str = Field(alias="principalId")
+    principal_id: Optional[str] = Field(alias="principalId", default=None)
     workflow_id: str = Field(alias="workflowId")
     workflow_alias: str = Field(alias="workflowAlias")
     workflow_version: str = Field(alias="workflowVersion")
