@@ -3,16 +3,16 @@ import asyncio
 from altscore.borrower_central import BorrowerCentralAsync, BorrowerCentralSync
 from altscore.altdata import AltdataSync
 from altscore.cms import CMSSync, CMSAsync
-from typing import Optional
+from typing import Optional, Union
 import warnings
 
 warnings.filterwarnings("ignore")
 
 
-class AltScore:
+class AltScoreBase:
     _altdata_base_url = "https://data.altscore.ai"
 
-    def __init__(self, api_key: str = None, tenant: str = "default", async_mode: bool = False,
+    def __init__(self, api_key: str = None, tenant: str = "default",
                  environment: str = "production", user_token: Optional[str] = None,
                  form_token: Optional[str] = None):
         self.environment = environment
@@ -21,15 +21,6 @@ class AltScore:
         self.tenant = tenant
         self.form_token = form_token
         self._partner_id = None
-        self._async_mode = async_mode
-        if async_mode:
-            self.borrower_central = BorrowerCentralAsync(self)
-            self.altdata = None
-            self.cms = CMSAsync(self)
-        else:
-            self.borrower_central = BorrowerCentralSync(self)
-            self.altdata = AltdataSync(self)
-            self.cms = CMSSync(self)
 
     def __repr__(self):
         return f"AltScore({self.tenant}, {self.environment})"
@@ -56,14 +47,42 @@ class AltScore:
         else:
             raise ValueError(f"Unknown environment: {self.environment}")
 
+
+class AltScore(AltScoreBase):
+    _async_mode = False
+
+    def __init__(self, api_key: str = None, tenant: str = "default",
+                 environment: str = "production", user_token: Optional[str] = None,
+                 form_token: Optional[str] = None):
+        super().__init__(api_key, tenant, environment, user_token, form_token)
+        self.borrower_central = BorrowerCentralSync(self)
+        self.altdata = AltdataSync(self)
+        self.cms = CMSSync(self)
+
     @property
     def partner_id(self) -> Optional[str]:
         if self._partner_id is None:
-            if self._async_mode:
-                partner = asyncio.run(self.cms.partners.me())
-                partner_id = partner.data.partner_id
-            else:
-                partner_id = self.cms.partners.me().data.partner_id
+            partner_id = self.cms.partners.me().data.partner_id
+            self._partner_id = partner_id
+        return self._partner_id
+
+
+class AltScoreAsync(AltScoreBase):
+    _async_mode = True
+
+    def __init__(self, api_key: str = None, tenant: str = "default",
+                 environment: str = "production", user_token: Optional[str] = None,
+                 form_token: Optional[str] = None):
+        super().__init__(api_key, tenant, environment, user_token, form_token)
+        self.borrower_central = BorrowerCentralAsync(self)
+        self.altdata = None
+        self.cms = CMSAsync(self)
+
+    @property
+    def partner_id(self) -> Optional[str]:
+        if self._partner_id is None:
+            partner = asyncio.run(self.cms.partners.me())
+            partner_id = partner.data.partner_id
             self._partner_id = partner_id
         return self._partner_id
 
@@ -74,7 +93,7 @@ def borrower_sign_up_with_form(
         tenant: str,
         environment: str = "production",
         async_mode: bool = False
-) -> (AltScore, str, str, str):
+) -> (Union[AltScore, AltScoreAsync], str, str, str):
     client = AltScore(tenant=tenant, environment=environment)
     form_id = client.borrower_central.forms.create({
         "templateSlug": template_slug,
@@ -87,10 +106,16 @@ def borrower_sign_up_with_form(
             "persona": persona
         }
     )
-    altscore_module = AltScore(
-        form_token=new_borrower.form_token,
-        tenant=tenant,
-        environment=environment,
-        async_mode=async_mode
-    )
+    if async_mode:
+        altscore_module = AltScoreAsync(
+            form_token=new_borrower.form_token,
+            tenant=tenant,
+            environment=environment,
+        )
+    else:
+        altscore_module = AltScore(
+            form_token=new_borrower.form_token,
+            tenant=tenant,
+            environment=environment,
+        )
     return altscore_module, new_borrower.borrower_id, form_id

@@ -15,6 +15,8 @@ from altscore.borrower_central.model.store_packages import PackagesAsyncModule, 
 from altscore.borrower_central.model.store_sources import SourcesAsyncModule, SourcesSyncModule
 from altscore.borrower_central.model.evaluators import EvaluatorAsyncModule, EvaluatorSyncModule
 from altscore.borrower_central.model.forms import FormsAsyncModule, FormsSyncModule
+from altscore.borrower_central.model.policy_alerts import AlertsAsyncModule, AlertsSyncModule
+from altscore.borrower_central.model.policy_rules import RulesAsyncModule, RulesSyncModule
 
 
 class BorrowerCentralAsync:
@@ -37,6 +39,7 @@ class BorrowerCentralAsync:
         self.store_sources = SourcesAsyncModule(altscore_client)
         self.evaluators = EvaluatorAsyncModule(altscore_client)
         self.forms = FormsAsyncModule(altscore_client)
+        self.alerts = AlertsAsyncModule(altscore_client)
 
 
 class BorrowerCentralSync:
@@ -59,3 +62,4 @@ class BorrowerCentralSync:
         self.store_sources = SourcesSyncModule(altscore_client)
         self.evaluators = EvaluatorSyncModule(altscore_client)
         self.forms = FormsSyncModule(altscore_client)
+        self.alerts = AlertsSyncModule(altscore_client)

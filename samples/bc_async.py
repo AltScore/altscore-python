@@ -1,11 +1,11 @@
-from altscore import AltScore
+from altscore import AltScoreAsync as AltScore
 from decouple import config
 import asyncio
 
 
 async def get_borrower():
-    altscore = AltScore(api_key=config("ALTSCORE_API_KEY"), async_mode=True)
-    borrower = await altscore.borrower_central.borrower.retrieve("dfaab9fd-d4eb-4f53-9070-f2605c4cc9e2")
+    altscore = AltScore(api_key=config("ALTSCORE_API_KEY"))
+    borrower = await altscore.borrower_central.borrowers.retrieve("dfaab9fd-d4eb-4f53-9070-f2605c4cc9e2")
     authorizations = await borrower.get_authorizations(key="bureau_authorization")
 
     if len(authorizations) > 0:

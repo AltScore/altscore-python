@@ -1,11 +1,11 @@
 import pandas as pd
 
-from altscore import AltScore
+from altscore import AltScoreAsync as AltScore
 from altscore.utils import divide_in_chunks
 from decouple import config
 import asyncio
 
-altscore = AltScore(user_token=config("ALTSCORE_USER_TOKEN"), environment="sandbox", async_mode=True)
+altscore = AltScore(user_token=config("ALTSCORE_USER_TOKEN"), environment="sandbox")
 # %%
 me = altscore.partner_id
 # %%

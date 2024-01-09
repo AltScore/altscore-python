@@ -26,7 +26,7 @@ class CreditLine(BaseModel):
     assigned: Money
     available: Money
     consumed: Money
-    reservations: List[Reservation]
+    reservations: Optional[List[Reservation]] = Field(alias="reservations", default=None)
 
     class Config:
         populate_by_name = True
