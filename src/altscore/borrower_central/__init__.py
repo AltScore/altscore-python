@@ -40,6 +40,7 @@ class BorrowerCentralAsync:
         self.evaluators = EvaluatorAsyncModule(altscore_client)
         self.forms = FormsAsyncModule(altscore_client)
         self.alerts = AlertsAsyncModule(altscore_client)
+        self.rules = RulesAsyncModule(altscore_client)
 
 
 class BorrowerCentralSync:
@@ -63,3 +64,4 @@ class BorrowerCentralSync:
         self.evaluators = EvaluatorSyncModule(altscore_client)
         self.forms = FormsSyncModule(altscore_client)
         self.alerts = AlertsSyncModule(altscore_client)
+        self.rules = RulesSyncModule(altscore_client)
