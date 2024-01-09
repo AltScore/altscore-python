@@ -5,7 +5,7 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
 
 
 class RuleAlert(BaseModel):
-    alert_lvl: int = Field(alias="alertLvl")
+    level: int = Field(alias="level")
     message: str = Field(alias="message")
 
 
