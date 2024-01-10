@@ -9,9 +9,11 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
 class AlertAPIDTO(BaseModel):
     id: str = Field(alias="id")
     rule_id: str = Field(alias="ruleId")
+    rule_code: Optional[str] = Field(alias="ruleCode", default=None)
     borrower_id: str = Field(alias="borrowerId")
     level: int = Field(alias="level")
     message: str = Field(alias="message")
+    reference_id: Optional[str] = Field(alias="referenceId", default=None)
     is_dismissed: bool = Field(alias="isDismissed")
     dismissed_by: Optional[str] = Field(alias="dismissedBy")
     dismissed_at: Optional[str] = Field(alias="dismissedAt")
@@ -27,6 +29,8 @@ class AlertAPIDTO(BaseModel):
 class CreateAlert(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
     rule_id: str = Field(alias="ruleId")
+    rule_code: Optional[str] = Field(alias="ruleCode", default=None)
+    reference_id: Optional[str] = Field(alias="referenceId", default=None)
     level: int = Field(alias="level")
     message: str = Field(alias="message")
 
