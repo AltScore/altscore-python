@@ -52,6 +52,7 @@ class InputKeys(BaseModel):
     tax_id: Optional[str] = Field(alias="taxId", default=None)
     legal_name: Optional[str] = Field(alias="legalName", default=None)
     dba: Optional[str] = Field(alias="dba", default=None)
+    business_id: Optional[str] = Field(alias="businessId", default=None)
     legal_rep_id: Optional[str] = Field(alias="legalRepId", default=None)
     country_code: Optional[str] = Field(alias="countryCode", default=None)
     date_to_analyze: Optional[str] = Field(alias="dateToAnalyze", default=None)

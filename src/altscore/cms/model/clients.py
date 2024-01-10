@@ -47,28 +47,28 @@ class CreateClientDTO(BaseModel):
 
 class ClientBase:
 
-    def __init__(self, base_url):
-        self.base_url = base_url
-
     def _credit_accounts(
             self, client_id: str, product_family: str
     ) -> (str, Optional[dict]):
-        return f"{self.base_url}/v2/clients/{client_id}/credit-accounts/{product_family}"
+        return f"/v2/clients/{client_id}/credit-accounts/{product_family}"
+
+    def _status(self, client_id: str):
+        return f"/v2/clients/{client_id}/status"
 
 
 class ClientAsync(ClientBase):
     data: ClientAPIDTO
 
     def __init__(self, base_url, header_builder, data: ClientAPIDTO):
-        super().__init__(base_url)
+        super().__init__()
+        self.base_url = base_url
         self._header_builder = header_builder
         self.data = data
 
     async def get_credit_account(self, product_family: str) -> CreditAccountAsync:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
-            url = self._credit_accounts(self.data.id, product_family=product_family)
             response = await client.get(
-                url,
+                self._credit_accounts(self.data.id, product_family=product_family),
                 headers=self._header_builder()
             )
             return CreditAccountAsync(
@@ -79,9 +79,8 @@ class ClientAsync(ClientBase):
 
     async def enable(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
-            url = f"{self.base_url}/v2/clients/{self.data.id}/status"
             response = await client.put(
-                url,
+                self._status(self.data.id),
                 json={
                     "status": "enabled"
                 },
@@ -92,9 +91,8 @@ class ClientAsync(ClientBase):
 
     async def disable(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
-            url = f"{self.base_url}/v2/clients/{self.data.id}/status"
             response = await client.put(
-                url,
+                self._status(self.data.id),
                 json={
                     "status": "disabled"
                 },
@@ -120,9 +118,8 @@ class ClientSync(ClientBase):
 
     def get_credit_account(self, product_family: str) -> CreditAccountSync:
         with httpx.Client(base_url=self.base_url) as client:
-            url = self._credit_accounts(self.data.id, product_family=product_family)
             response = client.get(
-                url,
+                self._credit_accounts(self.data.id, product_family=product_family),
                 headers=self._header_builder()
             )
             return CreditAccountSync(
@@ -133,9 +130,8 @@ class ClientSync(ClientBase):
 
     def enable(self):
         with httpx.Client(base_url=self.base_url) as client:
-            url = f"{self.base_url}/v2/clients/{self.data.id}/status"
             response = client.put(
-                url,
+                self._status(self.data.id),
                 json={
                     "status": "enabled"
                 },
@@ -146,9 +142,8 @@ class ClientSync(ClientBase):
 
     def disable(self):
         with httpx.Client(base_url=self.base_url) as client:
-            url = f"{self.base_url}/v2/clients/{self.data.id}/status"
             response = client.put(
-                url,
+                self._status(self.data.id),
                 json={
                     "status": "disabled"
                 },
