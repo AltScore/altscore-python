@@ -116,7 +116,7 @@ class MetricOutput(BaseModel):
 
 
 class EvaluatorOutput(BaseModel):
-    score: ScoreOutput = Field(alias="score")
+    score: Optional[ScoreOutput] = Field(alias="score", default=None)
     scorecard: List[ScoreCardRuleOutput] = Field(alias="scorecard", default=[])
     metrics: List[MetricOutput] = Field(alias="metrics", default=[])
     rules: List[BusinessRuleOutput] = Field(alias="rules", default=[])
