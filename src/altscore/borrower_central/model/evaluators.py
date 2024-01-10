@@ -70,11 +70,14 @@ class EvaluatorInput(BaseModel):
 
 
 class BusinessRuleOutput(BaseModel):
+    id: Optional[str] = Field(alias="id", default=None)
     order: int = Field(alias="order")
     code: str = Field(alias="code")
     label: str = Field(alias="label")
     value: str = Field(alias="value")
-    alert: Optional[str] = Field(alias="alert", default=None)
+    alert_level: Optional[int] = Field(alias="alertLevel", default=None)
+    # hit can be None if the rule cannot be evaluated due to missing fields
+    hit: Optional[bool] = Field(alias="hit", default=None)
 
     class Config:
         allow_population_by_field_name = True
@@ -86,7 +89,6 @@ class ScoreOutput(BaseModel):
     label: str = Field(alias="label")
     value: float = Field(alias="value")
     max_value: Optional[float] = Field(alias="maxValue", default=None)
-    alert: Optional[str] = Field(alias="alert", default=None)
 
     class Config:
         allow_population_by_field_name = True
