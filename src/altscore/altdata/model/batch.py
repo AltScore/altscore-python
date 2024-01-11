@@ -9,7 +9,6 @@ from altscore.altdata.model.common_schemas import SourceConfig
 from altscore.altdata.utils.dataframes import df_to_base64
 from altscore.common.http_errors import raise_for_status_improved
 from dateutil.parser import parse
-import requests
 import json
 
 
@@ -118,6 +117,50 @@ class BatchSyncModule:
             )
 
 
+class BatchAsyncModule:
+
+    def __init__(self, altscore_client):
+        self.altscore_client = altscore_client
+
+    def build_headers(self):
+        return {"API-KEY": self.altscore_client.api_key}
+
+    async def new_batch_from_dataframe(self, df, label: str, sources_config: List[SourceConfig]):
+        async with httpx.AsyncClient(base_url=self.altscore_client._altdata_base_url) as client:
+            payload = df_to_batch_payload(df=df, label=label, sources_config=sources_config)
+            batch_response = await client.post(
+                "/v1/batches",
+                json=payload,
+                headers=self.build_headers(),
+                timeout=500
+            )
+            raise_for_status_improved(batch_response)
+            batch_id = batch_response.json()["batchId"]
+            return BatchSync(
+                base_url=self.altscore_client._altdata_base_url,
+                header_builder=self.build_headers,
+                data=BatchData(batch_id=batch_id, label=label, sources_config=sources_config)
+            )
+
+    async def retrieve(self, batch_id: str):
+        async with httpx.AsyncClient(base_url=self.altscore_client._altdata_base_url) as client:
+            response = await client.get(
+                f"/v1/batches/{batch_id}",
+                headers=self.build_headers(),
+                timeout=500
+            )
+            raise_for_status_improved(response)
+            return BatchSync(
+                base_url=self.altscore_client._altdata_base_url,
+                header_builder=self.build_headers,
+                data=BatchData(
+                    batch_id=batch_id,
+                    label=response.json()["label"],
+                    sources_config=response.json()["sourcesConfig"]
+                )
+            )
+
+
 class BatchBase:
 
     def __init__(self, base_url):
@@ -206,9 +249,80 @@ class BatchSync(BatchBase):
     def export_source_data_to_dict(self):
         if self.export_urls is None:
             self._get_export_urls()
-        req = requests.get(self.export_urls["sourceDataExportUrl"])
-        data = [json.loads(e) for e in req.content.decode("utf8").split("\n") if len(e) > 0]
-        return data
+        with httpx.Client() as client:
+            req = client.get(self.export_urls["sourceDataExportUrl"], timeout=500)
+            data = [json.loads(e) for e in req.content.decode("utf8").split("\n") if len(e) > 0]
+            return data
+
+
+class BatchAsync(BatchBase):
+
+    def __init__(self, base_url, header_builder, data: BatchData):
+        super().__init__(base_url)
+        self.header_builder = header_builder
+        self.data: BatchData = data
+
+    @property
+    def batch_id(self):
+        return self.data.batch_id
+
+    @property
+    def label(self):
+        return self.data.label
+
+    @property
+    def status(self):
+        return self.data.status
+
+    @property
+    def export_urls(self):
+        return self.data.export_urls
+
+    async def get_status(self):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(self._status(batch_id=self.data.batch_id),
+                                        headers=self.header_builder())
+            raise_for_status_improved(response)
+            self.data.status = BatchStatus.parse_obj(response.json())
+
+    async def retry(self):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.post(self._retry(batch_id=self.data.batch_id),
+                                         headers=self.header_builder())
+            raise_for_status_improved(response)
+
+    async def _get_export_urls(self):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.post(
+                self._export(batch_id=self.data.batch_id),
+                headers=self.header_builder(),
+                timeout=500
+            )
+            raise_for_status_improved(response)
+            data = response.json()
+            assert data.get("dataExportUrl") is not None and data.get(
+                "dataExportUrl") != "", "Failed to parse response, contact support or update SDK"
+            assert data.get("sourceDataExportUrl") is not None and data.get(
+                "sourceDataExportUrl") != "", "Failed to parse response, contact support or update SDK"
+            self.data.export_urls = data
+
+    async def export_to_dataframe(self):
+        import pandas as pd
+        if self.export_urls is None:
+            await self._get_export_urls()
+        return pd.read_csv(
+            self.export_urls["dataExportUrl"], encoding="utf-8",
+            dtype={"personId": str, "taxId": str, "foreignKey": str, "email": str, "phone": str}
+        )
+
+    async def export_source_data_to_dict(self):
+        if self.export_urls is None:
+            await self._get_export_urls()
+
+        async with httpx.AsyncClient() as client:
+            req = await client.get(self.export_urls["sourceDataExportUrl"], timeout=500)
+            data = [json.loads(e) for e in req.content.decode("utf8").split("\n") if len(e) > 0]
+            return data
 
 
 def df_to_batch_payload(df, label, sources_config):

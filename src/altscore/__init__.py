@@ -1,7 +1,7 @@
 import asyncio
 
 from altscore.borrower_central import BorrowerCentralAsync, BorrowerCentralSync
-from altscore.altdata import AltdataSync
+from altscore.altdata import AltDataSync, AltDataAsync
 from altscore.cms import CMSSync, CMSAsync
 from typing import Optional, Union
 import warnings
@@ -56,7 +56,7 @@ class AltScore(AltScoreBase):
                  form_token: Optional[str] = None):
         super().__init__(api_key, tenant, environment, user_token, form_token)
         self.borrower_central = BorrowerCentralSync(self)
-        self.altdata = AltdataSync(self)
+        self.altdata = AltDataSync(self)
         self.cms = CMSSync(self)
 
     @property
@@ -75,7 +75,7 @@ class AltScoreAsync(AltScoreBase):
                  form_token: Optional[str] = None):
         super().__init__(api_key, tenant, environment, user_token, form_token)
         self.borrower_central = BorrowerCentralAsync(self)
-        self.altdata = None
+        self.altdata = AltDataAsync(self)
         self.cms = CMSAsync(self)
 
     @property

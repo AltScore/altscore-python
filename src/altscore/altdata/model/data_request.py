@@ -212,6 +212,56 @@ class RequestSyncModule:
         )
 
 
+class RequestAsyncModule:
+
+    def __init__(self, altscore_client):
+        self.altscore_client = altscore_client
+
+    def build_headers(self):
+        return {"API-KEY": self.altscore_client.api_key}
+
+    async def new_sync(self, input_keys: InputKeys, sources_config: List[SourceConfig], timeout: Optional[int] = None):
+        payload = input_keys.dict(by_alias=True, exclude_none=True)
+        if timeout is not None:
+            payload["timeout"] = timeout
+        payload["sourcesConfig"] = [s.dict(by_alias=True) for s in sources_config]
+        async with httpx.AsyncClient(base_url=self.altscore_client._altdata_base_url) as client:
+            r = await client.post(
+                url="/v1/requests/sync",
+                json=payload,
+                headers=self.build_headers(),
+                timeout=500
+            )
+            raise_for_status_improved(r)
+            sync_data_response = r.json()
+            return RequestResult.from_api(sync_data_response)
+
+    async def new_async(self, input_keys: InputKeys, sources_config: List[SourceConfig]):
+        payload = input_keys.dict(by_alias=True, exclude_none=True)
+        payload["sourcesConfig"] = [s.dict(by_alias=True) for s in sources_config]
+        async with httpx.AsyncClient(base_url=self.altscore_client._altdata_base_url) as client:
+            r = await client.post(
+                url="/v1/requests/async",
+                json=payload,
+                headers=self.build_headers(),
+                timeout=500
+            )
+            raise_for_status_improved(r)
+            sync_data_response = r.json()
+            return AsyncRequestSync(
+                base_url=self.altscore_client._altdata_base_url,
+                header_builder=self.build_headers,
+                request_id=sync_data_response["requestId"]
+            )
+
+    def retrieve(self, request_id: str):
+        return AsyncRequestSync(
+            base_url=self.altscore_client._altdata_base_url,
+            header_builder=self.build_headers,
+            request_id=request_id
+        )
+
+
 class RequestsBase:
 
     def __init__(self, base_url):
@@ -251,6 +301,37 @@ class AsyncRequestSync(RequestsBase):
     def get_status(self):
         with httpx.Client(base_url=self.base_url) as client:
             r = client.get(
+                url=self._get_status(self.id),
+                headers=self.header_builder()
+            )
+            raise_for_status_improved(r)
+            return RequestStatus.from_api(r.json())
+
+
+class AsyncRequestAsync(RequestsBase):
+
+    def __init__(self, base_url, header_builder, request_id: str):
+        super().__init__(base_url)
+        self.base_url = base_url
+        self.header_builder = header_builder
+        self.request_id = request_id
+
+    @property
+    def id(self):
+        return self.request_id
+
+    async def pull(self):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            r = await client.get(
+                url=self._get(self.id),
+                headers=self.header_builder()
+            )
+            raise_for_status_improved(r)
+            return RequestResult.from_api(r.json())
+
+    async def get_status(self):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            r = await client.get(
                 url=self._get_status(self.id),
                 headers=self.header_builder()
             )

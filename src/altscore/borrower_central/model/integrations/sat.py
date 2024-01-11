@@ -2,6 +2,7 @@ import datetime as dt
 import httpx
 from pydantic import BaseModel, Field
 from altscore.common.http_errors import raise_for_status_improved
+from altscore.borrower_central.helpers import build_headers
 
 
 class ExtractionCoverageInfo(BaseModel):
@@ -16,11 +17,14 @@ class ExtractionCoverageInfo(BaseModel):
         allow_population_by_alias = True
 
 
-class SatIntegrationAsync:
+class SatIntegrationAsyncModule:
 
-    def __init__(self, base_url, header_builder):
-        self.base_url = base_url
-        self.header_builder = header_builder
+    def __init__(self, altscore_client):
+        self.altscore_client = altscore_client
+        self.base_url = self.altscore_client._borrower_central_base_url
+
+    def build_headers(self):
+        return build_headers(self)
 
     async def check_extractions(
             self, rfc: str, date_to_analyze: dt.datetime, days_of_tolerance: int) -> ExtractionCoverageInfo:
@@ -32,7 +36,7 @@ class SatIntegrationAsync:
                     "dateToAnalyze": date_to_analyze.isoformat(),
                     "daysOfTolerance": days_of_tolerance
                 },
-                headers=self.header_builder()
+                headers=self.build_headers()
             )
             raise_for_status_improved(response)
             return ExtractionCoverageInfo.parse_obj(response.json())
@@ -46,17 +50,20 @@ class SatIntegrationAsync:
                     "rfc": rfc,
                     "dateToAnalyze": date_to_analyze.isoformat()
                 },
-                headers=self.header_builder()
+                headers=self.build_headers()
             )
             raise_for_status_improved(response)
             return None
 
 
-class SatIntegrationSync:
+class SatIntegrationSyncModule:
 
-    def __init__(self, base_url, header_builder):
-        self.base_url = base_url
-        self.header_builder = header_builder
+    def __init__(self, altscore_client):
+        self.altscore_client = altscore_client
+        self.base_url = self.altscore_client._borrower_central_base_url
+
+    def build_headers(self):
+        return build_headers(self)
 
     def check_extractions(
             self, rfc: str, date_to_analyze: dt.datetime, days_of_tolerance: int) -> ExtractionCoverageInfo:
@@ -68,7 +75,7 @@ class SatIntegrationSync:
                     "dateToAnalyze": date_to_analyze.isoformat(),
                     "daysOfTolerance": days_of_tolerance
                 },
-                headers=self.header_builder()
+                headers=self.build_headers()
             )
             raise_for_status_improved(response)
             return ExtractionCoverageInfo.parse_obj(response.json())
@@ -82,7 +89,7 @@ class SatIntegrationSync:
                     "rfc": rfc,
                     "dateToAnalyze": date_to_analyze.isoformat()
                 },
-                headers=self.header_builder()
+                headers=self.build_headers()
             )
             raise_for_status_improved(response)
             return None

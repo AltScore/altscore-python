@@ -13,10 +13,12 @@ from altscore.borrower_central.model.points_of_contact import PointOfContactAsyn
 from altscore.borrower_central.model.relationships import RelationshipsAsyncModule, RelationshipsSyncModule
 from altscore.borrower_central.model.store_packages import PackagesAsyncModule, PackagesSyncModule
 from altscore.borrower_central.model.store_sources import SourcesAsyncModule, SourcesSyncModule
+from altscore.borrower_central.model.workflows import WorkflowsAsyncModule, WorkflowsSyncModule
 from altscore.borrower_central.model.evaluators import EvaluatorAsyncModule, EvaluatorSyncModule
 from altscore.borrower_central.model.forms import FormsAsyncModule, FormsSyncModule
 from altscore.borrower_central.model.policy_alerts import AlertsAsyncModule, AlertsSyncModule
 from altscore.borrower_central.model.policy_rules import RulesAsyncModule, RulesSyncModule
+from altscore.borrower_central.model.integrations.sat import SatIntegrationAsyncModule, SatIntegrationSyncModule
 
 
 class BorrowerCentralAsync:
@@ -30,6 +32,7 @@ class BorrowerCentralAsync:
         self.documents = DocumentsAsyncModule(altscore_client)
         self.executions = ExecutionAsyncModule(altscore_client)
         self.identities = IdentitiesAsyncModule(altscore_client)
+        self.workflows = WorkflowsAsyncModule(altscore_client)
         self.points_of_contact = PointOfContactAsyncModule(altscore_client)
         self.relationships = RelationshipsAsyncModule(altscore_client)
         self.report_generator = ReportGeneratorAsyncModule(altscore_client)
@@ -41,6 +44,7 @@ class BorrowerCentralAsync:
         self.forms = FormsAsyncModule(altscore_client)
         self.alerts = AlertsAsyncModule(altscore_client)
         self.rules = RulesAsyncModule(altscore_client)
+        self.sat_integration = SatIntegrationAsyncModule(altscore_client)
 
 
 class BorrowerCentralSync:
@@ -53,6 +57,7 @@ class BorrowerCentralSync:
         self.data_models = DataModelSyncModule(altscore_client)
         self.documents = DocumentsSyncModule(altscore_client)
         self.executions = ExecutionSyncModule(altscore_client)
+        self.workflows = WorkflowsSyncModule(altscore_client)
         self.identities = IdentitiesSyncModule(altscore_client)
         self.points_of_contact = PointOfContactSyncModule(altscore_client)
         self.relationships = RelationshipsSyncModule(altscore_client)
@@ -65,3 +70,4 @@ class BorrowerCentralSync:
         self.forms = FormsSyncModule(altscore_client)
         self.alerts = AlertsSyncModule(altscore_client)
         self.rules = RulesSyncModule(altscore_client)
+        self.sat_integration = SatIntegrationSyncModule(altscore_client)
