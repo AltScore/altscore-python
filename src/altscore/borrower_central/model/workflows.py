@@ -14,6 +14,7 @@ class WorkFlowDataAPIDO(BaseModel):
     label: Optional[str] = Field(alias="label")
     description: Optional[str] = Field(alias="description")
     context: Optional[str] = Field(alias="context")
+    flow_definition: Optional[dict] = Field(alias="flowDefinition")
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
 
@@ -35,6 +36,7 @@ class CreateWorkflowDTO(BaseModel):
     execution_mode: str = Field(alias="executionMode")
     description: Optional[str] = Field(alias="description")
     context: Optional[str] = Field(alias="context", default=None)
+    flow_definition: Optional[dict] = Field(alias="flowDefinition")
     route: Lambda = Field(alias="route")
 
     class Config:
@@ -47,6 +49,7 @@ class UpdateWorkflowDTO(BaseModel):
     label: Optional[str] = Field(alias="label")
     description: Optional[str] = Field(alias="description")
     route: Lambda = Field(alias="route")
+    flow_definition: Optional[dict] = Field(alias="flowDefinition")
 
     class Config:
         populate_by_name = True
