@@ -1,5 +1,5 @@
 from typing import Optional, List, Dict, Any
-
+import httpx
 from altscore.altdata.model.data_request import RequestResult
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
@@ -26,6 +26,7 @@ class PackageAPIDTO(BaseModel):
 class CreatePackageDTO(BaseModel):
     borrower_id: Optional[str] = Field(alias="borrowerId")
     source_id: Optional[str] = Field(alias="sourceId", default=None)
+    workflow_id: Optional[str] = Field(alias="workflowId", default=None)
     alias: Optional[str] = Field(alias="alias", default=None)
     label: Optional[str] = Field(alias="label", default=None)
     content_type: Optional[str] = Field(alias="contentType", default=None)
@@ -59,6 +60,25 @@ class PackagesSyncModule(GenericSyncModule):
                          create_data_model=CreatePackageDTO,
                          update_data_model=None,
                          resource="stores/packages")
+
+    def force_stale(self, package_id: Optional[str] = None, borrower_id: Optional[str] = None,
+                    workflow_id: Optional[str] = None, alias: Optional[str] = None):
+        if package_id is None and borrower_id is None and workflow_id is None and alias is None:
+            raise ValueError("At least one of package_id, borrower_id, workflow_id or alias must be provided")
+        body = {
+            "packageId": package_id,
+            "borrowerId": borrower_id,
+            "workflowId": workflow_id,
+            "alias": alias,
+            "forcedStale": True
+        }
+        body = {k: v for k, v in body.items() if v is not None}
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            client.put(
+                "/stores/packages/stale",
+                json=body,
+                headers=self.build_headers()
+            )
 
     def create_from_altdata_request_result(
             self, borrower_id: str, source_id: str, altdata_request_result: RequestResult,
