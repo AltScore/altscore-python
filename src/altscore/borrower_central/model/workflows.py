@@ -104,7 +104,7 @@ class WorkflowsSyncModule(GenericSyncModule):
         if workflow_id is not None:
             with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
                 response = client.post(
-                    f"/workflows/{workflow_id}/execute",
+                    f"/v1/workflows/{workflow_id}/execute",
                     json=workflow_input,
                     headers=self.build_headers()
                 )
@@ -114,7 +114,7 @@ class WorkflowsSyncModule(GenericSyncModule):
         elif workflow_alias is not None and workflow_version is not None:
             with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
                 response = client.post(
-                    f"/workflows/{workflow_alias}/{workflow_version}/execute",
+                    f"/v1/workflows/{workflow_alias}/{workflow_version}/execute",
                     json=workflow_input,
                     headers=self.build_headers()
                 )
@@ -143,7 +143,7 @@ class WorkflowsAsyncModule(GenericAsyncModule):
         if workflow_id is not None:
             async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
                 response = await client.post(
-                    f"/workflows/{workflow_id}/execute",
+                    f"/v1/workflows/{workflow_id}/execute",
                     json=workflow_input,
                     headers=self.build_headers()
                 )
@@ -153,7 +153,7 @@ class WorkflowsAsyncModule(GenericAsyncModule):
         elif workflow_alias is not None and workflow_version is not None:
             async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
                 response = await client.post(
-                    f"/workflows/{workflow_alias}/{workflow_version}/execute",
+                    f"/v1/workflows/{workflow_alias}/{workflow_version}/execute",
                     json=workflow_input,
                     headers=self.build_headers()
                 )
