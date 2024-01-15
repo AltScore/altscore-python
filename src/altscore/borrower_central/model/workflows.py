@@ -106,7 +106,8 @@ class WorkflowsSyncModule(GenericSyncModule):
                 response = client.post(
                     f"/v1/workflows/{workflow_id}/execute",
                     json=workflow_input,
-                    headers=self.build_headers()
+                    headers=self.build_headers(),
+                    timeout=900
                 )
                 raise_for_status_improved(response)
                 return WorkflowExecutionResponseAPIDTO.parse_obj(response.json())
@@ -116,7 +117,8 @@ class WorkflowsSyncModule(GenericSyncModule):
                 response = client.post(
                     f"/v1/workflows/{workflow_alias}/{workflow_version}/execute",
                     json=workflow_input,
-                    headers=self.build_headers()
+                    headers=self.build_headers(),
+                    timeout=900
                 )
                 raise_for_status_improved(response)
                 return WorkflowExecutionResponseAPIDTO.parse_obj(response.json())
@@ -145,7 +147,8 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                 response = await client.post(
                     f"/v1/workflows/{workflow_id}/execute",
                     json=workflow_input,
-                    headers=self.build_headers()
+                    headers=self.build_headers(),
+                    timeout=900
                 )
                 raise_for_status_improved(response)
                 return WorkflowExecutionResponseAPIDTO.parse_obj(response.json())
@@ -155,7 +158,8 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                 response = await client.post(
                     f"/v1/workflows/{workflow_alias}/{workflow_version}/execute",
                     json=workflow_input,
-                    headers=self.build_headers()
+                    headers=self.build_headers(),
+                    timeout=900
                 )
                 raise_for_status_improved(response)
                 return WorkflowExecutionResponseAPIDTO.parse_obj(response.json())
