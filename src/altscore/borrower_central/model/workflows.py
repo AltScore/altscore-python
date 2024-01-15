@@ -96,10 +96,13 @@ class WorkflowsSyncModule(GenericSyncModule):
                          update_data_model=UpdateWorkflowDTO,
                          resource="workflows")
 
-    def execute(self, workflow_id: Optional[str], workflow_alias: Optional[str], workflow_version: Optional[str],
-                workflow_input: Dict):
+    def execute(self, workflow_input: Dict,
+                workflow_id: Optional[str] = None,
+                workflow_alias: Optional[str] = None,
+                workflow_version: Optional[str] = None,
+                ):
         if workflow_id is not None:
-            with httpx.Client(base_url=self.altscore_client._altdata_base_url) as client:
+            with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
                 response = client.post(
                     f"/workflows/{workflow_id}/execute",
                     json=workflow_input,
@@ -109,7 +112,7 @@ class WorkflowsSyncModule(GenericSyncModule):
                 return WorkflowExecutionResponseAPIDTO.parse_obj(response.json())
 
         elif workflow_alias is not None and workflow_version is not None:
-            with httpx.Client(base_url=self.altscore_client._altdata_base_url) as client:
+            with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
                 response = client.post(
                     f"/workflows/{workflow_alias}/{workflow_version}/execute",
                     json=workflow_input,
@@ -131,10 +134,14 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                          update_data_model=UpdateWorkflowDTO,
                          resource="workflows")
 
-    async def execute(self, workflow_id: Optional[str], workflow_alias: Optional[str], workflow_version: Optional[str],
-                      workflow_input: Dict):
+    async def execute(self,
+                      workflow_input: Dict,
+                      workflow_id: Optional[str] = None,
+                      workflow_alias: Optional[str] = None,
+                      workflow_version: Optional[str] = None,
+                      ):
         if workflow_id is not None:
-            async with httpx.AsyncClient(base_url=self.altscore_client._altdata_base_url) as client:
+            async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
                 response = await client.post(
                     f"/workflows/{workflow_id}/execute",
                     json=workflow_input,
@@ -144,7 +151,7 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                 return WorkflowExecutionResponseAPIDTO.parse_obj(response.json())
 
         elif workflow_alias is not None and workflow_version is not None:
-            async with httpx.AsyncClient(base_url=self.altscore_client._altdata_base_url) as client:
+            async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
                 response = await client.post(
                     f"/workflows/{workflow_alias}/{workflow_version}/execute",
                     json=workflow_input,
