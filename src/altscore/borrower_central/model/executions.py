@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field, validator
 from typing import Optional, Dict, Any, List
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule, convert_to_dash_case
-from altscore.borrower_central.model.attachments import AttachmentInput
+from altscore.borrower_central.model.attachments import AttachmentInput, AttachmentAPIDTO
 from altscore.common.http_errors import raise_for_status_improved
 import httpx
 import datetime as dt
@@ -174,7 +174,7 @@ class ExecutionSync(GenericSyncResource):
                 timeout=300
             )
             raise_for_status_improved(response)
-            return response.json()
+            return [AttachmentAPIDTO.parse_obj(e) for e in response.json()]
 
     def get_state(self):
         with httpx.Client() as client:
@@ -247,7 +247,7 @@ class ExecutionAsync(GenericAsyncResource):
                 timeout=300
             )
             raise_for_status_improved(response)
-            return response.json()
+            return [AttachmentAPIDTO.parse_obj(e) for e in response.json()]
 
     async def get_state(self):
         async with httpx.AsyncClient() as client:

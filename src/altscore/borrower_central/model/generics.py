@@ -1,7 +1,7 @@
 import httpx
 from pydantic import BaseModel, Field
 from altscore.borrower_central.helpers import build_headers
-from altscore.borrower_central.model.attachments import Attachment, AttachmentInput
+from altscore.borrower_central.model.attachments import AttachmentAPIDTO, AttachmentInput
 from altscore.common.http_errors import raise_for_status_improved
 from typing import Dict
 import stringcase
@@ -52,7 +52,7 @@ class GenericSyncResource(GenericBase):
                     timeout=300
                 )
                 raise_for_status_improved(response)
-                self.attachments = [Attachment.parse_obj(e) for e in response.json()]
+                self.attachments = [AttachmentAPIDTO.parse_obj(e) for e in response.json()]
         return self.attachments
 
     def post_attachment(self, attachment: Dict):
@@ -105,7 +105,7 @@ class GenericAsyncResource(GenericBase):
                     timeout=300
                 )
                 raise_for_status_improved(response)
-                self.attachments = [Attachment.parse_obj(e) for e in response.json()]
+                self.attachments = [AttachmentAPIDTO.parse_obj(e) for e in response.json()]
         return self.attachments
 
     async def post_attachment(self, attachment: Dict):

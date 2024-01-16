@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
 
 
-class Attachment(BaseModel):
+class AttachmentAPIDTO(BaseModel):
     id: str = Field(alias="id")
     url: Optional[str] = Field(alias="url", default=None)
     file_extension: Optional[str] = Field(alias="fileExtension", default=None)
