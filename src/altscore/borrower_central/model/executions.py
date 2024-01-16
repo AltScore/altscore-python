@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, validator
 from typing import Optional, Dict, Any, List
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
-    GenericSyncModule, GenericAsyncModule
+    GenericSyncModule, GenericAsyncModule, convert_to_dash_case
 from altscore.borrower_central.model.attachments import AttachmentInput
 from altscore.common.http_errors import raise_for_status_improved
 import httpx
@@ -152,6 +152,9 @@ class ExecutionSync(GenericSyncResource):
     def _output(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}/output"
 
+    def _output_attachments(self, resource_id):
+        return f"{self.base_url}/v1/{self.resource}/{resource_id}/output/attachments"
+
     def get_output(self):
         with httpx.Client() as client:
             response = client.get(
@@ -162,6 +165,16 @@ class ExecutionSync(GenericSyncResource):
             raise_for_status_improved(response)
             self.output = ExecutionOutputDataAPIDTO.parse_obj(response.json())
         return self.output
+
+    def get_output_attachments(self):
+        with httpx.Client() as client:
+            response = client.get(
+                self._output_attachments(self.data.id),
+                headers=self._header_builder(),
+                timeout=300
+            )
+            raise_for_status_improved(response)
+            return response.json()
 
     def get_state(self):
         with httpx.Client() as client:
@@ -201,20 +214,75 @@ class ExecutionSync(GenericSyncResource):
 
 class ExecutionAsync(GenericAsyncResource):
     output: ExecutionOutputDataAPIDTO
+    state: ExecutionState
 
     def __init__(self, base_url, header_builder, data: Dict):
         super().__init__(base_url, "executions", header_builder, ExecutionAPIDTO.parse_obj(data))
 
+    def _state(self, resource_id):
+        return f"{self.base_url}/v1/{self.resource}/{resource_id}/state"
+
+    def _output(self, resource_id):
+        return f"{self.base_url}/v1/{self.resource}/{resource_id}/output"
+
+    def _output_attachments(self, resource_id):
+        return f"{self.base_url}/v1/{self.resource}/{resource_id}/output/attachments"
+
     async def get_output(self):
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                self._get_output(self.data.id),
+                self._output(self.data.id),
                 headers=self._header_builder(),
                 timeout=300
             )
             raise_for_status_improved(response)
             self.output = ExecutionOutputDataAPIDTO.parse_obj(response.json())
         return self.output
+
+    async def get_output_attachments(self):
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                self._output_attachments(self.data.id),
+                headers=self._header_builder(),
+                timeout=300
+            )
+            raise_for_status_improved(response)
+            return response.json()
+
+    async def get_state(self):
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                self._state(self.data.id),
+                headers=self._header_builder(),
+                timeout=300
+            )
+            raise_for_status_improved(response)
+            self.state = ExecutionState.parse_obj(response.json())
+        return self.state
+
+    async def put_state(self, state: Dict):
+        state_obj = ExecutionState.parse_obj(state)
+        async with httpx.AsyncClient() as client:
+            response = await client.put(
+                self._state(self.data.id),
+                headers=self._header_builder(),
+                json=state_obj.to_api_dto(),
+                timeout=300
+            )
+            raise_for_status_improved(response)
+            self.state = state_obj
+
+    async def put_output(self, output: Dict):
+        output_obj = CreateExecutionOutput.parse_obj(output)
+        async with httpx.AsyncClient() as client:
+            response = await client.put(
+                self._output(self.data.id),
+                headers=self._header_builder(),
+                json=output_obj.dict(by_alias=True),
+                timeout=300
+            )
+            raise_for_status_improved(response)
+            await self.get_output()
 
 
 class ExecutionSyncModule(GenericSyncModule):
@@ -223,9 +291,41 @@ class ExecutionSyncModule(GenericSyncModule):
         super().__init__(altscore_client, sync_resource=ExecutionSync, retrieve_data_model=ExecutionAPIDTO,
                          create_data_model=CreateExecutionDTO, update_data_model=None, resource="executions")
 
+    def query_outputs(self, **kwargs):
+        query_params = {}
+        for k, v in kwargs.items():
+            if v is not None:
+                query_params[convert_to_dash_case(k)] = v
+
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                f"/v1/{self.resource}/outputs",
+                headers=self.build_headers(),
+                params=query_params,
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return [ExecutionOutputDataAPIDTO.parse_obj(x) for x in response.json()]
+
 
 class ExecutionAsyncModule(GenericAsyncModule):
 
     def __init__(self, altscore_client):
         super().__init__(altscore_client, async_resource=ExecutionAsync, retrieve_data_model=ExecutionAPIDTO,
                          create_data_model=CreateExecutionDTO, update_data_model=None, resource="executions")
+
+    async def query_outputs(self, **kwargs):
+        query_params = {}
+        for k, v in kwargs.items():
+            if v is not None:
+                query_params[convert_to_dash_case(k)] = v
+
+        async with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                f"/v1/{self.resource}/outputs",
+                headers=self.build_headers(),
+                params=query_params,
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return [ExecutionOutputDataAPIDTO.parse_obj(x) for x in response.json()]
