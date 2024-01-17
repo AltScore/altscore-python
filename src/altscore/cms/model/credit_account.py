@@ -2,11 +2,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 import httpx
 from altscore.common.http_errors import raise_for_status_improved
-
-
-class Money(BaseModel):
-    amount: str
-    currency: str
+from altscore.cms.model.common import Money
 
 
 class Reservation(BaseModel):

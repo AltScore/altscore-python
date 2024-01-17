@@ -21,16 +21,17 @@ import datetime as dt
 class BorrowerAPIDTO(BaseModel):
     id: str = Field(alias="id")
     persona: str = Field(alias="persona")
-    form_id: Optional[str] = Field(alias="formId", default=None)
+    avatar_url: Optional[str] = Field(alias="avatarUrl")
     label: Optional[str] = Field(alias="label")
     tags: List[str] = Field(alias="tags", default=[])
+    cms_client_ids: Optional[List[str]] = Field(alias="cmsClientIds", default=[])
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
 
     class Config:
         populate_by_name = True
         allow_population_by_field_name = True
-        populate_by_alias = True
+        allow_population_by_alias = True
 
 
 class CreateBorrowerDTO(BaseModel):
@@ -59,7 +60,6 @@ class BorrowerBase:
 
     def __init__(self, base_url):
         self.base_url = base_url
-
 
     def _authorizations(
             self, borrower_id: str, sort_by: Optional[str] = None, key: Optional[str] = None,
@@ -503,6 +503,27 @@ class BorrowerAsync(BorrowerBase):
                 data=package_data
             ) for package_data in data]
 
+    async def associate_cms_client_id(self, cms_client_id: str):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.post(
+                f"/v1/borrowers/{self.data.id}/cms-client-ids/{cms_client_id}",
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
+            return None
+
+    async def put_cms_client_ids(self, cms_client_ids: List[str]):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.put(
+                f"/v1/borrowers/{self.data.id}/cms-client-ids",
+                headers=self._header_builder(),
+                json={
+                    "cmsClientIds": cms_client_ids
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
     def __str__(self):
         return str(self.data)
 
@@ -652,6 +673,27 @@ class BorrowerSync(BorrowerBase):
                 header_builder=self._header_builder,
                 data=package_data
             ) for package_data in data]
+
+    def associate_cms_client_id(self, cms_client_id: str):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.post(
+                f"/v1/borrowers/{self.data.id}/cms-client-ids/{cms_client_id}",
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
+            return None
+
+    def put_cms_client_ids(self, cms_client_ids: List[str]):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.put(
+                f"/v1/borrowers/{self.data.id}/cms-client-ids",
+                headers=self._header_builder(),
+                json={
+                    "cmsClientIds": cms_client_ids
+                }
+            )
+            raise_for_status_improved(response)
+            return None
 
     def __str__(self):
         return str(self.data)

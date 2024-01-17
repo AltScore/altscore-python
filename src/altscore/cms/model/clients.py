@@ -2,10 +2,9 @@ from pydantic import BaseModel, Field
 from typing import Optional
 import httpx
 from altscore.common.http_errors import raise_for_status_improved
-from altscore.cms.helpers import build_headers
 from altscore.cms.model.credit_account import CreditAccountSync, CreditAccountAsync, CreditAccountAPIDTO
+from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule
 import datetime as dt
-import asyncio
 
 
 class ClientAPIDTO(BaseModel):
@@ -47,12 +46,14 @@ class CreateClientDTO(BaseModel):
 
 class ClientBase:
 
+    @staticmethod
     def _credit_accounts(
-            self, client_id: str, product_family: str
+            client_id: str, product_family: str
     ) -> (str, Optional[dict]):
         return f"/v2/clients/{client_id}/credit-accounts/{product_family}"
 
-    def _status(self, client_id: str):
+    @staticmethod
+    def _status(client_id: str):
         return f"/v2/clients/{client_id}/status"
 
 
@@ -112,7 +113,8 @@ class ClientSync(ClientBase):
     data: ClientAPIDTO
 
     def __init__(self, base_url, header_builder, data: ClientAPIDTO):
-        super().__init__(base_url)
+        super().__init__()
+        self.base_url = base_url
         self._header_builder = header_builder
         self.data: ClientAPIDTO = data
 
@@ -152,14 +154,25 @@ class ClientSync(ClientBase):
             raise_for_status_improved(response)
             self.data = ClientAPIDTO.parse_obj(response.json())
 
+    def __str__(self):
+        return str(self.data)
 
-class ClientsAsyncModule:
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.data.id})"
+
+
+class ClientsAsyncModule(GenericAsyncModule):
 
     def __init__(self, altscore_client):
-        self.altscore_client = altscore_client
-
-    def build_headers(self, partner_id: Optional[str] = None):
-        return build_headers(self, partner_id=partner_id)
+        super().__init__(
+            altscore_client=altscore_client,
+            async_resource=ClientAsync,
+            retrieve_data_model=ClientAPIDTO,
+            create_data_model=CreateClientDTO,
+            update_data_model=None,
+            resource="clients",
+            resource_version="v2"
+        )
 
     async def create(self, new_entity_data: dict):
         if new_entity_data.get("partnerId") is None:
@@ -174,77 +187,19 @@ class ClientsAsyncModule:
             raise_for_status_improved(response)
             return response.json()["clientId"]
 
-    async def retrieve(self, client_identifier: str) -> Optional[ClientAsync]:
-        """
-        Retrieves a Client Object using a client identifier.
-        The identifier can be the clientId, taxId or externalId (needs the X-Partner-Id header)
-        """
-        async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
-            response = await client.get(
-                f"/v2/clients/{client_identifier}",
-                headers=self.build_headers(),
-                timeout=120
-            )
-            if response.status_code == 404:
-                return None
-            raise_for_status_improved(response)
-            return ClientAsync(
-                base_url=self.altscore_client._cms_base_url,
-                header_builder=self.build_headers,
-                data=ClientAPIDTO.parse_obj(response.json())
-            )
 
-    async def retrieve_many(self, limit=100, offset=0):
-        """
-        Retrieves many clients paginated
-        """
-        async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
-            response = await client.get(
-                f"/v2/clients?limit={limit}&offset={offset}",
-                params={
-                    "limit": limit,
-                    "offset": offset
-                },
-                headers=self.build_headers(),
-                timeout=120
-            )
-            raise_for_status_improved(response)
-            return [
-                ClientAsync(
-                    base_url=self.altscore_client._cms_base_url,
-                    header_builder=self.build_headers,
-                    data=ClientAPIDTO.parse_obj(item)
-                ) for item in response.json()
-            ]
-
-    async def retrieve_all(self):
-        """
-        Retrieves all clients
-        """
-        async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
-            response = await client.get(
-                f"/v2/clients",
-                headers=self.build_headers(),
-                timeout=30
-            )
-            raise_for_status_improved(response)
-            total_count = int(response.headers["x-total-count"])
-
-        clients = []
-        for offset in range(0, total_count, 100):
-            clients.append(self.retrieve_many(limit=100, offset=offset))
-        clients = await asyncio.gather(*clients)
-        clients = [item for sublist in clients for item in sublist]
-        return clients
-
-
-class ClientsSyncModule:
+class ClientsSyncModule(GenericSyncModule):
 
     def __init__(self, altscore_client):
-        self.altscore_client = altscore_client
-
-    def build_headers(self, partner_id: Optional[str] = None):
-        return build_headers(self, partner_id=partner_id or self.altscore_client.partner_id)
+        super().__init__(
+            altscore_client=altscore_client,
+            sync_resource=ClientSync,
+            retrieve_data_model=ClientAPIDTO,
+            create_data_model=CreateClientDTO,
+            update_data_model=None,
+            resource="clients",
+            resource_version="v2"
+        )
 
     def create(self, new_entity_data: dict):
         if new_entity_data.get("partnerId") is None:
@@ -258,63 +213,3 @@ class ClientsSyncModule:
             )
             raise_for_status_improved(response)
             return response.json()["clientId"]
-
-    def retrieve(self, client_identifier: str) -> Optional[ClientSync]:
-        """
-        Retrieves a Client Object using a client identifier.
-        The identifier can be the clientId, taxId or externalId (needs the X-Partner-Id header)
-        """
-        with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
-            response = client.get(
-                f"/v2/clients/{client_identifier}",
-                headers=self.build_headers(),
-                timeout=120
-            )
-            if response.status_code == 404:
-                return None
-            raise_for_status_improved(response)
-            return ClientSync(
-                base_url=self.altscore_client._cms_base_url,
-                header_builder=self.build_headers,
-                data=ClientAPIDTO.parse_obj(response.json())
-            )
-
-    def retrieve_many(self, limit=100, offset=0):
-        """
-        Retrieves many clients paginated
-        """
-        with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
-            response = client.get(
-                f"/v2/clients?limit={limit}&offset={offset}",
-                params={
-                    "limit": limit,
-                    "offset": offset
-                },
-                headers=self.build_headers(),
-                timeout=120
-            )
-            raise_for_status_improved(response)
-            return [
-                ClientSync(
-                    base_url=self.altscore_client._cms_base_url,
-                    header_builder=self.build_headers,
-                    data=ClientAPIDTO.parse_obj(item)
-                ) for item in response.json()
-            ]
-
-    def retrieve_all(self):
-        """
-        Retrieves all clients by taking account of x-total-count header
-        """
-        with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
-            response = client.get(
-                f"/v2/clients",
-                headers=self.build_headers(),
-                timeout=30
-            )
-            raise_for_status_improved(response)
-            total_count = int(response.headers["x-total-count"])
-            clients = []
-            for offset in range(0, total_count, 100):
-                clients += self.retrieve_many(limit=100, offset=offset)
-            return clients

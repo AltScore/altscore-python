@@ -7,9 +7,9 @@ me = altscore.partner_id
 # %%
 new_client = altscore.cms.clients.create(
     {
-        "externalId": "test-123456789",
+        "externalId": "test-12345678910",
         "legalName": "Test Client S.A",
-        "taxId": "123456789",
+        "taxId": "12345678910",
         "dba": "Test Client",
         "address": "Test Address",
         "emailAddress": "paulo@test.com"
@@ -23,3 +23,8 @@ ca = client.get_credit_account(product_family="dpa")
 ca.update(amount="100000.00", currency="ARS", reason="Línea inicial")
 #%%
 print(ca.data)
+#%%
+debts = altscore.cms.debts.retrieve_all()
+#%%
+active_debts = altscore.cms.debts.retrieve_all(status="active")
+#%%
