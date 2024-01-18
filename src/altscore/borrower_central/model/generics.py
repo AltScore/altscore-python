@@ -1,5 +1,5 @@
 import httpx
-from pydantic import BaseModel, Field
+import json
 from altscore.borrower_central.helpers import build_headers
 from altscore.borrower_central.model.attachments import AttachmentAPIDTO, AttachmentInput
 from altscore.common.http_errors import raise_for_status_improved
@@ -82,6 +82,7 @@ class GenericSyncResource(GenericBase):
     def __repr__(self):
         return f"{self.__class__.__name__}({self.data.id})"
 
+
 class GenericAsyncResource(GenericBase):
 
     def __init__(self, base_url, resource, header_builder, data):
@@ -146,6 +147,18 @@ class GenericSyncModule:
 
     def build_headers(self):
         return build_headers(self)
+
+    def print_create_schema(self):
+        print(json.dumps(self.create_data_model.schema(), indent=2, ensure_ascii=False))
+
+    def print_update_schema(self):
+        if self.update_data_model is None:
+            print("No update schema")
+            return
+        print(json.dumps(self.update_data_model.schema(), indent=2, ensure_ascii=False))
+
+    def print_retrieve_schema(self):
+        print(json.dumps(self.retrieve_data_model.schema(), indent=2, ensure_ascii=False))
 
     def retrieve(self, resource_id: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
@@ -235,6 +248,18 @@ class GenericAsyncModule:
 
     def build_headers(self):
         return build_headers(self)
+
+    def print_create_schema(self):
+        print(json.dumps(self.create_data_model.schema(), indent=2, ensure_ascii=False))
+
+    def print_update_schema(self):
+        if self.update_data_model is None:
+            print("No update schema")
+            return
+        print(json.dumps(self.update_data_model.schema(), indent=2, ensure_ascii=False))
+
+    def print_retrieve_schema(self):
+        print(json.dumps(self.retrieve_data_model.schema(), indent=2, ensure_ascii=False))
 
     async def retrieve(self, resource_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:

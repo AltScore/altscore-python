@@ -317,10 +317,10 @@ class BorrowersSyncModule:
             raise_for_status_improved(response)
             return None
 
-    def retrieve(self, borrower_id: str):
+    def retrieve(self, resource_id: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
-                f"/v1/borrowers/{borrower_id}",
+                f"/v1/borrowers/{resource_id}",
                 headers=self.build_headers(),
                 timeout=120
             )
@@ -382,6 +382,40 @@ class BorrowerAsync(BorrowerBase):
                 header_builder=self._header_builder,
                 data=document_data
             ) for document_data in data]
+
+    async def get_identity_by_key(self, key: str) -> Optional[IdentityAsync]:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            url, query = self._identities(self.data.id, key=key)
+            response = await client.get(
+                url,
+                headers=self._header_builder(),
+                params=query
+            )
+            data = response.json()
+            if len(data) == 0:
+                return None
+            return IdentityAsync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                data=data[0]
+            )
+
+    async def get_borrower_field_by_key(self, key: str) -> Optional[BorrowerFieldAsync]:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            url, query = self._borrower_fields(self.data.id, key=key)
+            response = await client.get(
+                url,
+                headers=self._header_builder(),
+                params=query
+            )
+            data = response.json()
+            if len(data) == 0:
+                return None
+            return BorrowerFieldAsync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                data=data[0]
+            )
 
     async def get_identities(self, **kwargs) -> List[IdentityAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
@@ -553,6 +587,40 @@ class BorrowerSync(BorrowerBase):
                 header_builder=self._header_builder,
                 data=document_data
             ) for document_data in data]
+
+    def get_identity_by_key(self, key: str) -> Optional[IdentitySync]:
+        with httpx.Client(base_url=self.base_url) as client:
+            url, query = self._identities(self.data.id, key=key)
+            response = client.get(
+                url,
+                headers=self._header_builder(),
+                params=query
+            )
+            data = response.json()
+            if len(data) == 0:
+                return None
+            return IdentitySync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                data=data[0]
+            )
+
+    def get_borrower_field_by_key(self, key: str) -> Optional[BorrowerFieldSync]:
+        with httpx.Client(base_url=self.base_url) as client:
+            url, query = self._borrower_fields(self.data.id, key=key)
+            response = client.get(
+                url,
+                headers=self._header_builder(),
+                params=query
+            )
+            data = response.json()
+            if len(data) == 0:
+                return None
+            return BorrowerFieldSync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                data=data[0]
+            )
 
     def get_identities(self, **kwargs) -> List[IdentitySync]:
         with httpx.Client(base_url=self.base_url) as client:

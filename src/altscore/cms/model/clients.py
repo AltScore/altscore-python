@@ -175,12 +175,18 @@ class ClientsAsyncModule(GenericAsyncModule):
         )
 
     async def create(self, new_entity_data: dict):
-        if new_entity_data.get("partnerId") is None:
-            new_entity_data["partnerId"] = self.altscore_client.partner_id
+        partner_id = new_entity_data.get("partnerId")
+        if partner_id is None:
+            partner_id = self.altscore_client.partner_id
+            new_entity_data["partnerId"] = partner_id
+
+        headers = self.build_headers()
+        # if this is a client creation with "impersonation" of a partner we need to set the x-partner-id header
+        headers["x-partner-id"] = partner_id
         async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
             response = await client.post(
                 "/v2/clients",
-                headers=self.build_headers(),
+                headers=headers,
                 json=CreateClientDTO.parse_obj(new_entity_data).dict(by_alias=True),
                 timeout=120
             )
@@ -202,12 +208,18 @@ class ClientsSyncModule(GenericSyncModule):
         )
 
     def create(self, new_entity_data: dict):
-        if new_entity_data.get("partnerId") is None:
-            new_entity_data["partnerId"] = self.altscore_client.partner_id
+        partner_id = new_entity_data.get("partnerId")
+        if partner_id is None:
+            partner_id = self.altscore_client.partner_id
+            new_entity_data["partnerId"] = partner_id
+
+        headers = self.build_headers()
+        # if this is a client creation with "impersonation" of a partner we need to set the x-partner-id header
+        headers["x-partner-id"] = partner_id
         with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
             response = client.post(
                 "/v2/clients",
-                headers=self.build_headers(),
+                headers=headers,
                 json=CreateClientDTO.parse_obj(new_entity_data).dict(by_alias=True),
                 timeout=120
             )

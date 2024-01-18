@@ -7,7 +7,7 @@ from typing import Optional, Dict
 class AddressAPIDTO(BaseModel):
     id: str = Field(alias="id")
     borrower_id: str = Field(alias="borrowerId")
-    label: Optional[str] = Field(alias="label")
+    label: Optional[str] = Field(alias="label", default=None)
     street1: str = Field(alias="street1")
     street2: Optional[str] = Field(alias="street2", default=None)
     neighborhood: Optional[str] = Field(alias="neighborhood", default=None)
@@ -74,7 +74,7 @@ class AddressAPIDTO(BaseModel):
 
 class CreateAddressAPIDTO(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
-    label: Optional[str] = Field(alias="label")
+    label: Optional[str] = Field(alias="label", default=None)
     street1: str = Field(alias="street1")
     street2: Optional[str] = Field(alias="street2", default=None)
     neighborhood: Optional[str] = Field(alias="neighborhood", default=None)
