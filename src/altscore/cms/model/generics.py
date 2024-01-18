@@ -152,38 +152,28 @@ class GenericAsyncModule:
             raise_for_status_improved(response)
             return None
 
-    async def retrieve_many(self, limit=100, offset=0):
+    async def retrieve_all(self, **kwargs):
+        query_params = {}
+        for k, v in kwargs.items():
+            if v is not None:
+                query_params[convert_to_dash_case(k)] = v
+        query_params["limit"] = 10
+        query_params["offset"] = 0
         async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
             response = await client.get(
-                f"/{self.resource_version}/debts",
-                params={
-                    "limit": limit,
-                    "offset": offset
-                },
-                headers=self.build_headers(),
-                timeout=120
-            )
-            raise_for_status_improved(response)
-            return [self.async_resource(
-                base_url=self.altscore_client._cms_base_url,
-                header_builder=self.build_headers,
-                data=self.retrieve_data_model.parse_obj(e)
-            ) for e in response.json()]
-
-    async def retrieve_all(self):
-        async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
-            response = await client.get(
-                f"/{self.resource_version}/debts",
+                f"/{self.resource_version}/{self.resource}",
+                params=query_params,
                 headers=self.build_headers(),
                 timeout=30
             )
             raise_for_status_improved(response)
             total_count = int(response.headers["x-total-count"])
-        debts = []
-        for offset in range(0, total_count, 100):
-            debts.append(self.retrieve_many(limit=100, offset=offset))
-        debts = [item for sublist in debts for item in sublist]
-        return debts
+        resources = []
+        # TODO: this is not optimal, we should use asyncio.gather and a batch size
+        for offset in range(0, total_count, 1000):
+            resources.append(await self.query(limit=1000, offset=offset, **kwargs))
+        resources = [item for sublist in resources for item in sublist]
+        return resources
 
     async def query(self, **kwargs):
         query_params = {}
