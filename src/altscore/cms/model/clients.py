@@ -174,6 +174,25 @@ class ClientsAsyncModule(GenericAsyncModule):
             resource_version="v2"
         )
 
+    async def retrieve_by_external_id(self, external_id: str, partner_id: str = None) -> Optional[ClientAsync]:
+        headers = self.build_headers()
+        if partner_id is not None:
+            headers["x-partner-id"] = partner_id
+
+        async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
+            response = await client.get(
+                f"/{self.resource_version}/{self.resource}/{external_id}",
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                return self.async_resource(
+                    base_url=self.altscore_client._cms_base_url,
+                    header_builder=self.build_headers,
+                    data=self.retrieve_data_model.parse_obj(response.json())
+                )
+            return None
+
     async def create(self, new_entity_data: dict):
         partner_id = new_entity_data.get("partnerId")
         if partner_id is None:
@@ -188,7 +207,7 @@ class ClientsAsyncModule(GenericAsyncModule):
                 "/v2/clients",
                 headers=headers,
                 json=CreateClientDTO.parse_obj(new_entity_data).dict(by_alias=True),
-                timeout=120
+                timeout=30
             )
             raise_for_status_improved(response)
             return response.json()["clientId"]
@@ -207,6 +226,26 @@ class ClientsSyncModule(GenericSyncModule):
             resource_version="v2"
         )
 
+    def retrieve_by_external_id(self, external_id: str, partner_id: str = None) -> Optional[ClientSync]:
+
+        headers = self.build_headers()
+        if partner_id is not None:
+            headers["x-partner-id"] = partner_id
+
+        with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
+            response = client.get(
+                f"/{self.resource_version}/{self.resource}/{external_id}",
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                return self.sync_resource(
+                    base_url=self.altscore_client._cms_base_url,
+                    header_builder=self.build_headers,
+                    data=self.retrieve_data_model.parse_obj(response.json())
+                )
+            return None
+
     def create(self, new_entity_data: dict):
         partner_id = new_entity_data.get("partnerId")
         if partner_id is None:
@@ -221,7 +260,7 @@ class ClientsSyncModule(GenericSyncModule):
                 "/v2/clients",
                 headers=headers,
                 json=CreateClientDTO.parse_obj(new_entity_data).dict(by_alias=True),
-                timeout=120
+                timeout=30
             )
             raise_for_status_improved(response)
             return response.json()["clientId"]

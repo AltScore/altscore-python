@@ -20,12 +20,23 @@ class GenericSyncModule:
     def build_headers(self):
         return build_headers(self)
 
+    def create(self, new_entity_data: dict):
+        with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
+            response = client.post(
+                f"/{self.resource_version}/{self.resource}",
+                headers=self.build_headers(),
+                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return self.retrieve_data_model.parse_obj(response.json()).id
+
     def retrieve(self, resource_id: str):
         with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
             response = client.get(
                 f"/{self.resource_version}/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
-                timeout=120
+                timeout=30
             )
             if response.status_code == 200:
                 return self.sync_resource(
@@ -41,7 +52,7 @@ class GenericSyncModule:
                 f"/{self.resource_version}/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
                 json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True),
-                timeout=120
+                timeout=30
             )
             raise_for_status_improved(response)
             return resource_id
@@ -51,7 +62,7 @@ class GenericSyncModule:
             response = client.delete(
                 f"/{self.resource_version}/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
-                timeout=120
+                timeout=30
             )
             raise_for_status_improved(response)
             return None
@@ -89,7 +100,7 @@ class GenericSyncModule:
                 f"/{self.resource_version}/{self.resource}",
                 headers=self.build_headers(),
                 params=query_params,
-                timeout=120
+                timeout=30
             )
             raise_for_status_improved(response)
             return [self.sync_resource(
@@ -114,12 +125,23 @@ class GenericAsyncModule:
     def build_headers(self):
         return build_headers(self)
 
+    async def create(self, new_entity_data: dict):
+        async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
+            response = await client.post(
+                f"/{self.resource_version}/{self.resource}",
+                headers=self.build_headers(),
+                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return self.retrieve_data_model.parse_obj(response.json()).id
+
     async def retrieve(self, resource_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
             response = await client.get(
                 f"/{self.resource_version}/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
-                timeout=120
+                timeout=30
             )
             if response.status_code == 200:
                 return self.async_resource(
@@ -137,7 +159,7 @@ class GenericAsyncModule:
                 f"/{self.resource_version}/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
                 json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True),
-                timeout=120
+                timeout=30
             )
             raise_for_status_improved(response)
             return resource_id
@@ -147,7 +169,7 @@ class GenericAsyncModule:
             response = await client.delete(
                 f"/{self.resource_version}/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
-                timeout=120
+                timeout=30
             )
             raise_for_status_improved(response)
             return None
@@ -186,7 +208,7 @@ class GenericAsyncModule:
                 f"/{self.resource_version}/{self.resource}",
                 headers=self.build_headers(),
                 params=query_params,
-                timeout=120
+                timeout=30
             )
             raise_for_status_improved(response)
             return [self.async_resource(

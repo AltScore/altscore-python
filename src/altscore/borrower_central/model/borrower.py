@@ -558,6 +558,22 @@ class BorrowerAsync(BorrowerBase):
             raise_for_status_improved(response)
             return None
 
+    async def get_main_address(self) -> Optional[AddressAsync]:
+        addresses = await self.get_addresses(sort_by="priority", per_page=1)
+        if len(addresses) == 0:
+            return None
+        else:
+            return addresses[0]
+
+    async def get_main_point_of_contact(self, contact_method: str) -> Optional[PointOfContactAsync]:
+        points_of_contact = await self.get_points_of_contact(
+            contact_method=contact_method, sort_by="priority", per_page=1
+        )
+        if len(points_of_contact) == 0:
+            return None
+        else:
+            return points_of_contact[0]
+
     def __str__(self):
         return str(self.data)
 
@@ -762,6 +778,22 @@ class BorrowerSync(BorrowerBase):
             )
             raise_for_status_improved(response)
             return None
+
+    def get_main_address(self) -> Optional[AddressSync]:
+        addresses = self.get_addresses(sort_by="priority", per_page=1)
+        if len(addresses) == 0:
+            return None
+        else:
+            return addresses[0]
+
+    def get_main_point_of_contact(self, contact_method: str) -> Optional[PointOfContactSync]:
+        points_of_contact = self.get_points_of_contact(
+            contact_method=contact_method, sort_by="priority", per_page=1
+        )
+        if len(points_of_contact) == 0:
+            return None
+        else:
+            return points_of_contact[0]
 
     def __str__(self):
         return str(self.data)

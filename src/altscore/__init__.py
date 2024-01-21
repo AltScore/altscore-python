@@ -77,62 +77,65 @@ class AltScore(AltScoreBase):
         return self._partner_id
 
     def new_cms_client_from_borrower(
-            self, borrower_id: str, legal_name_identity_key: str, tax_id_identity_key: str,
-            external_id_identity_key: str = None, dba_identity_key: Optional[str] = None,
+            self, borrower_id: str,
+            legal_name_identity_key: Optional[str] = None,
+            tax_id_identity_key: Optional[str] = None,
+            external_id_identity_key: str = None,
+            dba_identity_key: Optional[str] = None,
             partner_id: Optional[str] = None
     ) -> str:
-        from uuid import uuid4
+
+        def find_identity_value_or_error(_borrower, identity_key):
+            identity = _borrower.get_identity_by_key(key=identity_key)
+            if identity is None:
+                raise LookupError(f"Identity {identity_key} not found for borrower {borrower_id}")
+            else:
+                return identity.data.value
+
         borrower = self.borrower_central.borrowers.retrieve(borrower_id)
         if borrower is None:
             raise LookupError(f"Borrower {borrower_id} not found")
 
         if external_id_identity_key is not None:
-            external_id = borrower.get_identities(key=external_id_identity_key)
-            if len(external_id) == 0:
-                external_id = borrower_id
-            else:
-                external_id = external_id.data.value
+            external_id = find_identity_value_or_error(borrower, external_id_identity_key)
         else:
             external_id = borrower_id
 
-        legal_name = borrower.get_identities(key=legal_name_identity_key)
-        if len(legal_name) == 0:
-            legal_name = "N/A"
+        if legal_name_identity_key is not None:
+            legal_name = find_identity_value_or_error(borrower, legal_name_identity_key)
         else:
-            legal_name = legal_name[0].data.value
+            legal_name = "N/A"
 
         if borrower.data.persona == "business":
-            dba = borrower.get_identities(key=dba_identity_key)
-            if len(dba) == 0:
-                dba = legal_name
+            if dba_identity_key is not None:
+                dba = find_identity_value_or_error(borrower, dba_identity_key)
             else:
-                dba = dba[0].data.value
+                dba = legal_name
         else:
             dba = "N/A"
 
-        tax_id = borrower.get_identities(key=tax_id_identity_key)
-        if len(tax_id) == 0:
-            tax_id = f"N/A-{uuid4()}"
+        if tax_id_identity_key is not None:
+            tax_id = find_identity_value_or_error(borrower, tax_id_identity_key)
         else:
-            tax_id = tax_id[0].data.value
+            tax_id = "N/A"
 
-        addresses = borrower.get_addresses(sort_by="priority", per_page=1)
-        if len(addresses) == 0:
+        address = borrower.get_main_address()
+        if address is None:
             address = "N/A"
         else:
-            address = addresses[0].data.get_address_str()
+            address = address.data.get_address_str()
 
-        email = borrower.get_points_of_contact(contact_method="email", sort_by="priority", per_page=1)
-        if len(email) == 0:
+        email = borrower.get_main_point_of_contact(contact_method="email")
+        if email is None:
             email = "N/A"
         else:
-            email = email[0].data.value
+            email = email.data.value
 
-        phone = borrower.get_points_of_contact(contact_method="phone", sort_by="priority", per_page=1)
-        if len(phone) == 0:
+        phone = borrower.get_main_point_of_contact(contact_method="phone")
+        if phone is None:
             phone = "N/A"
         else:
-            phone = phone[0].data.value
+            phone = phone.data.value
 
         client_data = {
             "externalId": external_id,
@@ -181,56 +184,57 @@ class AltScoreAsync(AltScoreBase):
             external_id_identity_key: str = None, dba_identity_key: Optional[str] = None,
             partner_id: Optional[str] = None
     ) -> str:
-        from uuid import uuid4
+        async def find_identity_value_or_error(_borrower, identity_key):
+            identity = await _borrower.get_identity_by_key(key=identity_key)
+            if identity is None:
+                raise LookupError(f"Identity {identity_key} not found for borrower {borrower_id}")
+            else:
+                return identity.data.value
+
         borrower = await self.borrower_central.borrowers.retrieve(borrower_id)
         if borrower is None:
             raise LookupError(f"Borrower {borrower_id} not found")
 
         if external_id_identity_key is not None:
-            external_id = await borrower.get_identities(key=external_id_identity_key)
-            if external_id is None:
-                external_id = borrower_id
-            else:
-                external_id = external_id.data.value
-
-        legal_name = await borrower.get_identities(key=legal_name_identity_key)
-        if legal_name is None:
-            legal_name = "N/A"
+            external_id = await find_identity_value_or_error(borrower, external_id_identity_key)
         else:
-            legal_name = legal_name.data.value
+            external_id = borrower_id
+
+        if legal_name_identity_key is not None:
+            legal_name = await find_identity_value_or_error(borrower, legal_name_identity_key)
+        else:
+            legal_name = "N/A"
 
         if borrower.data.persona == "business":
-            dba = await borrower.get_identities(key=dba_identity_key)
-            if dba is None:
-                dba = legal_name
+            if dba_identity_key is not None:
+                dba = await find_identity_value_or_error(borrower, dba_identity_key)
             else:
-                dba = dba.data.value
+                dba = legal_name
         else:
             dba = "N/A"
 
-        tax_id = await borrower.get_identities(key=tax_id_identity_key)
-        if tax_id is None:
-            tax_id = f"N/A-{uuid4()}"
+        if tax_id_identity_key is not None:
+            tax_id = await find_identity_value_or_error(borrower, tax_id_identity_key)
         else:
-            tax_id = tax_id.data.value
+            tax_id = "N/A"
 
-        addresses = await borrower.get_addresses(sort_by="priority", per_page=1)
-        if len(addresses) == 0:
+        address = await borrower.get_main_address()
+        if address is None:
             address = "N/A"
         else:
-            address = addresses[0].data.get_address_str()
+            address = address.data.get_address_str()
 
-        email = await borrower.get_points_of_contact(contact_method="email", sort_by="priority", per_page=1)
-        if len(email) == 0:
+        email = await borrower.get_main_point_of_contact(contact_method="email")
+        if email is None:
             email = "N/A"
         else:
-            email = email[0].data.value
+            email = email.data.value
 
-        phone = await borrower.get_points_of_contact(contact_method="phone", sort_by="priority", per_page=1)
-        if len(phone) == 0:
+        phone = await borrower.get_main_point_of_contact(contact_method="phone")
+        if phone is None:
             phone = "N/A"
         else:
-            phone = phone[0].data.value
+            phone = phone.data.value
 
         client_data = {
             "externalId": external_id,

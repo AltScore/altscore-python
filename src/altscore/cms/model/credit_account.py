@@ -57,6 +57,9 @@ class CreditAccountAPIDTO(BaseModel):
         allow_population_by_field_name = True
         populate_by_alias = True
 
+    def is_enabled(self):
+        return self.status == "enabled"
+
 
 class CreditAccountAsync:
     data: CreditAccountAPIDTO

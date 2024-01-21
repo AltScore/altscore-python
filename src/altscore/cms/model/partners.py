@@ -2,20 +2,35 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 import httpx
 from altscore.common.http_errors import raise_for_status_improved
+from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule
 from altscore.cms.helpers import build_headers
 
 
 class PartnerAPIDTO(BaseModel):
-    avatar: Optional[str] = Field(alias="avatar")
+    id: str = Field(alias="partnerId")
+    avatar: Optional[str] = Field(alias="avatar", default="")
     name: str = Field(alias="name")
     short_name: str = Field(alias="shortName")
     partner_id: str = Field(alias="partnerId")
     status: str = Field(alias="status")
+    is_aggregator: bool = Field(alias="isAggregator")
     email: str = Field(alias="email")
-    legal_name: Optional[str] = Field(alias="legalName", default=None)
-    address: Optional[str] = Field(alias="address", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        populate_by_alias = True
+
+
+class CreatePartnerDTO(BaseModel):
+    name: str = Field(alias="name")
+    short_name: str = Field(alias="shortName")
+    email: str = Field(alias="email")
+    tax_id: str = Field(alias="taxId")
+    is_aggregator: Optional[bool] = Field(alias="isAggregator", default=False)
+    avatar: Optional[str] = Field(alias="avatar", default="")
 
     class Config:
         populate_by_name = True
@@ -60,13 +75,33 @@ class PartnerSync(PartnerBase):
         return f"{self.__class__.__name__}({self.data.partner_id})"
 
 
-class PartnersAsyncModule:
+class PartnersAsyncModule(GenericAsyncModule):
 
     def __init__(self, altscore_client):
-        self.altscore_client = altscore_client
+        super().__init__(
+            altscore_client=altscore_client,
+            async_resource=PartnerAsync,
+            retrieve_data_model=PartnerAPIDTO,
+            create_data_model=CreatePartnerDTO,
+            update_data_model=None,
+            resource="partners",
+            resource_version="v2"
+        )
 
-    def build_headers(self, partner_id: Optional[str] = None):
-        return build_headers(self, partner_id=partner_id)
+    async def create(self, new_entity_data: dict):
+        async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
+            response = await client.post(
+                "/v2/partners",
+                headers=self.build_headers(),
+                json=CreatePartnerDTO.parse_obj(new_entity_data).dict(by_alias=True),
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return PartnerAsync(
+                base_url=self.altscore_client._cms_base_url,
+                header_builder=self.build_headers,
+                data=PartnerAPIDTO.parse_obj(response.json())
+            )
 
     async def me(self) -> PartnerAsync:
         async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
@@ -84,13 +119,18 @@ class PartnersAsyncModule:
             )
 
 
-class PartnersSyncModule:
+class PartnersSyncModule(GenericSyncModule):
 
     def __init__(self, altscore_client):
-        self.altscore_client = altscore_client
-
-    def build_headers(self, partner_id: Optional[str] = None):
-        return build_headers(self, partner_id=partner_id or self.altscore_client.partner_id)
+        super().__init__(
+            altscore_client=altscore_client,
+            sync_resource=PartnerSync,
+            retrieve_data_model=PartnerAPIDTO,
+            create_data_model=CreatePartnerDTO,
+            update_data_model=None,
+            resource="partners",
+            resource_version="v2"
+        )
 
     def me(self) -> PartnerSync:
         with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:

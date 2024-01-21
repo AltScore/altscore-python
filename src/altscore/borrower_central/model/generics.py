@@ -5,6 +5,7 @@ from altscore.borrower_central.model.attachments import AttachmentAPIDTO, Attach
 from altscore.common.http_errors import raise_for_status_improved
 from typing import Dict
 import stringcase
+from polyfactory.factories.pydantic_factory import ModelFactory
 
 
 class GenericBase:
@@ -148,17 +149,11 @@ class GenericSyncModule:
     def build_headers(self):
         return build_headers(self)
 
-    def print_create_schema(self):
-        print(json.dumps(self.create_data_model.schema(), indent=2, ensure_ascii=False))
-
-    def print_update_schema(self):
-        if self.update_data_model is None:
-            print("No update schema")
-            return
-        print(json.dumps(self.update_data_model.schema(), indent=2, ensure_ascii=False))
-
-    def print_retrieve_schema(self):
-        print(json.dumps(self.retrieve_data_model.schema(), indent=2, ensure_ascii=False))
+    def print_sample_create(self):
+        class SampleFactory(ModelFactory[self.create_data_model]):
+            ...
+        sample = SampleFactory.build()
+        print(json.dumps(sample.dict(by_alias=True), indent=2, ensure_ascii=False))
 
     def retrieve(self, resource_id: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
