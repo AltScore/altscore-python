@@ -152,7 +152,7 @@ class PackagesSyncModule(GenericSyncModule):
                 package_id = self.create_from_altdata_request_result(borrower_id=borrower_id,
                                                                      source_id=source_call_summary.source_id,
                                                                      altdata_request_result=altdata_request_result)
-                packages[source_call_summary.source_id] = package_id
+                packages[f"{source_call_summary.source_id}_{source_call_summary.version}"] = package_id
         return packages
 
 
@@ -240,5 +240,5 @@ class PackagesAsyncModule(GenericAsyncModule):
                     borrower_id=borrower_id,
                     source_id=source_call_summary.source_id,
                     altdata_request_result=altdata_request_result)
-                packages[source_call_summary.source_id] = package_id
+                packages[f"{source_call_summary.source_id}_{source_call_summary.version}"] = package_id
         return packages
