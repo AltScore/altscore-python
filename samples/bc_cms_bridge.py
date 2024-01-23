@@ -23,8 +23,8 @@ altscore.borrower_central.data_models.create(
 )
 altscore.borrower_central.data_models.create(
     {
-        "key": "pdv_id",
-        "label": "PDV ID",
+        "key": "id_pdv_arca",
+        "label": "PDV ID ARCA",
         "entity_type": "identity",
         "priority": -1
     },
@@ -67,7 +67,7 @@ altscore.borrower_central.identities.create(
 altscore.borrower_central.identities.create(
     {
         "borrowerId": borrower_id,
-        "key": "pdv_id",
+        "key": "id_pdv_arca",
         "value": "55555",
     },
 )

@@ -160,7 +160,7 @@ class GenericSyncModule:
             response = client.get(
                 f"/v1/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
-                timeout=120
+                timeout=30
             )
             if response.status_code == 200:
                 return self.sync_resource(
@@ -176,7 +176,7 @@ class GenericSyncModule:
                 f"/v1/{self.resource}",
                 headers=self.build_headers(),
                 json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
-                timeout=120
+                timeout=30
             )
             if response.status_code == 409 and update_if_exists:
                 data = response.json()
@@ -194,7 +194,7 @@ class GenericSyncModule:
                 f"/v1/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
                 json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True),
-                timeout=120
+                timeout=30
             )
             raise_for_status_improved(response)
             return resource_id
@@ -204,7 +204,7 @@ class GenericSyncModule:
             response = client.delete(
                 f"/v1/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
-                timeout=120
+                timeout=30
             )
             raise_for_status_improved(response)
             return None
@@ -220,7 +220,7 @@ class GenericSyncModule:
                 f"/v1/{self.resource}",
                 headers=self.build_headers(),
                 params=query_params,
-                timeout=120
+                timeout=30
             )
             raise_for_status_improved(response)
             return [self.sync_resource(
@@ -261,7 +261,7 @@ class GenericAsyncModule:
             response = await client.get(
                 f"/v1/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
-                timeout=120
+                timeout=30
             )
             if response.status_code == 200:
                 return self.async_resource(
@@ -279,7 +279,7 @@ class GenericAsyncModule:
                 f"/v1/{self.resource}",
                 headers=self.build_headers(),
                 json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
-                timeout=120
+                timeout=30
             )
             if response.status_code == 409 and update_if_exists:
                 if response.status_code == 409 and update_if_exists:
@@ -297,7 +297,7 @@ class GenericAsyncModule:
                 f"/v1/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
                 json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True),
-                timeout=120
+                timeout=30
             )
             raise_for_status_improved(response)
             return resource_id
@@ -307,7 +307,7 @@ class GenericAsyncModule:
             response = await client.delete(
                 f"/v1/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
-                timeout=120
+                timeout=30
             )
             raise_for_status_improved(response)
             return None
@@ -323,7 +323,7 @@ class GenericAsyncModule:
                 f"/v1/{self.resource}",
                 headers=self.build_headers(),
                 params=query_params,
-                timeout=120
+                timeout=30
             )
             raise_for_status_improved(response)
             return [self.async_resource(

@@ -4,11 +4,13 @@ from altscore.altdata.model.data_request import RequestResult
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 from pydantic import BaseModel, Field
+import datetime as dt
+from dateutil.parser import parse as parse_date
 
 
 class PackageAPIDTO(BaseModel):
     id: str = Field(alias="id")
-    borrower_id: Optional[str] = Field(alias="borrowerId")
+    borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
     source_id: Optional[str] = Field(alias="sourceId", default=None)
     content_type: Optional[str] = Field(alias="contentType", default=None)
     alias: Optional[str] = Field(alias="alias", default=None)
@@ -24,7 +26,7 @@ class PackageAPIDTO(BaseModel):
 
 
 class CreatePackageDTO(BaseModel):
-    borrower_id: Optional[str] = Field(alias="borrowerId")
+    borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
     source_id: Optional[str] = Field(alias="sourceId", default=None)
     workflow_id: Optional[str] = Field(alias="workflowId", default=None)
     alias: Optional[str] = Field(alias="alias", default=None)
@@ -60,6 +62,46 @@ class PackagesSyncModule(GenericSyncModule):
                          create_data_model=CreatePackageDTO,
                          update_data_model=None,
                          resource="stores/packages")
+
+    def retrieve_package_by_alias(self, alias: str, data_age: Optional[dt.timedelta] = None) -> Optional[PackageSync]:
+        packages = self.query(alias=alias, sort_by="createdAt", sort_order="desc")
+        if len(packages) > 0:
+            package = packages[0]
+            if data_age is None:
+                return package
+            else:
+                if parse_date(package.created_at) + data_age > dt.datetime.now(dt.timezone.utc):
+                    return package
+        return None
+
+    def retrieve_source_package(
+            self, source_id: str, borrower_id: Optional[str] = None, data_age: Optional[dt.timedelta] = None
+    ) -> Optional[PackageSync]:
+        if borrower_id:
+            packages = self.query(borrower_id=borrower_id, source_id=source_id, sort_by="createdAt", sort_order="desc")
+        else:
+            packages = self.query(source_id=source_id, sort_by="createdAt", sort_order="desc")
+        if len(packages) > 0:
+            package = packages[0]
+            if data_age is None:
+                return package
+            else:
+                if parse_date(package.created_at) + data_age > dt.datetime.now(dt.timezone.utc):
+                    return package
+        return None
+
+    def retrieve_workflow_package(
+            self, workflow_id: str, alias: str, data_age: Optional[dt.timedelta] = None
+    ) -> Optional[PackageSync]:
+        packages = self.query(workflow_id=workflow_id, alias=alias, sort_by="createdAt", sort_order="desc")
+        if len(packages) > 0:
+            package = packages[0]
+            if data_age is None:
+                return package
+            else:
+                if parse_date(package.created_at) + data_age > dt.datetime.now(dt.timezone.utc):
+                    return package
+        return None
 
     def force_stale(self, package_id: Optional[str] = None, borrower_id: Optional[str] = None,
                     workflow_id: Optional[str] = None, alias: Optional[str] = None):
@@ -123,6 +165,49 @@ class PackagesAsyncModule(GenericAsyncModule):
                          create_data_model=CreatePackageDTO,
                          update_data_model=None,
                          resource="/stores/packages")
+
+    async def retrieve_package_by_alias(
+            self, alias: str, data_age: Optional[dt.timedelta] = None
+    ) -> Optional[PackageAsync]:
+        packages = await self.query(alias=alias, sort_by="createdAt", sort_order="desc")
+        if len(packages) > 0:
+            package = packages[0]
+            if data_age is None:
+                return package
+            else:
+                if parse_date(package.created_at) + data_age > dt.datetime.now(dt.timezone.utc):
+                    return package
+        return None
+
+    async def retrieve_source_package(
+            self, source_id: str, borrower_id: Optional[str] = None, data_age: Optional[dt.timedelta] = None
+    ) -> Optional[PackageAsync]:
+        if borrower_id:
+            packages = await self.query(borrower_id=borrower_id, source_id=source_id, sort_by="createdAt",
+                                        sort_order="desc")
+        else:
+            packages = await self.query(source_id=source_id, sort_by="createdAt", sort_order="desc")
+        if len(packages) > 0:
+            package = packages[0]
+            if data_age is None:
+                return package
+            else:
+                if parse_date(package.created_at) + data_age > dt.datetime.now(dt.timezone.utc):
+                    return package
+        return None
+
+    async def retrieve_workflow_package(
+            self, workflow_id: str, alias: str, data_age: Optional[dt.timedelta] = None
+    ) -> Optional[PackageAsync]:
+        packages = await self.query(workflow_id=workflow_id, alias=alias, sort_by="createdAt", sort_order="desc")
+        if len(packages) > 0:
+            package = packages[0]
+            if data_age is None:
+                return package
+            else:
+                if parse_date(package.created_at) + data_age > dt.datetime.now(dt.timezone.utc):
+                    return package
+        return None
 
     async def create_from_altdata_request_result(
             self, borrower_id: str, source_id: str, altdata_request_result: RequestResult,
