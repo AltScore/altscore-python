@@ -3,19 +3,21 @@ from typing import Optional, List
 import httpx
 from altscore.borrower_central.helpers import build_headers
 from altscore.borrower_central.model.identities import IdentitySync, IdentityAsync
-from altscore.borrower_central.model.documents import DocumentSync, DocumentAsync, DocumentsAsyncModule, \
-    DocumentsSyncModule
+from altscore.borrower_central.model.documents import DocumentSync, DocumentAsync
 from altscore.borrower_central.model.addresses import AddressSync, AddressAsync
 from altscore.borrower_central.model.points_of_contact import PointOfContactSync, PointOfContactAsync
 from altscore.borrower_central.model.borrower_fields import BorrowerFieldSync, BorrowerFieldAsync
 from altscore.borrower_central.model.authorizations import AuthorizationSync, AuthorizationAsync
 from altscore.borrower_central.model.relationships import RelationshipSync, RelationshipAsync
+
+from altscore.borrower_central.model.stages import StageSync, StageAsync
+from altscore.borrower_central.model.risk_ratings import RiskRatingSync, RiskRatingAsync
+from altscore.borrower_central.model.policy_alerts import AlertSync, AlertAsync
+
 from altscore.common.http_errors import raise_for_status_improved
 from altscore.borrower_central.model.store_packages import PackageSync, PackageAsync
 from altscore.borrower_central.model.executions import ExecutionSync, ExecutionAsync
 from altscore.borrower_central.utils import clean_dict
-
-import datetime as dt
 
 
 class BorrowerAPIDTO(BaseModel):
@@ -195,6 +197,22 @@ class BorrowerBase:
         }
         return f"{self.base_url}/v1/executions", clean_dict(query)
 
+    def _alerts(
+            self, borrower_id: str, alert_id: Optional[str], rule_id: Optional[str],
+            rule_code: Optional[str], level: Optional[str], reference_id: Optional[str],
+            is_dismissed: Optional[bool]
+    ) -> (str, dict):
+        query = {
+            "borrower-id": borrower_id,
+            "alert-id": alert_id,
+            "rule-id": rule_id,
+            "rule-code": rule_code,
+            "level": level,
+            "reference-id": reference_id,
+            "is-dismissed": is_dismissed
+        }
+        return f"{self.base_url}/v1/alerts", clean_dict(query)
+
 
 class BorrowersAsyncModule:
 
@@ -368,6 +386,58 @@ class BorrowerAsync(BorrowerBase):
         self._header_builder = header_builder
         self.data = data
 
+    async def get_stage(self) -> StageAsync:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/stage",
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
+            return StageAsync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                data=response.json()
+            )
+
+    async def set_stage(self, stage: str, reference_id: Optional[str] = None):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.put(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/stage",
+                headers=self._header_builder(),
+                json={
+                    "value": stage,
+                    "referenceId": reference_id
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    async def get_risk_rating(self) -> RiskRatingAsync:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/risk-rating",
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
+            return RiskRatingAsync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                data=response.json()
+            )
+
+    async def set_risk_rating(self, risk_rating: str, reference_id: Optional[str] = None):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.put(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/risk-rating",
+                headers=self._header_builder(),
+                json={
+                    "value": risk_rating,
+                    "referenceId": reference_id
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
     async def get_documents(self, **kwargs) -> List[DocumentAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._documents(self.data.id, **kwargs)
@@ -537,6 +607,22 @@ class BorrowerAsync(BorrowerBase):
                 data=package_data
             ) for package_data in data]
 
+    async def get_alerts(self, **kwargs) -> List[AlertAsync]:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            url, query = self._alerts(self.data.id, **kwargs)
+            response = await client.get(
+                url,
+                headers=self._header_builder(),
+                params=query
+            )
+            data = response.json()
+            alerts = [AlertAsync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                data=alert_data
+            ) for alert_data in data]
+            return alerts
+
     async def associate_cms_client_id(self, cms_client_id: str):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
@@ -588,6 +674,58 @@ class BorrowerSync(BorrowerBase):
         super().__init__(base_url)
         self._header_builder = header_builder
         self.data = data
+
+    def get_stage(self):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.get(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/stage",
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
+            return StageSync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                data=response.json()
+            )
+
+    def set_stage(self, stage: str, reference_id: Optional[str] = None):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.put(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/stage",
+                headers=self._header_builder(),
+                json={
+                    "value": stage,
+                    "referenceId": reference_id
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    def get_risk_rating(self):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.get(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/risk-rating",
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
+            return RiskRatingSync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                data=response.json()
+            )
+
+    def set_risk_rating(self, risk_rating: str, reference_id: Optional[str] = None):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.put(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/risk-rating",
+                headers=self._header_builder(),
+                json={
+                    "value": risk_rating,
+                    "referenceId": reference_id
+                }
+            )
+            raise_for_status_improved(response)
+            return None
 
     def get_documents(self, **kwargs) -> List[DocumentSync]:
         with httpx.Client(base_url=self.base_url) as client:
@@ -757,6 +895,22 @@ class BorrowerSync(BorrowerBase):
                 header_builder=self._header_builder,
                 data=package_data
             ) for package_data in data]
+
+    def get_alerts(self, **kwargs) -> List[AlertSync]:
+        with httpx.Client(base_url=self.base_url) as client:
+            url, query = self._alerts(self.data.id, **kwargs)
+            response = client.get(
+                url,
+                headers=self._header_builder(),
+                params=query
+            )
+            data = response.json()
+            alerts = [AlertSync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                data=alert_data
+            ) for alert_data in data]
+            return alerts
 
     def associate_cms_client_id(self, cms_client_id: str):
         with httpx.Client(base_url=self.base_url) as client:

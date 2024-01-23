@@ -7,6 +7,14 @@ b1 = altscore.borrower_central.borrowers.retrieve("e7b20bd9-53ba-4a9f-8206-cc13f
 i1 = b1.get_identities()
 print(i1[1])
 #%%
+b1.set_stage("verified")
+b1.set_risk_rating("A")
+#%%
+stage = b1.get_stage()
+risk_rating = b1.get_risk_rating()
+print(stage)
+print(risk_rating)
+#%%
 borrower = altscore.borrower_central.borrowers.find_one_by_identity("full_name", "")
 # %%
 documents = borrower.get_documents()
