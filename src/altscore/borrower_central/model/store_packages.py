@@ -70,7 +70,7 @@ class PackagesSyncModule(GenericSyncModule):
             if data_age is None:
                 return package
             else:
-                if parse_date(package.created_at) + data_age > dt.datetime.now():
+                if parse_date(package.created_at) + data_age > dt.datetime.utcnow():
                     return package
         return None
 
@@ -86,7 +86,7 @@ class PackagesSyncModule(GenericSyncModule):
             if data_age is None:
                 return package
             else:
-                if parse_date(package.created_at) + data_age > dt.datetime.now():
+                if parse_date(package.created_at) + data_age > dt.datetime.utcnow():
                     return package
         return None
 
@@ -99,7 +99,7 @@ class PackagesSyncModule(GenericSyncModule):
             if data_age is None:
                 return package
             else:
-                if parse_date(package.created_at) + data_age > dt.datetime.now():
+                if parse_date(package.created_at) + data_age > dt.datetime.utcnow():
                     return package
         return None
 
@@ -177,7 +177,7 @@ class PackagesAsyncModule(GenericAsyncModule):
             if data_age is None:
                 return package
             else:
-                if parse_date(package.created_at) + data_age > dt.datetime.now():
+                if parse_date(package.created_at) + data_age > dt.datetime.utcnow():
                     return package
         return None
 
@@ -194,7 +194,7 @@ class PackagesAsyncModule(GenericAsyncModule):
             if data_age is None:
                 return package
             else:
-                if parse_date(package.created_at) + data_age > dt.datetime.now():
+                if parse_date(package.created_at) + data_age > dt.datetime.utcnow():
                     return package
         return None
 
@@ -207,7 +207,7 @@ class PackagesAsyncModule(GenericAsyncModule):
             if data_age is None:
                 return package
             else:
-                if parse_date(package.created_at) + data_age > dt.datetime.now():
+                if parse_date(package.created_at) + data_age > dt.datetime.utcnow():
                     return package
         return None
 
