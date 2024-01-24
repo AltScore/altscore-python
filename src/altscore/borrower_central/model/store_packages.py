@@ -125,6 +125,7 @@ class PackagesSyncModule(GenericSyncModule):
     def create_from_altdata_request_result(
             self, borrower_id: str, source_id: str, altdata_request_result: RequestResult,
             attachments: Optional[List[Dict[str, Any]]] = None,
+            content_type: str = "json"
     ):
         package = altdata_request_result.to_package(source_id)
         bc_source_id = "AD_{}_{}".format(source_id, package["version"])
@@ -132,6 +133,7 @@ class PackagesSyncModule(GenericSyncModule):
             "borrower_id": borrower_id,
             "source_id": bc_source_id,
             "content": package,
+            "content_type": content_type,
         }
         created_package_id = self.create(package_data)
         if attachments is not None:
@@ -211,7 +213,7 @@ class PackagesAsyncModule(GenericAsyncModule):
 
     async def create_from_altdata_request_result(
             self, borrower_id: str, source_id: str, altdata_request_result: RequestResult,
-            attachments: Optional[List[Dict[str, Any]]] = None,
+            attachments: Optional[List[Dict[str, Any]]] = None, content_type: str = "json"
     ):
         package = altdata_request_result.to_package(source_id)
         bc_source_id = "AD_{}_{}".format(source_id, package["version"])
@@ -219,6 +221,7 @@ class PackagesAsyncModule(GenericAsyncModule):
             "borrower_id": borrower_id,
             "source_id": bc_source_id,
             "content": package,
+            "content_type": content_type,
         }
         created_package_id = await self.create(package_data)
         if attachments is not None:
