@@ -82,7 +82,8 @@ class GenericSyncModule:
                 timeout=30
             )
             raise_for_status_improved(response)
-            total_count = int(response.headers["x-total-count"])
+            # If no header then total_count is 0
+            total_count = int(response.headers.get("x-total-count", 0))
         resources = []
         for offset in range(0, total_count, 100):
             resources.append(self.query(limit=100, offset=offset, **kwargs))
