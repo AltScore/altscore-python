@@ -14,15 +14,10 @@ setup(
     author="AltScore",
     author_email="developers@altscore.ai",
     license="MIT",
-    entry_points={
-        'console_scripts': [
-            'altscore-tui = tui.app:main',  # Adjust the path and function
-        ],
-    },
+    entry_points={},
     classifiers=[
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3.80",
         "Operating System :: OS Independent",
     ],
     install_requires=[
@@ -35,8 +30,7 @@ setup(
     ],
     extras_require={
         "dev": ["pytest>=7.0", "twine>=4.0.2", "textual", "pandas", "tabulate"],
-        "data-tools": ["pandas", "tabulate"],
-        "cli": ["textual", "pandas", "tabulate"],
+        "data-tools": ["pandas", "tabulate"]
     },
     python_requires=">=3.8",
 )
