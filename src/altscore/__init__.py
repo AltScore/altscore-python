@@ -1,29 +1,76 @@
 import asyncio
 
+import httpx
+from decouple import config
 from altscore.borrower_central import BorrowerCentralAsync, BorrowerCentralSync
 from altscore.altdata import AltDataSync, AltDataAsync
 from altscore.cms import CMSSync, CMSAsync
 from typing import Optional, Union
 import warnings
+from common.http_errors import raise_for_status_improved
 
 warnings.filterwarnings("ignore")
 
 
 class AltScoreBase:
-    _altdata_base_url = "https://data.altscore.ai"
 
-    def __init__(self, api_key: str = None, tenant: str = "default",
-                 environment: str = "production", user_token: Optional[str] = None,
+    def __init__(self, tenant: str = "default", environment: str = "production",
+                 api_key: str = None, user_token: Optional[str] = None,
+                 email: Optional[str] = None, password: Optional[str] = None,
+                 client_id: Optional[str] = None, client_secret: Optional[str] = None,
                  form_token: Optional[str] = None, partner_id: Optional[str] = None):
         self.environment = environment
-        self.api_key = api_key
-        self.user_token = user_token
         self.tenant = tenant
         self.form_token = form_token
         self._partner_id = partner_id
+        self.api_key = api_key
+        self.user_token = user_token
+        self.renew_token = None
+
+    def auth(self, email: Optional[str] = None, password: Optional[str] = None,
+             client_id: Optional[str] = None, client_secret: Optional[str] = None) -> None:
+        if email is not None and password is not None:
+            self.user_token = login_with_user_credentials(
+                email=email,
+                password=password,
+                environment=self.environment,
+                tenant=self.tenant
+            )
+        elif client_id is not None and client_secret is not None:
+            self.user_token, self.renew_token = login_with_client_credentials(
+                client_id=client_id,
+                client_secret=client_secret,
+                environment=self.environment,
+                tenant=self.tenant
+            )
+        else:
+            raise ValueError("Either email and password or client_id and client_secret must be provided")
+
+    def renew_token(self) -> None:
+        if self.renew_token is None:
+            altscore_email = config("ALTSCORE_EMAIL", None)
+            altscore_password = config("ALTSCORE_PASSWORD", None)
+            if altscore_email is None or altscore_password is None:
+                raise ValueError("ALTSCORE_EMAIL and ALTSCORE_PASSWORD must be available as environment variables")
+            self.user_token = login_with_user_credentials(
+                email=config("ALTSCORE_EMAIL"),
+                password=config("ALTSCORE_PASSWORD"),
+                environment=self.environment,
+                tenant=self.tenant
+            )
+        else:
+            self.user_token, self.renew_token = refresh_api_token(
+                refresh_token=self.renew_token,
+                environment=self.environment,
+                tenant=self.tenant
+            )
 
     def __repr__(self):
         return f"AltScore({self.tenant}, {self.environment})"
+
+    @property
+    def _altdata_base_url(self):
+        return "https://data.altscore.ai"
 
     @property
     def _borrower_central_base_url(self):
@@ -285,3 +332,77 @@ def borrower_sign_up_with_form(
             environment=environment,
         )
     return altscore_module, new_borrower.borrower_id, form_id
+
+
+def login_with_user_credentials(
+        email: str, password: str, environment: str, tenant: str = "default"
+) -> str:
+    auth_urls = {
+        "production": "https://auth.altscore.ai",
+        "sandbox": "https://auth.sandbox.altscore.ai",
+        "staging": "https://altscore-stg.us.frontegg.com",
+        "local": "http://localhost:8887"
+    }
+    headers = {}
+    if tenant != "default":
+        headers["frontegg-tenant-id"] = tenant
+    with httpx.Client() as client:
+        response = client.post(
+            url=f"{auth_urls[environment]}/identity/resources/auth/v1/user",
+            data={
+                "email": email,
+                "password": password
+            }
+        )
+        raise_for_status_improved(response)
+        data = response.json()
+        return data["accessToken"]
+
+
+def login_with_client_credentials(
+        client_id: str, client_secret: str, environment: str, tenant: str = "default"
+) -> (str, str):
+    auth_urls = {
+        "production": "https://auth.altscore.ai",
+        "sandbox": "https://auth.sandbox.altscore.ai",
+        "staging": "https://altscore-stg.us.frontegg.com",
+        "local": "http://localhost:8887"
+    }
+    headers = {}
+    if tenant != "default":
+        headers["frontegg-tenant-id"] = tenant
+    with httpx.Client() as client:
+        response = client.post(
+            url=f"{auth_urls[environment]}/identity/resources/auth/v1/client",
+            data={
+                "clientId": client_id,
+                "clientSecret": client_secret
+            }
+        )
+        raise_for_status_improved(response)
+        data = response.json()
+        return data["accessToken"], data["refreshToken"]
+
+
+def refresh_api_token(
+        refresh_token: str, environment: str, tenant: str = "default"
+) -> (str, str):
+    auth_urls = {
+        "production": "https://auth.altscore.ai",
+        "sandbox": "https://auth.sandbox.altscore.ai",
+        "staging": "https://altscore-stg.us.frontegg.com",
+        "local": "http://localhost:8887"
+    }
+    headers = {}
+    if tenant != "default":
+        headers["frontegg-tenant-id"] = tenant
+    with httpx.Client() as client:
+        response = client.post(
+            url=f"{auth_urls[environment]}/identity/resources/auth/v1/api-token/token/refresh",
+            data={
+                "refreshToken": refresh_token,
+            }
+        )
+        raise_for_status_improved(response)
+        data = response.json()
+        return data["accessToken"], data["refreshToken"]

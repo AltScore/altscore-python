@@ -3,6 +3,7 @@ import httpx
 from pydantic import BaseModel, Field
 from altscore.common.http_errors import raise_for_status_improved
 from altscore.borrower_central.helpers import build_headers
+from typing import Optional
 
 
 class ExtractionCoverageInfo(BaseModel):
@@ -27,29 +28,38 @@ class SatIntegrationAsyncModule:
         return build_headers(self)
 
     async def check_extractions(
-            self, rfc: str, date_to_analyze: dt.datetime, days_of_tolerance: int) -> ExtractionCoverageInfo:
+            self, rfc: str, date_to_analyze: Optional[dt.datetime] = None,
+            days_of_tolerance: Optional[int] = None
+    ) -> ExtractionCoverageInfo:
+        payload = {
+            "rfc": rfc
+        }
+        if date_to_analyze is not None:
+            payload["dateToAnalyze"] = date_to_analyze.isoformat()
+        if days_of_tolerance is not None:
+            payload["daysOfTolerance"] = days_of_tolerance
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 "/integrations/sat/extractions/check",
-                json={
-                    "rfc": rfc,
-                    "dateToAnalyze": date_to_analyze.isoformat(),
-                    "daysOfTolerance": days_of_tolerance
-                },
+                json=payload,
                 headers=self.build_headers()
             )
             raise_for_status_improved(response)
             return ExtractionCoverageInfo.parse_obj(response.json())
 
     async def start_extractions(
-            self, rfc: str, date_to_analyze: dt.datetime) -> None:
+            self, rfc: str, date_to_analyze: Optional[dt.datetime] = None
+    ) -> None:
+        payload = {
+            "rfc": rfc
+        }
+        if date_to_analyze is not None:
+            payload["dateToAnalyze"] = date_to_analyze.isoformat()
+
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 "/integrations/sat/extractions/start",
-                json={
-                    "rfc": rfc,
-                    "dateToAnalyze": date_to_analyze.isoformat()
-                },
+                json=payload,
                 headers=self.build_headers()
             )
             raise_for_status_improved(response)
@@ -66,29 +76,38 @@ class SatIntegrationSyncModule:
         return build_headers(self)
 
     def check_extractions(
-            self, rfc: str, date_to_analyze: dt.datetime, days_of_tolerance: int) -> ExtractionCoverageInfo:
+            self, rfc: str, date_to_analyze: Optional[dt.datetime] = None,
+            days_of_tolerance: Optional[int] = None
+    ) -> ExtractionCoverageInfo:
+        payload = {
+            "rfc": rfc
+        }
+        if date_to_analyze is not None:
+            payload["dateToAnalyze"] = date_to_analyze.isoformat()
+        if days_of_tolerance is not None:
+            payload["daysOfTolerance"] = days_of_tolerance
+
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 "/integrations/sat/extractions/check",
-                json={
-                    "rfc": rfc,
-                    "dateToAnalyze": date_to_analyze.isoformat(),
-                    "daysOfTolerance": days_of_tolerance
-                },
+                json=payload,
                 headers=self.build_headers()
             )
             raise_for_status_improved(response)
             return ExtractionCoverageInfo.parse_obj(response.json())
 
     def start_extractions(
-            self, rfc: str, date_to_analyze: dt.datetime) -> None:
+            self, rfc: str, date_to_analyze: Optional[dt.datetime] = None
+    ) -> None:
+        payload = {
+            "rfc": rfc
+        }
+        if date_to_analyze is not None:
+            payload["dateToAnalyze"] = date_to_analyze.isoformat()
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 "/integrations/sat/extractions/start",
-                json={
-                    "rfc": rfc,
-                    "dateToAnalyze": date_to_analyze.isoformat()
-                },
+                json=payload,
                 headers=self.build_headers()
             )
             raise_for_status_improved(response)
