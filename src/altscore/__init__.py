@@ -7,7 +7,7 @@ from altscore.altdata import AltDataSync, AltDataAsync
 from altscore.cms import CMSSync, CMSAsync
 from typing import Optional, Union
 import warnings
-from common.http_errors import raise_for_status_improved
+from altscore.common.http_errors import raise_for_status_improved
 
 warnings.filterwarnings("ignore")
 
