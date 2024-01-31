@@ -75,12 +75,24 @@ class PackagesSyncModule(GenericSyncModule):
         return None
 
     def retrieve_source_package(
-            self, source_id: str, borrower_id: Optional[str] = None, data_age: Optional[dt.timedelta] = None
+            self, source_id: str, borrower_id: Optional[str] = None, data_age: Optional[dt.timedelta] = None,
+            package_alias: Optional[str] = None
     ) -> Optional[PackageSync]:
         if borrower_id:
-            packages = self.query(borrower_id=borrower_id, source_id=source_id, sort_by="createdAt", sort_order="desc")
+            packages = self.query(
+                borrower_id=borrower_id,
+                source_id=source_id,
+                alias=package_alias,
+                sort_by="createdAt",
+                sort_order="desc"
+            )
         else:
-            packages = self.query(source_id=source_id, sort_by="createdAt", sort_order="desc")
+            packages = self.query(
+                source_id=source_id,
+                alias=package_alias,
+                sort_by="createdAt",
+                sort_order="desc"
+            )
         if len(packages) > 0:
             package = packages[0]
             if data_age is None:
@@ -125,7 +137,7 @@ class PackagesSyncModule(GenericSyncModule):
     def create_from_altdata_request_result(
             self, borrower_id: str, source_id: str, altdata_request_result: RequestResult,
             attachments: Optional[List[Dict[str, Any]]] = None,
-            content_type: str = "json"
+            content_type: str = "json", package_alias: Optional[str] = None
     ):
         package = altdata_request_result.to_package(source_id)
         bc_source_id = "AD_{}_{}".format(source_id, package["version"])
@@ -134,6 +146,7 @@ class PackagesSyncModule(GenericSyncModule):
             "source_id": bc_source_id,
             "content": package,
             "content_type": content_type,
+            "alias": package_alias
         }
         created_package_id = self.create(package_data)
         if attachments is not None:
@@ -182,13 +195,23 @@ class PackagesAsyncModule(GenericAsyncModule):
         return None
 
     async def retrieve_source_package(
-            self, source_id: str, borrower_id: Optional[str] = None, data_age: Optional[dt.timedelta] = None
+            self, source_id: str, borrower_id: Optional[str] = None, data_age: Optional[dt.timedelta] = None,
+            package_alias: Optional[str] = None
     ) -> Optional[PackageAsync]:
         if borrower_id:
-            packages = await self.query(borrower_id=borrower_id, source_id=source_id, sort_by="createdAt",
-                                        sort_order="desc")
+            packages = await self.query(borrower_id=borrower_id,
+                                        source_id=source_id,
+                                        sort_by="createdAt",
+                                        sort_order="desc",
+                                        alias=package_alias
+                                        )
         else:
-            packages = await self.query(source_id=source_id, sort_by="createdAt", sort_order="desc")
+            packages = await self.query(
+                source_id=source_id,
+                sort_by="createdAt",
+                sort_order="desc",
+                alias=package_alias
+            )
         if len(packages) > 0:
             package = packages[0]
             if data_age is None:
@@ -213,7 +236,8 @@ class PackagesAsyncModule(GenericAsyncModule):
 
     async def create_from_altdata_request_result(
             self, borrower_id: str, source_id: str, altdata_request_result: RequestResult,
-            attachments: Optional[List[Dict[str, Any]]] = None, content_type: str = "json"
+            attachments: Optional[List[Dict[str, Any]]] = None, content_type: str = "json",
+            package_alias: Optional[str] = None
     ):
         package = altdata_request_result.to_package(source_id)
         bc_source_id = "AD_{}_{}".format(source_id, package["version"])
@@ -222,6 +246,7 @@ class PackagesAsyncModule(GenericAsyncModule):
             "source_id": bc_source_id,
             "content": package,
             "content_type": content_type,
+            "alias": package_alias
         }
         created_package_id = await self.create(package_data)
         if attachments is not None:
