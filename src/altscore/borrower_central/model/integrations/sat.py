@@ -40,7 +40,7 @@ class SatIntegrationAsyncModule:
             payload["daysOfTolerance"] = days_of_tolerance
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
-                "/integrations/sat/extractions/check",
+                "/v1/integrations/sat/extractions/check",
                 json=payload,
                 headers=self.build_headers()
             )
@@ -58,7 +58,7 @@ class SatIntegrationAsyncModule:
 
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
-                "/integrations/sat/extractions/start",
+                "/v1/integrations/sat/extractions/start",
                 json=payload,
                 headers=self.build_headers()
             )
@@ -89,7 +89,7 @@ class SatIntegrationSyncModule:
 
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
-                "/integrations/sat/extractions/check",
+                "/v1/integrations/sat/extractions/check",
                 json=payload,
                 headers=self.build_headers()
             )
@@ -106,7 +106,7 @@ class SatIntegrationSyncModule:
             payload["dateToAnalyze"] = date_to_analyze.isoformat()
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
-                "/integrations/sat/extractions/start",
+                "/v1/integrations/sat/extractions/start",
                 json=payload,
                 headers=self.build_headers()
             )
