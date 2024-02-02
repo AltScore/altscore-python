@@ -42,7 +42,8 @@ class SatIntegrationAsyncModule:
             response = await client.post(
                 "/v1/integrations/sat/extractions/check",
                 json=payload,
-                headers=self.build_headers()
+                headers=self.build_headers(),
+                timeout=120,
             )
             raise_for_status_improved(response)
             return ExtractionCoverageInfo.parse_obj(response.json())
@@ -91,7 +92,8 @@ class SatIntegrationSyncModule:
             response = client.post(
                 "/v1/integrations/sat/extractions/check",
                 json=payload,
-                headers=self.build_headers()
+                headers=self.build_headers(),
+                timeout=120
             )
             raise_for_status_improved(response)
             return ExtractionCoverageInfo.parse_obj(response.json())
