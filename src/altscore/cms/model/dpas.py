@@ -105,7 +105,8 @@ class DPAFlowAsync(DPABase):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 self._approval(self.data.id),
-                headers=self._header_builder()
+                headers=self._header_builder(),
+                timeout=30
             )
             raise_for_status_improved(response)
             self.data = DPAFlowAPIDTO.parse_obj(response.json())
@@ -115,7 +116,8 @@ class DPAFlowAsync(DPABase):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 self._cancellation(self.data.id),
-                headers=self._header_builder()
+                headers=self._header_builder(),
+                timeout=30
             )
             raise_for_status_improved(response)
             self.data = DPAFlowAPIDTO.parse_obj(response.json())
@@ -126,7 +128,8 @@ class DPAFlowAsync(DPABase):
             response = await client.post(
                 self._invoice(self.data.id),
                 json=Invoice.parse_obj(invoice).dict(by_alias=True),
-                headers=self._header_builder()
+                headers=self._header_builder(),
+                timeout=30
             )
             raise_for_status_improved(response)
             return response.json()
@@ -153,7 +156,8 @@ class DPAFlowSync(DPABase):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 self._approval(self.data.id),
-                headers=self._header_builder()
+                headers=self._header_builder(),
+                timeout=30
             )
             raise_for_status_improved(response)
             self.data = DPAFlowAPIDTO.parse_obj(response.json())
@@ -163,7 +167,8 @@ class DPAFlowSync(DPABase):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 self._cancellation(self.data.id),
-                headers=self._header_builder()
+                headers=self._header_builder(),
+                timeout=30
             )
             raise_for_status_improved(response)
             self.data = DPAFlowAPIDTO.parse_obj(response.json())

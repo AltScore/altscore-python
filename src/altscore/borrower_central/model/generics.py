@@ -5,7 +5,6 @@ from altscore.borrower_central.model.attachments import AttachmentAPIDTO, Attach
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401
 from typing import Dict
 import stringcase
-from polyfactory.factories.pydantic_factory import ModelFactory
 
 
 class GenericBase:
@@ -159,13 +158,6 @@ class GenericSyncModule:
 
     def build_headers(self):
         return build_headers(self)
-
-    def print_sample_create(self):
-        class SampleFactory(ModelFactory[self.create_data_model]):
-            ...
-
-        sample = SampleFactory.build()
-        print(json.dumps(sample.dict(by_alias=True), indent=2, ensure_ascii=False))
 
     @retry_on_401
     def retrieve(self, resource_id: str):

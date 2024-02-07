@@ -134,7 +134,8 @@ class DebtAsync(DebtBase):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
                 self._payments(self.data.flow_id),
-                headers=self._header_builder()
+                headers=self._header_builder(),
+                timeout=30
             )
             raise_for_status_improved(response)
             return [Payment.parse_obj(e) for e in response.json()]
@@ -158,6 +159,7 @@ class DebtAsync(DebtBase):
                     "notes": notes,
                     "paymentDate": payment_date.strftime("%Y-%m-%d")
                 },
+                timeout=30,
                 headers=self._header_builder()
             )
             raise_for_status_improved(response)
@@ -167,7 +169,8 @@ class DebtAsync(DebtBase):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
                 self._penalties(self.data.flow_id),
-                headers=self._header_builder()
+                headers=self._header_builder(),
+                timeout=30
             )
             raise_for_status_improved(response)
             return [Penalty.parse_obj(e) for e in response.json()]
@@ -194,7 +197,8 @@ class DebtSync(DebtBase):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.get(
                 self._payments(self.data.flow_id),
-                headers=self._header_builder()
+                headers=self._header_builder(),
+                timeout=30
             )
             raise_for_status_improved(response)
             return [Payment.parse_obj(e) for e in response.json()]
@@ -218,7 +222,8 @@ class DebtSync(DebtBase):
                     "notes": notes,
                     "paymentDate": payment_date.strftime("%Y-%m-%d")
                 },
-                headers=self._header_builder()
+                headers=self._header_builder(),
+                timeout=30
             )
             raise_for_status_improved(response)
 
@@ -227,7 +232,8 @@ class DebtSync(DebtBase):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.get(
                 self._penalties(self.data.flow_id),
-                headers=self._header_builder()
+                headers=self._header_builder(),
+                timeout=30
             )
             raise_for_status_improved(response)
             return [Penalty.parse_obj(e) for e in response.json()]

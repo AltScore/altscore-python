@@ -97,7 +97,7 @@ class PartnersAsyncModule(GenericAsyncModule):
                 "/v2/partners/me",
                 # This is important to avoid infinite recursion
                 headers=build_headers(self, partner_id=None),
-                timeout=120
+                timeout=30
             )
             raise_for_status_improved(response)
             return PartnerAsync(
@@ -128,7 +128,7 @@ class PartnersSyncModule(GenericSyncModule):
                 "/v2/partners/me",
                 # This is important to avoid infinite recursion
                 headers=build_headers(self, partner_id=None),
-                timeout=120
+                timeout=30
             )
             raise_for_status_improved(response)
             return PartnerSync(

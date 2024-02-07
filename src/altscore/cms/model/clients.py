@@ -72,7 +72,8 @@ class ClientAsync(ClientBase):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
                 self._credit_accounts(self.data.id, product_family=product_family),
-                headers=self._header_builder()
+                headers=self._header_builder(),
+                timeout=30
             )
             return CreditAccountAsync(
                 base_url=self.base_url,
@@ -89,6 +90,7 @@ class ClientAsync(ClientBase):
                 json={
                     "status": "enabled"
                 },
+                timeout=30,
                 headers=self._header_builder()
             )
             raise_for_status_improved(response)
@@ -102,6 +104,7 @@ class ClientAsync(ClientBase):
                 json={
                     "status": "disabled"
                 },
+                timeout=30,
                 headers=self._header_builder()
             )
             raise_for_status_improved(response)
@@ -146,6 +149,7 @@ class ClientSync(ClientBase):
                 json={
                     "status": "enabled"
                 },
+                timeout=30,
                 headers=self._header_builder()
             )
             raise_for_status_improved(response)
@@ -159,6 +163,7 @@ class ClientSync(ClientBase):
                 json={
                     "status": "disabled"
                 },
+                timeout=30,
                 headers=self._header_builder()
             )
             raise_for_status_improved(response)

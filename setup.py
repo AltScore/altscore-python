@@ -4,7 +4,7 @@ long_description = "Python SDK for AltScore"
 
 setup(
     name="altscore",
-    version="0.1.52",
+    version="0.1.53",
     description="Python SDK for AltScore. It provides a simple interface to the AltScore API.",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
@@ -26,7 +26,6 @@ setup(
         "pydantic<=1.10.12",
         "httpx",
         "stringcase",
-        "polyfactory",
         "python-decouple"
     ],
     extras_require={
