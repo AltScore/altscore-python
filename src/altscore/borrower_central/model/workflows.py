@@ -77,13 +77,13 @@ class WorkflowExecutionResponseAPIDTO(BaseModel):
 class WorkflowSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "workflows", header_builder, WorkflowDataAPIDTO.parse_obj(data))
+        super().__init__(base_url, "workflows", header_builder, renew_token, WorkflowDataAPIDTO.parse_obj(data))
 
 
 class WorkflowAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "workflows", header_builder, WorkflowDataAPIDTO.parse_obj(data))
+        super().__init__(base_url, "workflows", header_builder, renew_token, WorkflowDataAPIDTO.parse_obj(data))
 
 
 class WorkflowsSyncModule(GenericSyncModule):
@@ -96,6 +96,7 @@ class WorkflowsSyncModule(GenericSyncModule):
                          update_data_model=UpdateWorkflowDTO,
                          resource="workflows")
 
+    @retry_on_401
     def execute(self, workflow_input: Dict,
                 workflow_id: Optional[str] = None,
                 workflow_alias: Optional[str] = None,
@@ -136,6 +137,7 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                          update_data_model=UpdateWorkflowDTO,
                          resource="workflows")
 
+    @retry_on_401
     async def execute(self,
                       workflow_input: Dict,
                       workflow_id: Optional[str] = None,
