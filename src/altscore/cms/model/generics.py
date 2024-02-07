@@ -110,6 +110,7 @@ class GenericSyncModule:
             return [self.sync_resource(
                 base_url=self.altscore_client._cms_base_url,
                 header_builder=self.build_headers,
+                renew_token=self.renew_token,
                 data=self.retrieve_data_model.parse_obj(e)
             ) for e in response.json()]
 
@@ -221,6 +222,7 @@ class GenericAsyncModule:
             return [self.async_resource(
                 base_url=self.altscore_client._cms_base_url,
                 header_builder=self.build_headers,
+                renew_token=self.renew_token,
                 data=self.retrieve_data_model.parse_obj(e)
             ) for e in response.json()]
 
