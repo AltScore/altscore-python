@@ -179,7 +179,7 @@ class GenericSyncModule:
                 return self.sync_resource(
                     base_url=self.altscore_client._borrower_central_base_url,
                     header_builder=self.build_headers,
-                    rewew_token=self.renew_token,
+                    renew_token=self.renew_token,
                     data=self.retrieve_data_model.parse_obj(response.json())
                 )
             return None
@@ -289,7 +289,7 @@ class GenericAsyncModule:
                 return self.async_resource(
                     base_url=self.altscore_client._borrower_central_base_url,
                     header_builder=self.build_headers,
-                    rewew_token=self.renew_token,
+                    renew_token=self.renew_token,
                     data=self.retrieve_data_model.parse_obj(response.json())
                 )
             elif response.status_code in [403, 401]:
