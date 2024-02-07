@@ -6,7 +6,7 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
     GenericSyncModule, GenericAsyncModule
 
 
-class WorkFlowDataAPIDO(BaseModel):
+class WorkflowDataAPIDO(BaseModel):
     id: str = Field(alias="id")
     execution_mode: str = Field(alias="executionMode")
     alias: str = Field(alias="alias")
@@ -77,13 +77,13 @@ class WorkflowExecutionResponseAPIDTO(BaseModel):
 class WorkflowSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "workflows", header_builder, WorkFlowDataAPIDO.parse_obj(data))
+        super().__init__(base_url, "workflows", header_builder, WorkflowDataAPIDO.parse_obj(data))
 
 
 class WorkflowAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "workflows", header_builder, WorkFlowDataAPIDO.parse_obj(data))
+        super().__init__(base_url, "workflows", header_builder, WorkflowDataAPIDO.parse_obj(data))
 
 
 class WorkflowsSyncModule(GenericSyncModule):
@@ -91,7 +91,7 @@ class WorkflowsSyncModule(GenericSyncModule):
     def __init__(self, altscore_client):
         super().__init__(altscore_client,
                          sync_resource=WorkflowSync,
-                         retrieve_data_model=WorkFlowDataAPIDO,
+                         retrieve_data_model=WorkflowDataAPIDO,
                          create_data_model=CreateWorkflowDTO,
                          update_data_model=UpdateWorkflowDTO,
                          resource="workflows")
@@ -131,7 +131,7 @@ class WorkflowsAsyncModule(GenericAsyncModule):
     def __init__(self, altscore_client):
         super().__init__(altscore_client,
                          async_resource=WorkflowAsync,
-                         retrieve_data_model=WorkFlowDataAPIDO,
+                         retrieve_data_model=WorkflowDataAPIDO,
                          create_data_model=CreateWorkflowDTO,
                          update_data_model=UpdateWorkflowDTO,
                          resource="workflows")
