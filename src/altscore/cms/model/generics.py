@@ -200,8 +200,8 @@ class GenericAsyncModule:
             total_count = int(response.headers["x-total-count"])
         resources = []
         # TODO: this is not optimal, we should use asyncio.gather and a batch size
-        for offset in range(0, total_count, 1000):
-            resources.append(await self.query(limit=1000, offset=offset, **kwargs))
+        for offset in range(0, total_count, 100):
+            resources.append(await self.query(limit=100, offset=offset, **kwargs))
         resources = [item for sublist in resources for item in sublist]
         return resources
 
