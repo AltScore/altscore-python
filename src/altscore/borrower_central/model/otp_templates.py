@@ -57,14 +57,14 @@ class CreateOTPTemplateDTO(BaseModel):
 
 class OTPTemplatesSync(GenericSyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "otp-templates", header_builder, OTPTemplateAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "otp-templates",header_builder, renew_token, OTPTemplateAPIDTO.parse_obj(data))
 
 
 class OTPTemplatesAsync(GenericAsyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "otp-templates", header_builder, OTPTemplateAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "otp-templates",header_builder, renew_token, OTPTemplateAPIDTO.parse_obj(data))
 
 
 class OTPTemplatesSyncModule(GenericSyncModule):

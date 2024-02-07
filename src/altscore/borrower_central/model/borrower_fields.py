@@ -53,14 +53,14 @@ class UpdateBorrowerFieldDTO(BaseModel):
 
 class BorrowerFieldSync(GenericSyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "borrower-fields", header_builder, BorrowerFieldAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "borrower-fields", header_builder, renew_token, BorrowerFieldAPIDTO.parse_obj(data))
 
 
 class BorrowerFieldAsync(GenericAsyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "borrower-fields", header_builder, BorrowerFieldAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "borrower-fields", header_builder, renew_token, BorrowerFieldAPIDTO.parse_obj(data))
 
 
 class BorrowerFieldsSyncModule(GenericSyncModule):

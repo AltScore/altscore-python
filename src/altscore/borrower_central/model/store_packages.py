@@ -43,14 +43,14 @@ class CreatePackageDTO(BaseModel):
 
 class PackageSync(GenericSyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "/stores/packages", header_builder, PackageAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "/stores/packages", header_builder, renew_token, PackageAPIDTO.parse_obj(data))
 
 
 class PackageAsync(GenericAsyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "/stores/packages", header_builder, PackageAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "/stores/packages", header_builder, renew_token, PackageAPIDTO.parse_obj(data))
 
 
 class PackagesSyncModule(GenericSyncModule):

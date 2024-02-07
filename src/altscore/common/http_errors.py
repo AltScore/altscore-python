@@ -1,6 +1,21 @@
 from json import loads
-
+from functools import wraps
 from httpx import HTTPStatusError
+
+
+def retry_on_401(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except HTTPStatusError as e:
+            if e.response.status_code == 401:
+                args[0].renew_token()  # Assuming the first argument is self
+                return f(*args, **kwargs)
+            else:
+                raise
+
+    return wrapper
 
 
 def raise_for_status_improved(httpx_request) -> None:
@@ -31,5 +46,5 @@ def raise_for_status_improved(httpx_request) -> None:
         5: "Server error",
     }
     error_type = error_types.get(status_class, "Invalid status code")
-    message = message.format(httpx_request, error_type=error_type)+"Response: "+str(parsed_text)+"\n"
+    message = message.format(httpx_request, error_type=error_type) + "Response: " + str(parsed_text) + "\n"
     raise HTTPStatusError(message, request=request, response=httpx_request)

@@ -1,6 +1,6 @@
 import httpx
 from altscore.cms.helpers import build_headers
-from altscore.common.http_errors import raise_for_status_improved
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401
 from typing import Dict
 import stringcase
 
@@ -16,6 +16,9 @@ class GenericSyncModule:
         self.update_data_model = update_data_model
         self.resource_version = resource_version
         self.resource = resource.strip("/")
+
+    def renew_token(self):
+        return self.altscore_client.renew_token()
 
     def build_headers(self):
         return build_headers(self)
@@ -122,6 +125,9 @@ class GenericAsyncModule:
         self.update_data_model = update_data_model
         self.resource_version = resource_version
         self.resource = resource.strip("/")
+
+    def renew_token(self):
+        return self.altscore_client.renew_token()
 
     def build_headers(self):
         return build_headers(self)

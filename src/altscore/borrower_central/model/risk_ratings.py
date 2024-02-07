@@ -31,14 +31,14 @@ class CreateUpdateRiskRatingDTO(BaseModel):
 
 class RiskRatingSync(GenericSyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "risk-ratings", header_builder, RiskRatingAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "risk-ratings", header_builder, renew_token, RiskRatingAPIDTO.parse_obj(data))
 
 
 class RiskRatingAsync(GenericAsyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "risk-ratings", header_builder, RiskRatingAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "risk-ratings", header_builder, renew_token, RiskRatingAPIDTO.parse_obj(data))
 
 
 class RiskRatingsSyncModule(GenericSyncModule):

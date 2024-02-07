@@ -36,14 +36,14 @@ class CreateRuleDTO(BaseModel):
 
 class RulesSync(GenericSyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "rules", header_builder, RuleAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "rules", header_builder, renew_token, RuleAPIDTO.parse_obj(data))
 
 
 class RulesAsync(GenericAsyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "rules", header_builder, RuleAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "rules", header_builder, renew_token, RuleAPIDTO.parse_obj(data))
 
 
 class RulesSyncModule(GenericSyncModule):

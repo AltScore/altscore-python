@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 import httpx
-from altscore.common.http_errors import raise_for_status_improved
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401
 from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule
 from altscore.cms.helpers import build_headers
 
@@ -47,10 +47,11 @@ class PartnerBase:
 class PartnerAsync(PartnerBase):
     data: PartnerAPIDTO
 
-    def __init__(self, base_url, header_builder, data: PartnerAPIDTO):
+    def __init__(self, base_url, header_builder, renew_token, data: PartnerAPIDTO):
         super().__init__(base_url)
         self.base_url = base_url
         self._header_builder = header_builder
+        self.renew_token = renew_token
         self.data = data
 
     def __str__(self):
@@ -63,9 +64,10 @@ class PartnerAsync(PartnerBase):
 class PartnerSync(PartnerBase):
     data: PartnerAPIDTO
 
-    def __init__(self, base_url, header_builder, data: PartnerAPIDTO):
+    def __init__(self, base_url, header_builder, renew_token, data: PartnerAPIDTO):
         super().__init__(base_url)
         self._header_builder = header_builder
+        self.renew_token = renew_token
         self.data = data
 
     def __str__(self):
@@ -88,21 +90,7 @@ class PartnersAsyncModule(GenericAsyncModule):
             resource_version="v2"
         )
 
-    async def create(self, new_entity_data: dict):
-        async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
-            response = await client.post(
-                "/v2/partners",
-                headers=self.build_headers(),
-                json=CreatePartnerDTO.parse_obj(new_entity_data).dict(by_alias=True),
-                timeout=120
-            )
-            raise_for_status_improved(response)
-            return PartnerAsync(
-                base_url=self.altscore_client._cms_base_url,
-                header_builder=self.build_headers,
-                data=PartnerAPIDTO.parse_obj(response.json())
-            )
-
+    @retry_on_401
     async def me(self) -> PartnerAsync:
         async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
             response = await client.get(
@@ -115,6 +103,7 @@ class PartnersAsyncModule(GenericAsyncModule):
             return PartnerAsync(
                 base_url=self.altscore_client._cms_base_url,
                 header_builder=self.build_headers,
+                renew_token=self.renew_token,
                 data=PartnerAPIDTO.parse_obj(response.json())
             )
 
@@ -132,6 +121,7 @@ class PartnersSyncModule(GenericSyncModule):
             resource_version="v2"
         )
 
+    @retry_on_401
     def me(self) -> PartnerSync:
         with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
             response = client.get(
@@ -144,5 +134,6 @@ class PartnersSyncModule(GenericSyncModule):
             return PartnerSync(
                 base_url=self.altscore_client._cms_base_url,
                 header_builder=self.build_headers,
+                renew_token=self.renew_token,
                 data=PartnerAPIDTO.parse_obj(response.json())
             )

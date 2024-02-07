@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import httpx
-from altscore.common.http_errors import raise_for_status_improved
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401
 from altscore.cms.model.common import Money
 
 
@@ -64,11 +64,13 @@ class CreditAccountAPIDTO(BaseModel):
 class CreditAccountAsync:
     data: CreditAccountAPIDTO
 
-    def __init__(self, base_url, header_builder, data: CreditAccountAPIDTO):
+    def __init__(self, base_url, header_builder, renew_token, data: CreditAccountAPIDTO):
         self.base_url = base_url
         self._header_builder = header_builder
+        self.renew_token = renew_token
         self.data = data
 
+    @retry_on_401
     async def update(self, amount: str, currency: str, reason: str) -> None:
         """
         Updates credit account with the given amount and currency, and the reason for the update.
@@ -100,11 +102,13 @@ class CreditAccountAsync:
 class CreditAccountSync:
     data: CreditAccountAPIDTO
 
-    def __init__(self, base_url, header_builder, data: CreditAccountAPIDTO):
+    def __init__(self, base_url, header_builder, renew_token, data: CreditAccountAPIDTO):
         self.base_url = base_url
         self._header_builder = header_builder
+        self.renew_token = renew_token
         self.data = data
 
+    @retry_on_401
     def update(self, amount: str, currency: str, reason: str) -> None:
         """
         Updates credit account with the given amount and currency, and the reason for the update.

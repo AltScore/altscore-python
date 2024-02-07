@@ -51,15 +51,15 @@ class CreateAuthorizationDTO(BaseModel):
 class AuthorizationSync(GenericSyncResource):
     data: AuthorizationAPIDTO
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "authorizations", header_builder, AuthorizationAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "authorizations", header_builder, renew_token, AuthorizationAPIDTO.parse_obj(data))
 
 
 class AuthorizationAsync(GenericAsyncResource):
     data: AuthorizationAPIDTO
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "authorizations", header_builder, AuthorizationAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "authorizations", header_builder, renew_token, AuthorizationAPIDTO.parse_obj(data))
 
 
 class AuthorizationsSyncModule(GenericSyncModule):

@@ -45,14 +45,14 @@ class UpdateDocumentDTO(BaseModel):
 
 class DocumentSync(GenericSyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "documents", header_builder, DocumentsAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "documents", header_builder, renew_token, DocumentsAPIDTO.parse_obj(data))
 
 
 class DocumentAsync(GenericAsyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "documents", header_builder, DocumentsAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "documents", header_builder, renew_token, DocumentsAPIDTO.parse_obj(data))
 
 
 class DocumentsSyncModule(GenericSyncModule):

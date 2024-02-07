@@ -46,14 +46,14 @@ class UpdateIdentityDTO(BaseModel):
 
 class IdentitySync(GenericSyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "identities", header_builder, IdentityAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "identities", header_builder, renew_token, IdentityAPIDTO.parse_obj(data))
 
 
 class IdentityAsync(GenericAsyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "identities", header_builder, IdentityAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "identities", header_builder, renew_token, IdentityAPIDTO.parse_obj(data))
 
 
 class IdentitiesSyncModule(GenericSyncModule):

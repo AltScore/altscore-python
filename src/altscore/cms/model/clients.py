@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 import httpx
-from altscore.common.http_errors import raise_for_status_improved
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401
 from altscore.cms.model.credit_account import CreditAccountSync, CreditAccountAsync, CreditAccountAPIDTO
 from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule
 import datetime as dt
@@ -60,12 +60,14 @@ class ClientBase:
 class ClientAsync(ClientBase):
     data: ClientAPIDTO
 
-    def __init__(self, base_url, header_builder, data: ClientAPIDTO):
+    def __init__(self, base_url, header_builder, renew_token, data: ClientAPIDTO):
         super().__init__()
         self.base_url = base_url
         self._header_builder = header_builder
+        self.renew_token = renew_token
         self.data = data
 
+    @retry_on_401
     async def get_credit_account(self, product_family: str) -> CreditAccountAsync:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
@@ -75,9 +77,11 @@ class ClientAsync(ClientBase):
             return CreditAccountAsync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=CreditAccountAPIDTO.parse_obj(response.json())
             )
 
+    @retry_on_401
     async def enable(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
@@ -90,6 +94,7 @@ class ClientAsync(ClientBase):
             raise_for_status_improved(response)
             self.data = ClientAPIDTO.parse_obj(response.json())
 
+    @retry_on_401
     async def disable(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
@@ -112,12 +117,14 @@ class ClientAsync(ClientBase):
 class ClientSync(ClientBase):
     data: ClientAPIDTO
 
-    def __init__(self, base_url, header_builder, data: ClientAPIDTO):
+    def __init__(self, base_url, header_builder, renew_token, data: ClientAPIDTO):
         super().__init__()
         self.base_url = base_url
         self._header_builder = header_builder
+        self.renew_token = renew_token
         self.data: ClientAPIDTO = data
 
+    @retry_on_401
     def get_credit_account(self, product_family: str) -> CreditAccountSync:
         with httpx.Client(base_url=self.base_url) as client:
             response = client.get(
@@ -127,9 +134,11 @@ class ClientSync(ClientBase):
             return CreditAccountSync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=CreditAccountAPIDTO.parse_obj(response.json())
             )
 
+    @retry_on_401
     def enable(self):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.put(
@@ -142,6 +151,7 @@ class ClientSync(ClientBase):
             raise_for_status_improved(response)
             self.data = ClientAPIDTO.parse_obj(response.json())
 
+    @retry_on_401
     def disable(self):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.put(
@@ -174,6 +184,10 @@ class ClientsAsyncModule(GenericAsyncModule):
             resource_version="v2"
         )
 
+    def renew_token(self):
+        self.altscore_client.renew_token()
+
+    @retry_on_401
     async def retrieve_by_external_id(self, external_id: str, partner_id: str = None) -> Optional[ClientAsync]:
         headers = self.build_headers()
         if partner_id is not None:
@@ -189,10 +203,12 @@ class ClientsAsyncModule(GenericAsyncModule):
                 return self.async_resource(
                     base_url=self.altscore_client._cms_base_url,
                     header_builder=self.build_headers,
+                    renew_token=self.renew_token,
                     data=self.retrieve_data_model.parse_obj(response.json())
                 )
             return None
 
+    @retry_on_401
     async def create(self, new_entity_data: dict):
         partner_id = new_entity_data.get("partnerId")
         if partner_id is None:
@@ -226,6 +242,10 @@ class ClientsSyncModule(GenericSyncModule):
             resource_version="v2"
         )
 
+    def renew_token(self):
+        self.altscore_client.renew_token()
+
+    @retry_on_401
     def retrieve_by_external_id(self, external_id: str, partner_id: str = None) -> Optional[ClientSync]:
 
         headers = self.build_headers()
@@ -242,10 +262,12 @@ class ClientsSyncModule(GenericSyncModule):
                 return self.sync_resource(
                     base_url=self.altscore_client._cms_base_url,
                     header_builder=self.build_headers,
+                    renew_token=self.renew_token,
                     data=self.retrieve_data_model.parse_obj(response.json())
                 )
             return None
 
+    @retry_on_401
     def create(self, new_entity_data: dict):
         partner_id = new_entity_data.get("partnerId")
         if partner_id is None:

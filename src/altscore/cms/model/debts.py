@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 import httpx
-from altscore.common.http_errors import raise_for_status_improved
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401
 from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule
 from altscore.cms.model.common import Money, Schedule, Terms
 
@@ -122,12 +122,14 @@ class DebtBase:
 class DebtAsync(DebtBase):
     data: DebtAPIDTO
 
-    def __init__(self, base_url, header_builder, data: DebtAPIDTO):
+    def __init__(self, base_url, header_builder, renew_token, data: DebtAPIDTO):
         super().__init__()
         self.base_url = base_url
         self._header_builder = header_builder
+        self.renew_token = renew_token
         self.data = data
 
+    @retry_on_401
     async def get_payments(self) -> List[Payment]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
@@ -137,6 +139,7 @@ class DebtAsync(DebtBase):
             raise_for_status_improved(response)
             return [Payment.parse_obj(e) for e in response.json()]
 
+    @retry_on_401
     async def submit_payment(self, amount: str, currency: str, reference_id: str, notes: Optional[str] = None,
                              payment_date: Optional[dt.date] = None) -> None:
         if payment_date is None:
@@ -159,6 +162,7 @@ class DebtAsync(DebtBase):
             )
             raise_for_status_improved(response)
 
+    @retry_on_401
     async def get_penalties(self) -> List[Penalty]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
@@ -178,12 +182,14 @@ class DebtAsync(DebtBase):
 class DebtSync(DebtBase):
     data: DebtAPIDTO
 
-    def __init__(self, base_url, header_builder, data: DebtAPIDTO):
+    def __init__(self, base_url, header_builder, renew_token, data: DebtAPIDTO):
         super().__init__()
         self.base_url = base_url
         self._header_builder = header_builder
+        self.renew_token = renew_token
         self.data = data
 
+    @retry_on_401
     def get_payments(self) -> List[Payment]:
         with httpx.Client(base_url=self.base_url) as client:
             response = client.get(
@@ -193,6 +199,7 @@ class DebtSync(DebtBase):
             raise_for_status_improved(response)
             return [Payment.parse_obj(e) for e in response.json()]
 
+    @retry_on_401
     def submit_payment(self, amount: str, currency: str, reference_id: str, notes: Optional[str] = None,
                        payment_date: Optional[dt.date] = None) -> None:
         if payment_date is None:
@@ -215,6 +222,7 @@ class DebtSync(DebtBase):
             )
             raise_for_status_improved(response)
 
+    @retry_on_401
     def get_penalties(self) -> List[Penalty]:
         with httpx.Client(base_url=self.base_url) as client:
             response = client.get(

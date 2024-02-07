@@ -31,14 +31,14 @@ class CreateUpdateStageDTO(BaseModel):
 
 class StageSync(GenericSyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "stages", header_builder, StageAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "stages", header_builder, renew_token, StageAPIDTO.parse_obj(data))
 
 
 class StageAsync(GenericAsyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "stages", header_builder, StageAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "stages", header_builder, renew_token, StageAPIDTO.parse_obj(data))
 
 
 class StagesSyncModule(GenericSyncModule):

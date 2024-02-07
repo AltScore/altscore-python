@@ -4,7 +4,11 @@ import asyncio
 
 
 async def get_borrower():
-    altscore = AltScore(api_key=config("ALTSCORE_API_KEY"))
+    altscore = AltScore(
+        client_id=config("ALTSCORE_CLIENT_ID"),
+        client_secret=config("ALTSCORE_CLIENT_SECRET"),
+        environment="staging"
+    )
     borrower = await altscore.borrower_central.borrowers.retrieve("dfaab9fd-d4eb-4f53-9070-f2605c4cc9e2")
     authorizations = await borrower.get_authorizations(key="bureau_authorization")
 

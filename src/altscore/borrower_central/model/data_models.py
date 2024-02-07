@@ -50,14 +50,14 @@ class DataModelUpdate(BaseModel):
 
 class DataModelSync(GenericSyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "data-models", header_builder, DataModelAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "data-models", header_builder, renew_token, DataModelAPIDTO.parse_obj(data))
 
 
 class DataModelAsync(GenericAsyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "data-models", header_builder, DataModelAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "data-models", header_builder, renew_token, DataModelAPIDTO.parse_obj(data))
 
 
 class DataModelSyncModule(GenericSyncModule):

@@ -52,14 +52,14 @@ class UpdateRelationshipDTO(BaseModel):
 
 class RelationshipSync(GenericSyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "relationships", header_builder, RelationshipAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "relationships", header_builder, renew_token, RelationshipAPIDTO.parse_obj(data))
 
 
 class RelationshipAsync(GenericAsyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "relationships", header_builder, RelationshipAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "relationships", header_builder, renew_token, RelationshipAPIDTO.parse_obj(data))
 
 
 class RelationshipsSyncModule(GenericSyncModule):

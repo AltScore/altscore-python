@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any, List
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule, convert_to_dash_case
 from altscore.borrower_central.model.attachments import AttachmentInput, AttachmentAPIDTO
-from altscore.common.http_errors import raise_for_status_improved
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401
 import httpx
 import datetime as dt
 from dateutil.parser import parse
@@ -143,8 +143,8 @@ class ExecutionSync(GenericSyncResource):
     output: ExecutionOutputDataAPIDTO
     state: ExecutionState
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "executions", header_builder, ExecutionAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "executions", header_builder, renew_token, ExecutionAPIDTO.parse_obj(data))
 
     def _state(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}/state"
@@ -155,6 +155,7 @@ class ExecutionSync(GenericSyncResource):
     def _output_attachments(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}/output/attachments"
 
+    @retry_on_401
     def get_output(self):
         with httpx.Client() as client:
             response = client.get(
@@ -166,6 +167,7 @@ class ExecutionSync(GenericSyncResource):
             self.output = ExecutionOutputDataAPIDTO.parse_obj(response.json())
         return self.output
 
+    @retry_on_401
     def get_output_attachments(self):
         with httpx.Client() as client:
             response = client.get(
@@ -176,6 +178,7 @@ class ExecutionSync(GenericSyncResource):
             raise_for_status_improved(response)
             return [AttachmentAPIDTO.parse_obj(e) for e in response.json()]
 
+    @retry_on_401
     def get_state(self):
         with httpx.Client() as client:
             response = client.get(
@@ -187,6 +190,7 @@ class ExecutionSync(GenericSyncResource):
             self.state = ExecutionState.parse_obj(response.json())
         return self.state
 
+    @retry_on_401
     def put_state(self, state: Dict):
         state_obj = ExecutionState.parse_obj(state)
         with httpx.Client() as client:
@@ -199,6 +203,7 @@ class ExecutionSync(GenericSyncResource):
             raise_for_status_improved(response)
             self.state = state_obj
 
+    @retry_on_401
     def put_output(self, output: Dict):
         output_obj = CreateExecutionOutput.parse_obj(output)
         with httpx.Client() as client:
@@ -216,8 +221,8 @@ class ExecutionAsync(GenericAsyncResource):
     output: ExecutionOutputDataAPIDTO
     state: ExecutionState
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "executions", header_builder, ExecutionAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "executions", header_builder, renew_token, ExecutionAPIDTO.parse_obj(data))
 
     def _state(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}/state"
@@ -228,6 +233,7 @@ class ExecutionAsync(GenericAsyncResource):
     def _output_attachments(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}/output/attachments"
 
+    @retry_on_401
     async def get_output(self):
         async with httpx.AsyncClient() as client:
             response = await client.get(
@@ -239,6 +245,7 @@ class ExecutionAsync(GenericAsyncResource):
             self.output = ExecutionOutputDataAPIDTO.parse_obj(response.json())
         return self.output
 
+    @retry_on_401
     async def get_output_attachments(self):
         async with httpx.AsyncClient() as client:
             response = await client.get(
@@ -249,6 +256,7 @@ class ExecutionAsync(GenericAsyncResource):
             raise_for_status_improved(response)
             return [AttachmentAPIDTO.parse_obj(e) for e in response.json()]
 
+    @retry_on_401
     async def get_state(self):
         async with httpx.AsyncClient() as client:
             response = await client.get(
@@ -260,6 +268,7 @@ class ExecutionAsync(GenericAsyncResource):
             self.state = ExecutionState.parse_obj(response.json())
         return self.state
 
+    @retry_on_401
     async def put_state(self, state: Dict):
         state_obj = ExecutionState.parse_obj(state)
         async with httpx.AsyncClient() as client:
@@ -272,6 +281,7 @@ class ExecutionAsync(GenericAsyncResource):
             raise_for_status_improved(response)
             self.state = state_obj
 
+    @retry_on_401
     async def put_output(self, output: Dict):
         output_obj = CreateExecutionOutput.parse_obj(output)
         async with httpx.AsyncClient() as client:
@@ -291,6 +301,7 @@ class ExecutionSyncModule(GenericSyncModule):
         super().__init__(altscore_client, sync_resource=ExecutionSync, retrieve_data_model=ExecutionAPIDTO,
                          create_data_model=CreateExecutionDTO, update_data_model=None, resource="executions")
 
+    @retry_on_401
     def query_outputs(self, **kwargs):
         query_params = {}
         for k, v in kwargs.items():
@@ -314,6 +325,7 @@ class ExecutionAsyncModule(GenericAsyncModule):
         super().__init__(altscore_client, async_resource=ExecutionAsync, retrieve_data_model=ExecutionAPIDTO,
                          create_data_model=CreateExecutionDTO, update_data_model=None, resource="executions")
 
+    @retry_on_401
     async def query_outputs(self, **kwargs):
         query_params = {}
         for k, v in kwargs.items():

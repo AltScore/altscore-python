@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 import httpx
-from altscore.common.http_errors import raise_for_status_improved
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 
@@ -50,14 +50,14 @@ class CreateAltdataSourceDTO(BaseModel):
 
 class SourceSync(GenericSyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "/stores/sources", header_builder, SourceAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "/stores/sources", header_builder, renew_token, SourceAPIDTO.parse_obj(data))
 
 
 class SourceAsync(GenericAsyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "/stores/sources", header_builder, SourceAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "/stores/sources", header_builder, renew_token, SourceAPIDTO.parse_obj(data))
 
 
 class SourcesSyncModule(GenericSyncModule):

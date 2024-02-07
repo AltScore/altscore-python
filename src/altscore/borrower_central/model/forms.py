@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 import httpx
-from altscore.common.http_errors import raise_for_status_improved
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 
@@ -68,14 +68,14 @@ class IdentityLookupResponse(BaseModel):
 
 class FormSync(GenericSyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "forms", header_builder, FormAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "forms", header_builder, renew_token, FormAPIDTO.parse_obj(data))
 
 
 class FormAsync(GenericAsyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "forms", header_builder, FormAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "forms", header_builder, renew_token, FormAPIDTO.parse_obj(data))
 
 
 class FormsSyncModule(GenericSyncModule):
@@ -84,6 +84,7 @@ class FormsSyncModule(GenericSyncModule):
         super().__init__(altscore_client, sync_resource=FormSync, retrieve_data_model=FormAPIDTO,
                          create_data_model=StartFormRequest, update_data_model=None, resource="forms")
 
+    @retry_on_401
     def command_borrower_sign_up(self, borrower_sign_up_request: dict):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
@@ -97,6 +98,7 @@ class FormsSyncModule(GenericSyncModule):
                 form_token=response.headers.get("Authorization").split(" ")[1]
             )
 
+    @retry_on_401
     def query_identity_lookup(self, tenant: str, key: str, value: str, form_id: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
@@ -112,6 +114,7 @@ class FormsSyncModule(GenericSyncModule):
             raise_for_status_improved(response)
             return IdentityLookupResponse.parse_obj(response.json())
 
+    @retry_on_401
     def query_entity_value(self, borrower_id: str, entity_type: str, key: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
@@ -134,6 +137,7 @@ class FormsAsyncModule(GenericAsyncModule):
         super().__init__(altscore_client, async_resource=FormSync, retrieve_data_model=FormAPIDTO,
                          create_data_model=StartFormRequest, update_data_model=None, resource="forms")
 
+    @retry_on_401
     async def command_borrower_sign_up(self, borrower_sign_up_request: dict):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
@@ -147,6 +151,7 @@ class FormsAsyncModule(GenericAsyncModule):
                 form_token=response.headers.get("Authorization").split(" ")[1]
             )
 
+    @retry_on_401
     async def query_identity_lookup(self, tenant: str, key: str, value: str, form_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
@@ -162,6 +167,7 @@ class FormsAsyncModule(GenericAsyncModule):
             raise_for_status_improved(response)
             return IdentityLookupResponse.parse_obj(response.json())
 
+    @retry_on_401
     async def query_entity_value(self, borrower_id: str, entity_type: str, key: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(

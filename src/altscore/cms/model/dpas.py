@@ -1,10 +1,11 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import List
 import httpx
-from altscore.common.http_errors import raise_for_status_improved
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401
 from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule
 from altscore.cms.model.common import Money, Schedule, Terms
 import datetime as dt
+from dateutil.parser import parse as date_parser
 
 
 class Client(BaseModel):
@@ -92,12 +93,14 @@ class DPABase:
 class DPAFlowAsync(DPABase):
     data: DPAFlowAPIDTO
 
-    def __init__(self, base_url, header_builder, data: DPAFlowAPIDTO):
+    def __init__(self, base_url, header_builder, renew_token, data: DPAFlowAPIDTO):
         super().__init__()
         self.base_url = base_url
         self._header_builder = header_builder
+        self.renew_token = renew_token
         self.data = data
 
+    @retry_on_401
     async def approve(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
@@ -107,6 +110,7 @@ class DPAFlowAsync(DPABase):
             raise_for_status_improved(response)
             self.data = DPAFlowAPIDTO.parse_obj(response.json())
 
+    @retry_on_401
     async def cancel(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
@@ -116,6 +120,7 @@ class DPAFlowAsync(DPABase):
             raise_for_status_improved(response)
             self.data = DPAFlowAPIDTO.parse_obj(response.json())
 
+    @retry_on_401
     async def submit_invoice(self, invoice: dict):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
@@ -136,12 +141,14 @@ class DPAFlowAsync(DPABase):
 class DPAFlowSync(DPABase):
     data: DPAFlowAPIDTO
 
-    def __init__(self, base_url, header_builder, data: DPAFlowAPIDTO):
+    def __init__(self, base_url, header_builder, renew_token, data: DPAFlowAPIDTO):
         super().__init__()
         self.base_url = base_url
         self._header_builder = header_builder
+        self.renew_token = renew_token
         self.data: DPAFlowAPIDTO = data
 
+    @retry_on_401
     def approve(self):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
@@ -151,6 +158,7 @@ class DPAFlowSync(DPABase):
             raise_for_status_improved(response)
             self.data = DPAFlowAPIDTO.parse_obj(response.json())
 
+    @retry_on_401
     def cancel(self):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
@@ -179,27 +187,25 @@ class DPAFlowsAsyncModule(GenericAsyncModule):
             resource="dpas"
         )
 
-    async def create(self, amount: str, currency: str, external_id: str,
-                     disbursement_date: Optional[dt.date] = None) -> str:
-        if disbursement_date is None:
-            disbursement_date = dt.date.today()
+    @retry_on_401
+    async def create(self, new_entity_data: dict):
+        disbursement_date_str = \
+            new_entity_data.get("disbursementDate") or new_entity_data.get("disbursement_date")
+        if disbursement_date_str is None:
+            disbursement_date = dt.date.today().strftime("%Y-%m-%d")
+        else:
+            disbursement_date = date_parser(disbursement_date_str).strftime("%Y-%m-%d")
+        new_entity_data["disbursementDate"] = disbursement_date
+
         async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
             response = await client.post(
-                "/v1/dpas",
-                json=CreateDPAFlowDTO.parse_obj(
-                    {
-                        "amount": {
-                            "amount": amount,
-                            "currency": currency
-                        },
-                        "externalId": external_id,
-                        "disbursementDate": disbursement_date.strftime("%Y-%m-%d")
-                    }
-                ).dict(by_alias=True),
-                headers=self.build_headers()
+                f"/{self.resource_version}/{self.resource}",
+                headers=self.build_headers(),
+                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
+                timeout=30
             )
             raise_for_status_improved(response)
-            return response.json()["flowId"]
+            return self.retrieve_data_model.parse_obj(response.json()).id
 
 
 class DPAFlowsSyncModule(GenericSyncModule):
@@ -214,24 +220,22 @@ class DPAFlowsSyncModule(GenericSyncModule):
             resource="dpas"
         )
 
-    def create(self, amount: str, currency: str, external_id: str,
-               disbursement_date: Optional[dt.date] = None) -> str:
-        if disbursement_date is None:
-            disbursement_date = dt.date.today()
+    @retry_on_401
+    def create(self, new_entity_data: dict):
+        disbursement_date_str = \
+            new_entity_data.get("disbursementDate") or new_entity_data.get("disbursement_date")
+        if disbursement_date_str is None:
+            disbursement_date = dt.date.today().strftime("%Y-%m-%d")
+        else:
+            disbursement_date = date_parser(disbursement_date_str).strftime("%Y-%m-%d")
+        new_entity_data["disbursementDate"] = disbursement_date
+
         with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
             response = client.post(
-                "/v1/dpas",
-                json=CreateDPAFlowDTO.parse_obj(
-                    {
-                        "amount": {
-                            "amount": amount,
-                            "currency": currency
-                        },
-                        "externalId": external_id,
-                        "disbursementDate": disbursement_date.strftime("%Y-%m-%d")
-                    }
-                ).dict(by_alias=True),
-                headers=self.build_headers()
+                f"/{self.resource_version}/{self.resource}",
+                headers=self.build_headers(),
+                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
+                timeout=30
             )
             raise_for_status_improved(response)
-            return response.json()["flowId"]
+            return self.retrieve_data_model.parse_obj(response.json()).id

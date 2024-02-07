@@ -6,6 +6,9 @@ class ReportGeneratorSyncModule:
     def __init__(self, altscore_client):
         self.altscore_client = altscore_client
 
+    def renew_token(self):
+        self.altscore_client.renew_token()
+
     def build_headers(self):
         return {"API-KEY": self.altscore_client.api_key}
 
@@ -27,6 +30,9 @@ class ReportGeneratorAsyncModule:
 
     def __init__(self, altscore_client):
         self.altscore_client = altscore_client
+
+    def renew_token(self):
+        self.altscore_client.renew_token()
 
     def build_headers(self):
         return {"API-KEY": self.altscore_client.api_key}

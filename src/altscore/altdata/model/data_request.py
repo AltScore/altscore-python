@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict
+from altscore.altdata.helpers import build_headers
 from altscore.altdata.model.common_schemas import SourceConfig
-from altscore.common.http_errors import raise_for_status_improved
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401
 import json
 import httpx
 
@@ -168,7 +169,7 @@ class RequestSyncModule:
         self.altscore_client = altscore_client
 
     def build_headers(self):
-        return {"API-KEY": self.altscore_client.api_key}
+        return build_headers(self)
 
     def new_sync(self, input_keys: InputKeys, sources_config: List[SourceConfig], timeout: Optional[int] = None):
         payload = input_keys.dict(by_alias=True, exclude_none=True)
@@ -218,7 +219,7 @@ class RequestAsyncModule:
         self.altscore_client = altscore_client
 
     def build_headers(self):
-        return {"API-KEY": self.altscore_client.api_key}
+        return build_headers(self)
 
     async def new_sync(self, input_keys: InputKeys, sources_config: List[SourceConfig], timeout: Optional[int] = None):
         payload = input_keys.dict(by_alias=True, exclude_none=True)

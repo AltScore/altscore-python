@@ -7,7 +7,7 @@ from altscore.altdata import AltDataSync, AltDataAsync
 from altscore.cms import CMSSync, CMSAsync
 from typing import Optional, Union
 import warnings
-from altscore.common.http_errors import raise_for_status_improved
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401
 
 warnings.filterwarnings("ignore")
 
@@ -25,7 +25,14 @@ class AltScoreBase:
         self._partner_id = partner_id
         self.api_key = api_key
         self.user_token = user_token
-        self.renew_token = None
+        self._refresh_token = None
+        if self.api_key is None and self.user_token is None and self.form_token is None:
+            self.auth(
+                email=email,
+                password=password,
+                client_id=client_id,
+                client_secret=client_secret
+            )
 
     def auth(self, email: Optional[str] = None, password: Optional[str] = None,
              client_id: Optional[str] = None, client_secret: Optional[str] = None) -> None:
@@ -37,21 +44,23 @@ class AltScoreBase:
                 tenant=self.tenant
             )
         elif client_id is not None and client_secret is not None:
-            self.user_token, self.renew_token = login_with_client_credentials(
+            self.user_token, self._refresh_token = login_with_client_credentials(
                 client_id=client_id,
                 client_secret=client_secret,
                 environment=self.environment,
                 tenant=self.tenant
             )
         else:
-            raise ValueError("Either email and password or client_id and client_secret must be provided")
+            raise ValueError("Authentication error, "
+                             "either email and password or client_id and client_secret must be provided")
 
     def renew_token(self) -> None:
-        if self.renew_token is None:
+        if self._refresh_token is None:
             altscore_email = config("ALTSCORE_EMAIL", None)
             altscore_password = config("ALTSCORE_PASSWORD", None)
             if altscore_email is None or altscore_password is None:
-                raise ValueError("ALTSCORE_EMAIL and ALTSCORE_PASSWORD must be available as environment variables")
+                raise ValueError("Authentication error, "
+                                 "refresh token not found and no credentials provided as environment variables")
             self.user_token = login_with_user_credentials(
                 email=config("ALTSCORE_EMAIL"),
                 password=config("ALTSCORE_PASSWORD"),
@@ -59,8 +68,8 @@ class AltScoreBase:
                 tenant=self.tenant
             )
         else:
-            self.user_token, self.renew_token = refresh_api_token(
-                refresh_token=self.renew_token,
+            self.user_token, self._refresh_token = refresh_api_token(
+                refresh_token=self._refresh_token,
                 environment=self.environment,
                 tenant=self.tenant
             )
@@ -102,8 +111,10 @@ class AltScoreBase:
 class AltScore(AltScoreBase):
     _async_mode = False
 
-    def __init__(self, api_key: str = None, tenant: str = "default",
-                 environment: str = "production", user_token: Optional[str] = None,
+    def __init__(self, tenant: str = "default", environment: str = "production",
+                 api_key: str = None, user_token: Optional[str] = None,
+                 email: Optional[str] = None, password: Optional[str] = None,
+                 client_id: Optional[str] = None, client_secret: Optional[str] = None,
                  form_token: Optional[str] = None, partner_id: Optional[str] = None):
         super().__init__(
             api_key=api_key,
@@ -111,6 +122,10 @@ class AltScore(AltScoreBase):
             environment=environment,
             user_token=user_token,
             form_token=form_token,
+            email=email,
+            password=password,
+            client_id=client_id,
+            client_secret=client_secret,
             partner_id=partner_id)
         self.borrower_central = BorrowerCentralSync(self)
         self.altdata = AltDataSync(self)
@@ -204,8 +219,10 @@ class AltScore(AltScoreBase):
 class AltScoreAsync(AltScoreBase):
     _async_mode = True
 
-    def __init__(self, api_key: str = None, tenant: str = "default",
-                 environment: str = "production", user_token: Optional[str] = None,
+    def __init__(self, tenant: str = "default", environment: str = "production",
+                 api_key: str = None, user_token: Optional[str] = None,
+                 email: Optional[str] = None, password: Optional[str] = None,
+                 client_id: Optional[str] = None, client_secret: Optional[str] = None,
                  form_token: Optional[str] = None, partner_id: Optional[str] = None):
         super().__init__(
             api_key=api_key,
@@ -213,6 +230,10 @@ class AltScoreAsync(AltScoreBase):
             environment=environment,
             user_token=user_token,
             form_token=form_token,
+            email=email,
+            password=password,
+            client_id=client_id,
+            client_secret=client_secret,
             partner_id=partner_id)
         self.borrower_central = BorrowerCentralAsync(self)
         self.altdata = AltDataAsync(self)
@@ -373,10 +394,10 @@ def login_with_client_credentials(
         headers["frontegg-tenant-id"] = tenant
     with httpx.Client() as client:
         response = client.post(
-            url=f"{auth_urls[environment]}/identity/resources/auth/v1/client",
+            url=f"{auth_urls[environment]}/identity/resources/auth/v1/api-token",
             data={
                 "clientId": client_id,
-                "clientSecret": client_secret
+                "secret": client_secret
             }
         )
         raise_for_status_improved(response)
@@ -406,3 +427,5 @@ def refresh_api_token(
         raise_for_status_improved(response)
         data = response.json()
         return data["accessToken"], data["refreshToken"]
+
+

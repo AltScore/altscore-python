@@ -14,7 +14,7 @@ from altscore.borrower_central.model.stages import StageSync, StageAsync
 from altscore.borrower_central.model.risk_ratings import RiskRatingSync, RiskRatingAsync
 from altscore.borrower_central.model.policy_alerts import AlertSync, AlertAsync
 
-from altscore.common.http_errors import raise_for_status_improved
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401
 from altscore.borrower_central.model.store_packages import PackageSync, PackageAsync
 from altscore.borrower_central.model.executions import ExecutionSync, ExecutionAsync
 from altscore.borrower_central.utils import clean_dict
@@ -219,9 +219,13 @@ class BorrowersAsyncModule:
     def __init__(self, altscore_client):
         self.altscore_client = altscore_client
 
+    def renew_token(self):
+        self.altscore_client.renew_token()
+
     def build_headers(self):
         return build_headers(self)
 
+    @retry_on_401
     async def create(self, new_entity_data: dict):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
@@ -233,6 +237,7 @@ class BorrowersAsyncModule:
             raise_for_status_improved(response)
             return response.json()["id"]
 
+    @retry_on_401
     async def patch(self, resource_id: str, patch_data: dict):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.patch(
@@ -244,6 +249,7 @@ class BorrowersAsyncModule:
             raise_for_status_improved(response)
             return await self.retrieve(response.json()["id"])
 
+    @retry_on_401
     async def delete(self, resource_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.delete(
@@ -254,6 +260,7 @@ class BorrowersAsyncModule:
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401
     async def retrieve(self, resource_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
@@ -261,14 +268,17 @@ class BorrowersAsyncModule:
                 headers=self.build_headers(),
                 timeout=120,
             )
+            raise_for_status_improved(response)
             if response.status_code == 200:
                 return BorrowerAsync(
                     base_url=self.altscore_client._borrower_central_base_url,
                     header_builder=self.build_headers,
+                    renew_token=self.renew_token,
                     data=BorrowerAPIDTO.parse_obj(response.json())
                 )
             return None
 
+    @retry_on_401
     async def find_one_by_identity(self, identity_key: str, identity_value: str):
         """
         Exact match by identity
@@ -300,9 +310,13 @@ class BorrowersSyncModule:
     def __init__(self, altscore_client):
         self.altscore_client = altscore_client
 
+    def renew_token(self):
+        self.altscore_client.renew_token()
+
     def build_headers(self):
         return build_headers(self)
 
+    @retry_on_401
     def create(self, new_entity_data: dict):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
@@ -314,6 +328,7 @@ class BorrowersSyncModule:
             raise_for_status_improved(response)
             return response.json()["id"]
 
+    @retry_on_401
     def patch(self, resource_id: str, patch_data: dict):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.patch(
@@ -325,6 +340,7 @@ class BorrowersSyncModule:
             raise_for_status_improved(response)
             return self.retrieve(response.json()["id"])
 
+    @retry_on_401
     def delete(self, resource_id: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.delete(
@@ -335,6 +351,7 @@ class BorrowersSyncModule:
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401
     def retrieve(self, resource_id: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
@@ -342,16 +359,17 @@ class BorrowersSyncModule:
                 headers=self.build_headers(),
                 timeout=120
             )
+            raise_for_status_improved(response)
             if response.status_code == 200:
                 return BorrowerSync(
                     base_url=self.altscore_client._borrower_central_base_url,
                     header_builder=self.build_headers,
+                    renew_token=self.renew_token,
                     data=BorrowerAPIDTO.parse_obj(response.json())
                 )
-            elif response.status_code in [403, 401]:
-                raise Exception("Unauthorized, check your API key")
             return None
 
+    @retry_on_401
     def find_one_by_identity(self, identity_key: str, identity_value: str):
         """
         Exact match by identity
@@ -381,11 +399,13 @@ class BorrowersSyncModule:
 class BorrowerAsync(BorrowerBase):
     data: BorrowerAPIDTO
 
-    def __init__(self, base_url, header_builder, data: BorrowerAPIDTO):
+    def __init__(self, base_url, header_builder, renew_token, data: BorrowerAPIDTO):
         super().__init__(base_url)
         self._header_builder = header_builder
+        self.renew_token = renew_token
         self.data = data
 
+    @retry_on_401
     async def get_stage(self) -> StageAsync:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
@@ -396,9 +416,11 @@ class BorrowerAsync(BorrowerBase):
             return StageAsync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=response.json()
             )
 
+    @retry_on_401
     async def set_stage(self, stage: str, reference_id: Optional[str] = None):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
@@ -412,6 +434,7 @@ class BorrowerAsync(BorrowerBase):
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401
     async def get_risk_rating(self) -> RiskRatingAsync:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
@@ -422,9 +445,11 @@ class BorrowerAsync(BorrowerBase):
             return RiskRatingAsync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=response.json()
             )
 
+    @retry_on_401
     async def set_risk_rating(self, risk_rating: str, reference_id: Optional[str] = None):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
@@ -438,6 +463,7 @@ class BorrowerAsync(BorrowerBase):
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401
     async def get_documents(self, **kwargs) -> List[DocumentAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._documents(self.data.id, **kwargs)
@@ -450,9 +476,11 @@ class BorrowerAsync(BorrowerBase):
             return [DocumentAsync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=document_data
             ) for document_data in data]
 
+    @retry_on_401
     async def get_identity_by_key(self, key: str) -> Optional[IdentityAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._identities(self.data.id, key=key)
@@ -467,9 +495,11 @@ class BorrowerAsync(BorrowerBase):
             return IdentityAsync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=data[0]
             )
 
+    @retry_on_401
     async def get_borrower_field_by_key(self, key: str) -> Optional[BorrowerFieldAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._borrower_fields(self.data.id, key=key)
@@ -484,9 +514,11 @@ class BorrowerAsync(BorrowerBase):
             return BorrowerFieldAsync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=data[0]
             )
 
+    @retry_on_401
     async def get_identities(self, **kwargs) -> List[IdentityAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._identities(self.data.id, **kwargs)
@@ -499,9 +531,11 @@ class BorrowerAsync(BorrowerBase):
             return [IdentityAsync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=identity_data
             ) for identity_data in data]
 
+    @retry_on_401
     async def get_addresses(self, **kwargs) -> List[AddressAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._addresses(self.data.id, **kwargs)
@@ -514,9 +548,11 @@ class BorrowerAsync(BorrowerBase):
             return [AddressAsync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=address_data
             ) for address_data in data]
 
+    @retry_on_401
     async def get_points_of_contact(self, **kwargs) -> List[PointOfContactAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._points_of_contact(self.data.id, **kwargs)
@@ -529,9 +565,11 @@ class BorrowerAsync(BorrowerBase):
             return [PointOfContactAsync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=point_of_contact_data
             ) for point_of_contact_data in data]
 
+    @retry_on_401
     async def get_borrower_fields(self, **kwargs) -> List[BorrowerFieldAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._borrower_fields(self.data.id, **kwargs)
@@ -544,9 +582,11 @@ class BorrowerAsync(BorrowerBase):
             return [BorrowerFieldAsync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=borrower_field_data
             ) for borrower_field_data in data]
 
+    @retry_on_401
     async def get_authorizations(self, **kwargs) -> List[AuthorizationAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._authorizations(self.data.id, **kwargs)
@@ -559,9 +599,11 @@ class BorrowerAsync(BorrowerBase):
             return [AuthorizationAsync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=authorization_data
             ) for authorization_data in data]
 
+    @retry_on_401
     async def get_relationships(self, **kwargs) -> List[RelationshipAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._relationships(self.data.id, **kwargs)
@@ -574,9 +616,11 @@ class BorrowerAsync(BorrowerBase):
             return [RelationshipAsync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=relationship_data
             ) for relationship_data in data]
 
+    @retry_on_401
     async def get_executions(self, **kwargs) -> List[ExecutionAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._executions(self.data.id, **kwargs)
@@ -589,9 +633,11 @@ class BorrowerAsync(BorrowerBase):
             return [ExecutionAsync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=execution_data
             ) for execution_data in data]
 
+    @retry_on_401
     async def get_packages(self, **kwargs) -> List[PackageAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._packages(self.data.id, **kwargs)
@@ -604,9 +650,11 @@ class BorrowerAsync(BorrowerBase):
             return [PackageAsync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=package_data
             ) for package_data in data]
 
+    @retry_on_401
     async def get_alerts(self, **kwargs) -> List[AlertAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._alerts(self.data.id, **kwargs)
@@ -619,10 +667,12 @@ class BorrowerAsync(BorrowerBase):
             alerts = [AlertAsync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=alert_data
             ) for alert_data in data]
             return alerts
 
+    @retry_on_401
     async def associate_cms_client_id(self, cms_client_id: str):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
@@ -632,6 +682,7 @@ class BorrowerAsync(BorrowerBase):
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401
     async def put_cms_client_ids(self, cms_client_ids: List[str]):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
@@ -644,6 +695,7 @@ class BorrowerAsync(BorrowerBase):
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401
     async def get_main_address(self) -> Optional[AddressAsync]:
         addresses = await self.get_addresses(sort_by="priority", per_page=1)
         if len(addresses) == 0:
@@ -651,6 +703,7 @@ class BorrowerAsync(BorrowerBase):
         else:
             return addresses[0]
 
+    @retry_on_401
     async def get_main_point_of_contact(self, contact_method: str) -> Optional[PointOfContactAsync]:
         points_of_contact = await self.get_points_of_contact(
             contact_method=contact_method, sort_by="priority", per_page=1
@@ -670,11 +723,13 @@ class BorrowerAsync(BorrowerBase):
 class BorrowerSync(BorrowerBase):
     data: BorrowerAPIDTO
 
-    def __init__(self, base_url, header_builder, data: BorrowerAPIDTO):
+    def __init__(self, base_url, header_builder, renew_token, data: BorrowerAPIDTO):
         super().__init__(base_url)
         self._header_builder = header_builder
+        self.renew_token = renew_token
         self.data = data
 
+    @retry_on_401
     def get_stage(self):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.get(
@@ -685,9 +740,11 @@ class BorrowerSync(BorrowerBase):
             return StageSync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=response.json()
             )
 
+    @retry_on_401
     def set_stage(self, stage: str, reference_id: Optional[str] = None):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.put(
@@ -701,6 +758,7 @@ class BorrowerSync(BorrowerBase):
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401
     def get_risk_rating(self):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.get(
@@ -711,9 +769,11 @@ class BorrowerSync(BorrowerBase):
             return RiskRatingSync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=response.json()
             )
 
+    @retry_on_401
     def set_risk_rating(self, risk_rating: str, reference_id: Optional[str] = None):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.put(
@@ -727,6 +787,7 @@ class BorrowerSync(BorrowerBase):
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401
     def get_documents(self, **kwargs) -> List[DocumentSync]:
         with httpx.Client(base_url=self.base_url) as client:
             url, query = self._documents(self.data.id, **kwargs)
@@ -739,9 +800,11 @@ class BorrowerSync(BorrowerBase):
             return [DocumentSync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=document_data
             ) for document_data in data]
 
+    @retry_on_401
     def get_identity_by_key(self, key: str) -> Optional[IdentitySync]:
         with httpx.Client(base_url=self.base_url) as client:
             url, query = self._identities(self.data.id, key=key)
@@ -756,9 +819,11 @@ class BorrowerSync(BorrowerBase):
             return IdentitySync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=data[0]
             )
 
+    @retry_on_401
     def get_borrower_field_by_key(self, key: str) -> Optional[BorrowerFieldSync]:
         with httpx.Client(base_url=self.base_url) as client:
             url, query = self._borrower_fields(self.data.id, key=key)
@@ -773,9 +838,11 @@ class BorrowerSync(BorrowerBase):
             return BorrowerFieldSync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=data[0]
             )
 
+    @retry_on_401
     def get_identities(self, **kwargs) -> List[IdentitySync]:
         with httpx.Client(base_url=self.base_url) as client:
             url, query = self._identities(self.data.id, **kwargs)
@@ -788,9 +855,11 @@ class BorrowerSync(BorrowerBase):
             return [IdentitySync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=identity_data
             ) for identity_data in data]
 
+    @retry_on_401
     def get_addresses(self, **kwargs) -> List[AddressSync]:
         with httpx.Client(base_url=self.base_url) as client:
             url, query = self._addresses(self.data.id, **kwargs)
@@ -803,9 +872,11 @@ class BorrowerSync(BorrowerBase):
             return [AddressSync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=address_data
             ) for address_data in data]
 
+    @retry_on_401
     def get_points_of_contact(self, **kwargs) -> List[PointOfContactSync]:
         with httpx.Client(base_url=self.base_url) as client:
             url, query = self._points_of_contact(self.data.id, **kwargs)
@@ -818,9 +889,11 @@ class BorrowerSync(BorrowerBase):
             return [PointOfContactSync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=point_of_contact_data
             ) for point_of_contact_data in data]
 
+    @retry_on_401
     def get_borrower_fields(self, **kwargs) -> List[BorrowerFieldSync]:
         with httpx.Client(base_url=self.base_url) as client:
             url, query = self._borrower_fields(self.data.id, **kwargs)
@@ -833,9 +906,11 @@ class BorrowerSync(BorrowerBase):
             return [BorrowerFieldSync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=borrower_field_data
             ) for borrower_field_data in data]
 
+    @retry_on_401
     def get_authorizations(self, **kwargs) -> List[AuthorizationSync]:
         with httpx.Client(base_url=self.base_url) as client:
             url, query = self._authorizations(self.data.id, **kwargs)
@@ -848,9 +923,11 @@ class BorrowerSync(BorrowerBase):
             return [AuthorizationSync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=authorization_data
             ) for authorization_data in data]
 
+    @retry_on_401
     def get_relationships(self, **kwargs) -> List[RelationshipSync]:
         with httpx.Client(base_url=self.base_url) as client:
             url, query = self._relationships(self.data.id, **kwargs)
@@ -863,9 +940,11 @@ class BorrowerSync(BorrowerBase):
             return [RelationshipSync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=relationship_data
             ) for relationship_data in data]
 
+    @retry_on_401
     def get_executions(self, **kwargs) -> List[ExecutionSync]:
         with httpx.Client(base_url=self.base_url) as client:
             url, query = self._executions(self.data.id, **kwargs)
@@ -878,9 +957,11 @@ class BorrowerSync(BorrowerBase):
             return [ExecutionSync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=execution_data
             ) for execution_data in data]
 
+    @retry_on_401
     def get_packages(self, **kwargs) -> List[PackageSync]:
         with httpx.Client(base_url=self.base_url) as client:
             url, query = self._packages(self.data.id, **kwargs)
@@ -893,9 +974,11 @@ class BorrowerSync(BorrowerBase):
             return [PackageSync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=package_data
             ) for package_data in data]
 
+    @retry_on_401
     def get_alerts(self, **kwargs) -> List[AlertSync]:
         with httpx.Client(base_url=self.base_url) as client:
             url, query = self._alerts(self.data.id, **kwargs)
@@ -908,10 +991,12 @@ class BorrowerSync(BorrowerBase):
             alerts = [AlertSync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
+                renew_token=self.renew_token,
                 data=alert_data
             ) for alert_data in data]
             return alerts
 
+    @retry_on_401
     def associate_cms_client_id(self, cms_client_id: str):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
@@ -921,6 +1006,7 @@ class BorrowerSync(BorrowerBase):
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401
     def put_cms_client_ids(self, cms_client_ids: List[str]):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.put(
@@ -933,6 +1019,7 @@ class BorrowerSync(BorrowerBase):
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401
     def get_main_address(self) -> Optional[AddressSync]:
         addresses = self.get_addresses(sort_by="priority", per_page=1)
         if len(addresses) == 0:
@@ -940,6 +1027,7 @@ class BorrowerSync(BorrowerBase):
         else:
             return addresses[0]
 
+    @retry_on_401
     def get_main_point_of_contact(self, contact_method: str) -> Optional[PointOfContactSync]:
         points_of_contact = self.get_points_of_contact(
             contact_method=contact_method, sort_by="priority", per_page=1

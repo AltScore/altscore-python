@@ -32,14 +32,14 @@ class CreateFormTemplateDTO(BaseModel):
 
 class FormTemplatesSync(GenericSyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "form-templates", header_builder, FormTemplateAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "form-templates", header_builder, renew_token, FormTemplateAPIDTO.parse_obj(data))
 
 
 class FormTemplatesAsync(GenericAsyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "form-templates", header_builder, FormTemplateAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "form-templates", header_builder, renew_token, FormTemplateAPIDTO.parse_obj(data))
 
 
 class FormTemplatesSyncModule(GenericSyncModule):

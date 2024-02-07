@@ -2,7 +2,7 @@ import httpx
 import json
 from altscore.borrower_central.helpers import build_headers
 from altscore.borrower_central.model.attachments import AttachmentAPIDTO, AttachmentInput
-from altscore.common.http_errors import raise_for_status_improved
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401
 from typing import Dict
 import stringcase
 from polyfactory.factories.pydantic_factory import ModelFactory
@@ -32,9 +32,10 @@ class GenericBase:
 
 class GenericSyncResource(GenericBase):
 
-    def __init__(self, base_url, resource, header_builder, data):
+    def __init__(self, base_url, resource, header_builder, renew_token, data):
         super().__init__(base_url, resource)
         self._header_builder = header_builder
+        self.renew_token = renew_token
         self.data = data
         self.attachments = None
         self.signatures = None
@@ -44,6 +45,7 @@ class GenericSyncResource(GenericBase):
     def created_at(self):
         return self.data.created_at
 
+    @retry_on_401
     def get_attachments(self):
         if self.data.has_attachments:
             with httpx.Client() as client:
@@ -56,6 +58,7 @@ class GenericSyncResource(GenericBase):
                 self.attachments = [AttachmentAPIDTO.parse_obj(e) for e in response.json()]
         return self.attachments
 
+    @retry_on_401
     def post_attachment(self, attachment: Dict):
         with httpx.Client() as client:
             response = client.post(
@@ -66,6 +69,7 @@ class GenericSyncResource(GenericBase):
             )
             raise_for_status_improved(response)
 
+    @retry_on_401
     def get_content(self):
         if self.resource in ["stores/packages"]:
             with httpx.Client() as client:
@@ -86,9 +90,10 @@ class GenericSyncResource(GenericBase):
 
 class GenericAsyncResource(GenericBase):
 
-    def __init__(self, base_url, resource, header_builder, data):
+    def __init__(self, base_url, resource, header_builder, renew_token, data):
         super().__init__(base_url, resource)
         self._header_builder = header_builder
+        self.renew_token = renew_token
         self.data = data
         self.attachments = None
         self.signatures = None
@@ -98,6 +103,7 @@ class GenericAsyncResource(GenericBase):
     def created_at(self):
         return self.data.created_at
 
+    @retry_on_401
     async def get_attachments(self):
         if self.data.has_attachments:
             async with httpx.AsyncClient() as client:
@@ -110,6 +116,7 @@ class GenericAsyncResource(GenericBase):
                 self.attachments = [AttachmentAPIDTO.parse_obj(e) for e in response.json()]
         return self.attachments
 
+    @retry_on_401
     async def post_attachment(self, attachment: Dict):
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -120,6 +127,7 @@ class GenericAsyncResource(GenericBase):
             )
             raise_for_status_improved(response)
 
+    @retry_on_401
     async def get_content(self):
         if self.resource in ["stores/packages"]:
             async with httpx.AsyncClient() as client:
@@ -146,15 +154,20 @@ class GenericSyncModule:
         self.update_data_model = update_data_model
         self.resource = resource.strip("/")
 
+    def renew_token(self):
+        self.altscore_client.renew_token()
+
     def build_headers(self):
         return build_headers(self)
 
     def print_sample_create(self):
         class SampleFactory(ModelFactory[self.create_data_model]):
             ...
+
         sample = SampleFactory.build()
         print(json.dumps(sample.dict(by_alias=True), indent=2, ensure_ascii=False))
 
+    @retry_on_401
     def retrieve(self, resource_id: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
@@ -166,10 +179,12 @@ class GenericSyncModule:
                 return self.sync_resource(
                     base_url=self.altscore_client._borrower_central_base_url,
                     header_builder=self.build_headers,
+                    rewew_token=self.renew_token,
                     data=self.retrieve_data_model.parse_obj(response.json())
                 )
             return None
 
+    @retry_on_401
     def create(self, new_entity_data: Dict, update_if_exists: bool = False) -> str:
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
@@ -188,6 +203,7 @@ class GenericSyncModule:
             raise_for_status_improved(response)
             return response.json()["id"]
 
+    @retry_on_401
     def patch(self, resource_id: str, patch_data: Dict) -> str:
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.patch(
@@ -199,6 +215,7 @@ class GenericSyncModule:
             raise_for_status_improved(response)
             return resource_id
 
+    @retry_on_401
     def delete(self, resource_id: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.delete(
@@ -209,6 +226,7 @@ class GenericSyncModule:
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401
     def query(self, **kwargs):
         query_params = {}
         for k, v in kwargs.items():
@@ -241,6 +259,9 @@ class GenericAsyncModule:
         self.update_data_model = update_data_model
         self.resource = resource.strip("/")
 
+    def renew_token(self):
+        self.altscore_client.renew_token()
+
     def build_headers(self):
         return build_headers(self)
 
@@ -256,6 +277,7 @@ class GenericAsyncModule:
     def print_retrieve_schema(self):
         print(json.dumps(self.retrieve_data_model.schema(), indent=2, ensure_ascii=False))
 
+    @retry_on_401
     async def retrieve(self, resource_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
@@ -267,12 +289,14 @@ class GenericAsyncModule:
                 return self.async_resource(
                     base_url=self.altscore_client._borrower_central_base_url,
                     header_builder=self.build_headers,
+                    rewew_token=self.renew_token,
                     data=self.retrieve_data_model.parse_obj(response.json())
                 )
             elif response.status_code in [403, 401]:
                 raise Exception("Unauthorized, check your API key")
             return None
 
+    @retry_on_401
     async def create(self, new_entity_data: Dict, update_if_exists: bool = False) -> str:
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
@@ -291,6 +315,7 @@ class GenericAsyncModule:
             raise_for_status_improved(response)
             return response.json()["id"]
 
+    @retry_on_401
     async def patch(self, resource_id: str, patch_data: Dict) -> str:
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.patch(
@@ -302,6 +327,7 @@ class GenericAsyncModule:
             raise_for_status_improved(response)
             return resource_id
 
+    @retry_on_401
     async def delete(self, resource_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.delete(
@@ -312,6 +338,7 @@ class GenericAsyncModule:
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401
     async def query(self, **kwargs):
         query_params = {}
         for k, v in kwargs.items():

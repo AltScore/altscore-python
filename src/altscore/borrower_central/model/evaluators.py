@@ -3,7 +3,7 @@ import httpx
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 from pydantic import BaseModel, Field
-from altscore.common.http_errors import raise_for_status_improved
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401
 
 
 class EvaluatorAPIDTO(BaseModel):
@@ -131,9 +131,10 @@ class EvaluatorOutput(BaseModel):
 
 class EvaluatorSync(GenericSyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "evaluators", header_builder, EvaluatorAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "evaluators", header_builder, renew_token, EvaluatorAPIDTO.parse_obj(data))
 
+    @retry_on_401
     def evaluate(self, evaluator_input: EvaluatorInput) -> EvaluatorOutput:
         with httpx.Client() as client:
             response = client.post(
@@ -148,9 +149,10 @@ class EvaluatorSync(GenericSyncResource):
 
 class EvaluatorAsync(GenericAsyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "evaluators", header_builder, EvaluatorAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "evaluators", header_builder, renew_token, EvaluatorAPIDTO.parse_obj(data))
 
+    @retry_on_401
     async def evaluate(self, evaluator_input: EvaluatorInput) -> EvaluatorOutput:
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -173,6 +175,10 @@ class EvaluatorSyncModule(GenericSyncModule):
                          update_data_model=UpdateEvaluatorDTO,
                          resource="evaluators")
 
+    def renew_token(self):
+        self.altscore_client.renew_token()
+
+    @retry_on_401
     def evaluate(
             self, evaluator_input: Dict, evaluator_id: Optional[str] = None,
             evaluator_alias: Optional[str] = None, evaluator_version: Optional[str] = None
@@ -206,6 +212,10 @@ class EvaluatorAsyncModule(GenericAsyncModule):
                          update_data_model=UpdateEvaluatorDTO,
                          resource="evaluators")
 
+    def renew_token(self):
+        self.altscore_client.renew_token()
+
+    @retry_on_401
     async def evaluate(
             self, evaluator_input: Dict, evaluator_id: Optional[str] = None,
             evaluator_alias: Optional[str] = None, evaluator_version: Optional[str] = None

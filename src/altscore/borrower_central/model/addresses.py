@@ -122,14 +122,14 @@ class UpdateAddressDTO(BaseModel):
 
 class AddressSync(GenericSyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "addresses", header_builder, AddressAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "addresses", header_builder, renew_token, AddressAPIDTO.parse_obj(data))
 
 
 class AddressAsync(GenericAsyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "addresses", header_builder, AddressAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "addresses", header_builder, renew_token, AddressAPIDTO.parse_obj(data))
 
 
 class AddressesSyncModule(GenericSyncModule):
