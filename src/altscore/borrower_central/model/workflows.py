@@ -96,6 +96,7 @@ class WorkflowsSyncModule(GenericSyncModule):
                          update_data_model=UpdateWorkflowDTO,
                          resource="workflows")
 
+    @retry_on_401
     def retrieve_by_alias_version(self, alias: str, version: str):
         query_params = {
             "alias": alias,
@@ -162,6 +163,7 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                          update_data_model=UpdateWorkflowDTO,
                          resource="workflows")
 
+    @retry_on_401
     async def retrieve_by_alias_version(self, alias: str, version: str):
         query_params = {
             "alias": alias,
