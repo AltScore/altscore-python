@@ -1,4 +1,6 @@
 import httpx
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.borrower_central.helpers import build_headers
 
 
 class ReportGeneratorSyncModule:
@@ -10,8 +12,9 @@ class ReportGeneratorSyncModule:
         self.altscore_client.renew_token()
 
     def build_headers(self):
-        return {"API-KEY": self.altscore_client.api_key}
+        return build_headers(self)
 
+    @retry_on_401
     def generate(self, report_request: dict) -> str:
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
@@ -20,10 +23,8 @@ class ReportGeneratorSyncModule:
                 json=report_request,
                 timeout=120
             )
-            if response.status_code == 200:
-                return response.json()["url"]
-            else:
-                raise Exception(response.text)
+            raise_for_status_improved(response)
+            return response.json()["url"]
 
 
 class ReportGeneratorAsyncModule:
@@ -35,8 +36,9 @@ class ReportGeneratorAsyncModule:
         self.altscore_client.renew_token()
 
     def build_headers(self):
-        return {"API-KEY": self.altscore_client.api_key}
+        return build_headers(self)
 
+    @retry_on_401
     async def generate(self, report_request: dict) -> str:
         with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
@@ -45,7 +47,5 @@ class ReportGeneratorAsyncModule:
                 json=report_request,
                 timeout=120
             )
-            if response.status_code == 200:
-                return response.json()["url"]
-            else:
-                raise Exception(response.text)
+            raise_for_status_improved(response)
+            return response.json()["url"]
