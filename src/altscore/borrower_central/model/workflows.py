@@ -96,6 +96,30 @@ class WorkflowsSyncModule(GenericSyncModule):
                          update_data_model=UpdateWorkflowDTO,
                          resource="workflows")
 
+    def retrieve_by_alias_version(self, alias: str, version: str):
+        query_params = {
+            "alias": alias,
+            "version": version
+        }
+
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                f"/v1/{self.resource}",
+                headers=self.build_headers(),
+                params=query_params,
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            res = [self.sync_resource(
+                base_url=self.altscore_client._borrower_central_base_url,
+                header_builder=self.build_headers,
+                data=self.retrieve_data_model.parse_obj(e)
+            ) for e in response.json()]
+
+            if len(res) == 0:
+                return None
+            return res[0]
+
     @retry_on_401
     def execute(self, workflow_input: Dict,
                 workflow_id: Optional[str] = None,
@@ -136,6 +160,30 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                          create_data_model=CreateWorkflowDTO,
                          update_data_model=UpdateWorkflowDTO,
                          resource="workflows")
+
+    async def retrieve_by_alias_version(self, alias: str, version: str):
+        query_params = {
+            "alias": alias,
+            "version": version
+        }
+
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                f"/v1/{self.resource}",
+                headers=self.build_headers(),
+                params=query_params,
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            res = [self.async_resource(
+                base_url=self.altscore_client._borrower_central_base_url,
+                header_builder=self.build_headers,
+                data=self.retrieve_data_model.parse_obj(e)
+            ) for e in response.json()]
+
+            if len(res) == 0:
+                return None
+            return res[0]
 
     @retry_on_401
     async def execute(self,
