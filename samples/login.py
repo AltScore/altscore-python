@@ -1,6 +1,5 @@
 from altscore import AltScore
 from decouple import config
-from altscore.altdata.schemas import InputKeys, SourceConfig
 
 # With client_id and client_secret
 altscore = AltScore(
@@ -9,15 +8,5 @@ altscore = AltScore(
     environment="staging"
 )
 # %%
-source_data = altscore.altdata.requests.new_sync(
-    input_keys=InputKeys(
-        person_id="1714556493",
-    ),
-    sources_config=[
-        SourceConfig(
-            source_id="ECU_PUB_0002",
-            version="v1"
-        )
-    ]
-)
+altscore.get_tenant_from_token()
 # %%

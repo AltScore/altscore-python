@@ -1,5 +1,5 @@
 import asyncio
-
+import jwt
 import httpx
 from decouple import config
 from altscore.borrower_central import BorrowerCentralAsync, BorrowerCentralSync
@@ -106,6 +106,12 @@ class AltScoreBase:
             return "http://localhost:8889"
         else:
             raise ValueError(f"Unknown environment: {self.environment}")
+
+    def get_tenant_from_token(self) -> str:
+        return jwt.decode(
+            self.user_token,
+            options={"verify_signature": False}
+        )["tenantId"]
 
 
 class AltScore(AltScoreBase):
@@ -427,5 +433,3 @@ def refresh_api_token(
         raise_for_status_improved(response)
         data = response.json()
         return data["accessToken"], data["refreshToken"]
-
-

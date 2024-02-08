@@ -8,3 +8,4 @@ httpx
 stringcase
 textual
 textual-dev
+pyjwt
