@@ -37,7 +37,7 @@ class CreateWorkflowDTO(BaseModel):
     description: Optional[str] = Field(alias="description")
     context: Optional[str] = Field(alias="context", default=None)
     flow_definition: Optional[dict] = Field(alias="flowDefinition")
-    route: Lambda = Field(alias="route")
+    route: Optional[Lambda] = Field(alias="route", default=None)
 
     class Config:
         populate_by_name = True
@@ -48,7 +48,7 @@ class CreateWorkflowDTO(BaseModel):
 class UpdateWorkflowDTO(BaseModel):
     label: Optional[str] = Field(alias="label")
     description: Optional[str] = Field(alias="description")
-    route: Lambda = Field(alias="route")
+    route: Optional[Lambda] = Field(alias="route", default=None)
     flow_definition: Optional[dict] = Field(alias="flowDefinition")
 
     class Config:
