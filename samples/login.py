@@ -1,6 +1,6 @@
 from altscore import AltScore
 from decouple import config
-
+from altscore.altdata.schemas import InputKeys, SourceConfig
 # With client_id and client_secret
 altscore = AltScore(
     client_id=config("ALTSCORE_CLIENT_ID"),
@@ -21,3 +21,10 @@ req1 = altscore.altdata.requests.new_sync(
     timeout=10
 )
 # %%
+req2 = altscore.altdata.requests.new_sync(
+    input_keys=InputKeys(personId="1234567890"),
+    sources_config=[
+          SourceConfig(sourceId="TES-GEN-0000", version="v1")
+    ],
+    timeout=10
+)

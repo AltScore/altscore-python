@@ -13,6 +13,8 @@ class CreateExecutionDTO(BaseModel):
     workflow_id: Optional[str] = Field(alias="workflowId", default=None)
     workflow_alias: Optional[str] = Field(alias="workflowAlias", default=None)
     workflow_version: Optional[str] = Field(alias="workflowVersion", default=None)
+    borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
+    billable_id: Optional[str] = Field(alias="billableId", default=None)
 
     class Config:
         populate_by_name = True
@@ -28,6 +30,7 @@ class ExecutionAPIDTO(BaseModel):
     workflow_version: str = Field(alias="workflowVersion")
     batch_id: Optional[str] = Field(alias="batchId")
     billable_id: Optional[str] = Field(alias="billableId")
+    borrower_id: Optional[str] = Field(alias="borrowerId")
     status: Optional[str] = Field(alias="status", default=None)
     is_success: Optional[bool] = Field(alias="isSuccess", default=None)
     is_billable: Optional[bool] = Field(alias="isBillable", default=None)
@@ -43,6 +46,7 @@ class ExecutionAPIDTO(BaseModel):
 class ExecutionOutputDataAPIDTO(BaseModel):
     id: Optional[str] = Field(alias="id")
     billable_id: Optional[str] = Field(alias="billableId")
+    borrower_id: Optional[str] = Field(alias="borrowerId")
     workflow_id: str = Field(alias="workflowId")
     workflow_alias: str = Field(alias="workflowAlias")
     workflow_version: str = Field(alias="workflowVersion")
@@ -66,6 +70,8 @@ class CreateExecutionOutput(BaseModel):
     output: Dict = Field(alias="output")
     custom_output: Optional[Any] = Field(alias="customOutput", default=None)
     error_message: Optional[str] = Field(alias="errorMessage", default=None)
+    billable_id: Optional[str] = Field(alias="billableId", default=None)
+    borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
 
     class Config:
         populate_by_name = True
