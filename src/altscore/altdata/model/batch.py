@@ -77,6 +77,9 @@ class BatchSyncModule:
     def __init__(self, altscore_client):
         self.altscore_client = altscore_client
 
+    def renew_token(self):
+        self.altscore_client.renew_token()
+
     def build_headers(self):
         return {"API-KEY": self.altscore_client.api_key}
 
@@ -95,6 +98,7 @@ class BatchSyncModule:
             return BatchSync(
                 base_url=self.altscore_client._altdata_base_url,
                 header_builder=self.build_headers,
+                renew_token=self.renew_token,
                 data=BatchData(batch_id=batch_id, label=label, sources_config=sources_config)
             )
 
@@ -109,6 +113,7 @@ class BatchSyncModule:
             return BatchSync(
                 base_url=self.altscore_client._altdata_base_url,
                 header_builder=self.build_headers,
+                renew_token=self.renew_token,
                 data=BatchData(
                     batch_id=batch_id,
                     label=response.json()["label"],
@@ -121,6 +126,9 @@ class BatchAsyncModule:
 
     def __init__(self, altscore_client):
         self.altscore_client = altscore_client
+
+    def renew_token(self):
+        self.altscore_client.renew_token()
 
     def build_headers(self):
         return {"API-KEY": self.altscore_client.api_key}
@@ -139,6 +147,7 @@ class BatchAsyncModule:
             return BatchSync(
                 base_url=self.altscore_client._altdata_base_url,
                 header_builder=self.build_headers,
+                renew_token=self.renew_token,
                 data=BatchData(batch_id=batch_id, label=label, sources_config=sources_config)
             )
 
@@ -153,6 +162,7 @@ class BatchAsyncModule:
             return BatchSync(
                 base_url=self.altscore_client._altdata_base_url,
                 header_builder=self.build_headers,
+                renew_token=self.renew_token,
                 data=BatchData(
                     batch_id=batch_id,
                     label=response.json()["label"],
@@ -188,9 +198,10 @@ class BatchData:
 
 class BatchSync(BatchBase):
 
-    def __init__(self, base_url, header_builder, data: BatchData):
+    def __init__(self, base_url, header_builder, renew_token, data: BatchData):
         super().__init__(base_url)
         self.header_builder = header_builder
+        self.renew_token = renew_token
         self.data: BatchData = data
 
     @property
@@ -209,6 +220,7 @@ class BatchSync(BatchBase):
     def export_urls(self):
         return self.data.export_urls
 
+    @retry_on_401
     def get_status(self):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.get(self._status(batch_id=self.data.batch_id),
@@ -216,12 +228,14 @@ class BatchSync(BatchBase):
             raise_for_status_improved(response)
             self.data.status = BatchStatus.parse_obj(response.json())
 
+    @retry_on_401
     def retry(self):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(self._retry(batch_id=self.data.batch_id),
                                    headers=self.header_builder())
             raise_for_status_improved(response)
 
+    @retry_on_401
     def _get_export_urls(self):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
@@ -257,9 +271,10 @@ class BatchSync(BatchBase):
 
 class BatchAsync(BatchBase):
 
-    def __init__(self, base_url, header_builder, data: BatchData):
+    def __init__(self, base_url, header_builder, renew_token, data: BatchData):
         super().__init__(base_url)
         self.header_builder = header_builder
+        self.renew_token = renew_token
         self.data: BatchData = data
 
     @property
@@ -278,6 +293,7 @@ class BatchAsync(BatchBase):
     def export_urls(self):
         return self.data.export_urls
 
+    @retry_on_401
     async def get_status(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(self._status(batch_id=self.data.batch_id),
@@ -285,6 +301,7 @@ class BatchAsync(BatchBase):
             raise_for_status_improved(response)
             self.data.status = BatchStatus.parse_obj(response.json())
 
+    @retry_on_401
     async def retry(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(self._retry(batch_id=self.data.batch_id),

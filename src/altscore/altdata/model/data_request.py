@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Union
 from altscore.altdata.helpers import build_headers
 from altscore.altdata.model.common_schemas import SourceConfig
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401
@@ -110,7 +110,7 @@ class RequestStatus:
 class RequestAPIDTO(BaseModel):
     request_id: str = Field(alias="requestId")
     flat_data: Dict = Field(alias="data")
-    call_summary: List[SourceCallSummary] = Field(alias="callSummary")
+    call_summary: Optional[List[SourceCallSummary]] = Field(alias="callSummary", default=[])
     source_data: Dict = Field(alias="sourceData", default=None)
     inputs: Dict
     requested_at: str = Field(alias="requestedAt")
@@ -168,11 +168,21 @@ class RequestSyncModule:
     def __init__(self, altscore_client):
         self.altscore_client = altscore_client
 
+    def renew_token(self):
+        self.altscore_client.renew_token()
+
     def build_headers(self):
         return build_headers(self)
 
-    def new_sync(self, input_keys: InputKeys, sources_config: List[SourceConfig], timeout: Optional[int] = None):
+    @retry_on_401
+    def new_sync(self, input_keys: Union[InputKeys, Dict], sources_config: List[Union[Dict, SourceConfig]],
+                 timeout: Optional[int] = None):
+        if isinstance(input_keys, dict):
+            # to validate the input keys
+            input_keys = InputKeys.parse_obj(input_keys)
         payload = input_keys.dict(by_alias=True, exclude_none=True)
+        # to validate the sources config model
+        sources_config = [SourceConfig.parse_obj(s) if isinstance(s, dict) else s for s in sources_config]
         if timeout is not None:
             payload["timeout"] = timeout
         payload["sourcesConfig"] = [s.dict(by_alias=True) for s in sources_config]
@@ -182,13 +192,21 @@ class RequestSyncModule:
                 json=payload,
                 headers=self.build_headers(),
                 timeout=500
+                # dont confuse with the timeout in the payload, this is the timeout for the request, not the sources
             )
             raise_for_status_improved(r)
             sync_data_response = r.json()
             return RequestResult.from_api(sync_data_response)
 
-    def new_async(self, input_keys: InputKeys, sources_config: List[SourceConfig]):
+    @retry_on_401
+    def new_async(self, input_keys: Union[InputKeys, Dict], sources_config: List[Union[Dict, SourceConfig]]):
+        if isinstance(input_keys, dict):
+            # to validate the input keys
+            input_keys = InputKeys.parse_obj(input_keys)
         payload = input_keys.dict(by_alias=True, exclude_none=True)
+        # to validate the sources config model
+        sources_config = [SourceConfig.parse_obj(s) if isinstance(s, dict) else s for s in sources_config]
+
         payload["sourcesConfig"] = [s.dict(by_alias=True) for s in sources_config]
         with httpx.Client(base_url=self.altscore_client._altdata_base_url) as client:
             r = client.post(
@@ -202,6 +220,7 @@ class RequestSyncModule:
             return AsyncRequestSync(
                 base_url=self.altscore_client._altdata_base_url,
                 header_builder=self.build_headers,
+                renew_token=self.renew_token,
                 request_id=sync_data_response["requestId"]
             )
 
@@ -209,6 +228,7 @@ class RequestSyncModule:
         return AsyncRequestSync(
             base_url=self.altscore_client._altdata_base_url,
             header_builder=self.build_headers,
+            renew_token=self.renew_token,
             request_id=request_id
         )
 
@@ -218,13 +238,24 @@ class RequestAsyncModule:
     def __init__(self, altscore_client):
         self.altscore_client = altscore_client
 
+    def renew_token(self):
+        self.altscore_client.renew_token()
+
     def build_headers(self):
         return build_headers(self)
 
-    async def new_sync(self, input_keys: InputKeys, sources_config: List[SourceConfig], timeout: Optional[int] = None):
+    @retry_on_401
+    async def new_sync(self, input_keys: Union[InputKeys, Dict], sources_config: List[Union[Dict, SourceConfig]],
+                       timeout: Optional[int] = None):
+        if isinstance(input_keys, dict):
+            # to validate the input keys
+            input_keys = InputKeys.parse_obj(input_keys)
         payload = input_keys.dict(by_alias=True, exclude_none=True)
+        # to validate the sources config model
+        sources_config = [SourceConfig.parse_obj(s) if isinstance(s, dict) else s for s in sources_config]
         if timeout is not None:
             payload["timeout"] = timeout
+
         payload["sourcesConfig"] = [s.dict(by_alias=True) for s in sources_config]
         async with httpx.AsyncClient(base_url=self.altscore_client._altdata_base_url) as client:
             r = await client.post(
@@ -237,8 +268,15 @@ class RequestAsyncModule:
             sync_data_response = r.json()
             return RequestResult.from_api(sync_data_response)
 
-    async def new_async(self, input_keys: InputKeys, sources_config: List[SourceConfig]):
+    @retry_on_401
+    async def new_async(self, input_keys: Union[InputKeys, Dict], sources_config: List[Union[Dict, SourceConfig]]):
+        if isinstance(input_keys, dict):
+            # to validate the input keys
+            input_keys = InputKeys.parse_obj(input_keys)
         payload = input_keys.dict(by_alias=True, exclude_none=True)
+        # to validate the sources config model
+        sources_config = [SourceConfig.parse_obj(s) if isinstance(s, dict) else s for s in sources_config]
+
         payload["sourcesConfig"] = [s.dict(by_alias=True) for s in sources_config]
         async with httpx.AsyncClient(base_url=self.altscore_client._altdata_base_url) as client:
             r = await client.post(
@@ -252,6 +290,7 @@ class RequestAsyncModule:
             return AsyncRequestSync(
                 base_url=self.altscore_client._altdata_base_url,
                 header_builder=self.build_headers,
+                renew_token=self.renew_token,
                 request_id=sync_data_response["requestId"]
             )
 
@@ -259,6 +298,7 @@ class RequestAsyncModule:
         return AsyncRequestSync(
             base_url=self.altscore_client._altdata_base_url,
             header_builder=self.build_headers,
+            renew_token=self.renew_token,
             request_id=request_id
         )
 
@@ -280,16 +320,18 @@ class RequestsBase:
 
 class AsyncRequestSync(RequestsBase):
 
-    def __init__(self, base_url, header_builder, request_id: str):
+    def __init__(self, base_url, header_builder, renew_token, request_id: str):
         super().__init__(base_url)
         self.base_url = base_url
         self.header_builder = header_builder
+        self.renew_token = renew_token
         self.request_id = request_id
 
     @property
     def id(self):
         return self.request_id
 
+    @retry_on_401
     def pull(self):
         with httpx.Client(base_url=self.base_url) as client:
             r = client.get(
@@ -299,6 +341,7 @@ class AsyncRequestSync(RequestsBase):
             raise_for_status_improved(r)
             return RequestResult.from_api(r.json())
 
+    @retry_on_401
     def get_status(self):
         with httpx.Client(base_url=self.base_url) as client:
             r = client.get(
@@ -311,16 +354,18 @@ class AsyncRequestSync(RequestsBase):
 
 class AsyncRequestAsync(RequestsBase):
 
-    def __init__(self, base_url, header_builder, request_id: str):
+    def __init__(self, base_url, header_builder, renew_token, request_id: str):
         super().__init__(base_url)
         self.base_url = base_url
         self.header_builder = header_builder
+        self.renew_token = renew_token
         self.request_id = request_id
 
     @property
     def id(self):
         return self.request_id
 
+    @retry_on_401
     async def pull(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             r = await client.get(
@@ -330,6 +375,7 @@ class AsyncRequestAsync(RequestsBase):
             raise_for_status_improved(r)
             return RequestResult.from_api(r.json())
 
+    @retry_on_401
     async def get_status(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             r = await client.get(
