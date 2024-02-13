@@ -10,19 +10,23 @@ from dateutil.parser import parse as parse_date
 
 class PackageAPIDTO(BaseModel):
     id: str = Field(alias="id")
-    borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
+    borrower_id: Optional[str] = Field(alias="borrowerId")
     source_id: Optional[str] = Field(alias="sourceId", default=None)
-    content_type: Optional[str] = Field(alias="contentType", default=None)
     alias: Optional[str] = Field(alias="alias", default=None)
-    label: Optional[str] = Field(alias="label", default=None)
+    workflow_id: Optional[str] = Field(alias="workflowId", default=None)
+    label: Optional[str] = Field(alias="label")
+    content_type: Optional[str] = Field(alias="contentType", default=None)
     tags: List[str] = Field(alias="tags")
-    forced_stale: Optional[bool] = Field(alias="forcedStale", default=False)
     created_at: str = Field(alias="createdAt")
+    ttl: Optional[str] = Field(alias="ttl", default=None)
+    has_attachments: bool = Field(alias="hasAttachments")
+    forced_stale: Optional[bool] = Field(alias="forcedStale", default=False)
 
     class Config:
         populate_by_name = True
         allow_population_by_field_name = True
         allow_population_by_alias = True
+
 
 
 class CreatePackageDTO(BaseModel):
@@ -31,9 +35,10 @@ class CreatePackageDTO(BaseModel):
     workflow_id: Optional[str] = Field(alias="workflowId", default=None)
     alias: Optional[str] = Field(alias="alias", default=None)
     label: Optional[str] = Field(alias="label", default=None)
-    content_type: Optional[str] = Field(alias="contentType", default=None)
     tags: List[str] = Field(alias="tags", default=[])
     content: Any = Field(alias="content")
+    content_type: Optional[str] = Field(alias="contentType", default=None)
+    ttl_minutes: Optional[int] = Field(alias="ttlMinutes", default=None)
 
     class Config:
         populate_by_name = True

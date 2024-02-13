@@ -8,9 +8,8 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
 
 class SourceAPIDTO(BaseModel):
     id: str = Field(alias="id")
-    label: Optional[str] = Field(alias="label")
+    label: Optional[str] = Field(alias="label", default=None)
     tags: List[str] = Field(alias="tags", default=[])
-    content_type: str = Field(alias="contentType")
     transformer_config: Optional[Dict] = Field(alias="transformerConfig", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
@@ -27,8 +26,8 @@ class TransformerConfig(BaseModel):
 
 
 class CreateSourceDTO(BaseModel):
-    label: str = Field(alias="label")
-    content_type: str = Field(alias="contentType")
+    id: str = Field(alias="id")
+    label: Optional[str] = Field(alias="label", default=None)
     tags: List[str] = Field(alias="tags", default=[])
     transformer_config: Optional[TransformerConfig] = Field(alias="transformerConfig", default=None)
 
@@ -39,6 +38,7 @@ class CreateSourceDTO(BaseModel):
 
 
 class CreateAltdataSourceDTO(BaseModel):
+    label: Optional[str] = Field(alias="label", default=None)
     altdata_source_id: str = Field(alias="altdataSourceId")
     altdata_source_version: str = Field(alias="altdataSourceVersion")
 
@@ -67,9 +67,10 @@ class SourcesSyncModule(GenericSyncModule):
                          sync_resource=SourceSync,
                          retrieve_data_model=SourceAPIDTO,
                          create_data_model=CreateSourceDTO,
-                         update_data_model=None,
+                         update_data_model=CreateSourceDTO,
                          resource="/stores/sources")
 
+    @retry_on_401
     def create_altdata(self, altdata_source_id: str, altdata_source_version: str) -> str:
         new_entity_data = {
             "altdataSourceId": altdata_source_id,
@@ -93,9 +94,10 @@ class SourcesAsyncModule(GenericAsyncModule):
                          async_resource=SourceAsync,
                          retrieve_data_model=SourceAPIDTO,
                          create_data_model=CreateSourceDTO,
-                         update_data_model=None,
+                         update_data_model=CreateSourceDTO,
                          resource="/stores/sources")
 
+    @retry_on_401
     async def create_altdata(self, altdata_source_id: str, altdata_source_version: str) -> str:
         new_entity_data = {
             "altdataSourceId": altdata_source_id,
