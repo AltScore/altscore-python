@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Dict
 import httpx
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 
@@ -73,7 +73,7 @@ class AlertAsync(GenericAsyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "alerts", header_builder, renew_token, AlertAPIDTO.parse_obj(data))
 
-    @retry_on_401
+    @retry_on_401_async
     async def dismiss(self, dismissed_by: str, dismissed_at: Optional[str] = None) -> str:
         async with httpx.AsyncClient(base_url=self.base_url._borrower_central_base_url) as client:
             data = DismissAlert(dismissed_by=dismissed_by, dismissed_at=dismissed_at).dict(by_alias=True)

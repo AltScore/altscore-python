@@ -1,6 +1,6 @@
 import httpx
 from altscore.cms.helpers import build_headers
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from typing import Dict
 import stringcase
 

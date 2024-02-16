@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 import httpx
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.cms.model.credit_account import CreditAccountSync, CreditAccountAsync, CreditAccountAPIDTO
 from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule
 import datetime as dt
@@ -67,7 +67,7 @@ class ClientAsync(ClientBase):
         self.renew_token = renew_token
         self.data = data
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_credit_account(self, product_family: str) -> CreditAccountAsync:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
@@ -82,7 +82,7 @@ class ClientAsync(ClientBase):
                 data=CreditAccountAPIDTO.parse_obj(response.json())
             )
 
-    @retry_on_401
+    @retry_on_401_async
     async def enable(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
@@ -96,7 +96,7 @@ class ClientAsync(ClientBase):
             raise_for_status_improved(response)
             self.data = ClientAPIDTO.parse_obj(response.json())
 
-    @retry_on_401
+    @retry_on_401_async
     async def disable(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
@@ -192,7 +192,7 @@ class ClientsAsyncModule(GenericAsyncModule):
     def renew_token(self):
         self.altscore_client.renew_token()
 
-    @retry_on_401
+    @retry_on_401_async
     async def retrieve_by_external_id(self, external_id: str, partner_id: str = None) -> Optional[ClientAsync]:
         headers = self.build_headers()
         if partner_id is not None:
@@ -213,7 +213,7 @@ class ClientsAsyncModule(GenericAsyncModule):
                 )
             return None
 
-    @retry_on_401
+    @retry_on_401_async
     async def create(self, new_entity_data: dict):
         partner_id = new_entity_data.get("partnerId")
         if partner_id is None:

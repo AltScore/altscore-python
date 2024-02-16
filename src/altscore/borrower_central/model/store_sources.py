@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 import httpx
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 
@@ -97,7 +97,7 @@ class SourcesAsyncModule(GenericAsyncModule):
                          update_data_model=CreateSourceDTO,
                          resource="/stores/sources")
 
-    @retry_on_401
+    @retry_on_401_async
     async def create_altdata(self, altdata_source_id: str, altdata_source_version: str) -> str:
         new_entity_data = {
             "altdataSourceId": altdata_source_id,

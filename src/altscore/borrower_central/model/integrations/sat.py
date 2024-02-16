@@ -1,7 +1,7 @@
 import datetime as dt
 import httpx
 from pydantic import BaseModel, Field
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.borrower_central.helpers import build_headers
 from typing import Optional
 

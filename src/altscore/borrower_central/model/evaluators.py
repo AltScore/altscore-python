@@ -3,7 +3,7 @@ import httpx
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 from pydantic import BaseModel, Field
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 
 
 class EvaluatorAPIDTO(BaseModel):
@@ -152,7 +152,7 @@ class EvaluatorAsync(GenericAsyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "evaluators", header_builder, renew_token, EvaluatorAPIDTO.parse_obj(data))
 
-    @retry_on_401
+    @retry_on_401_async
     async def evaluate(self, evaluator_input: EvaluatorInput) -> EvaluatorOutput:
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -215,7 +215,7 @@ class EvaluatorAsyncModule(GenericAsyncModule):
     def renew_token(self):
         self.altscore_client.renew_token()
 
-    @retry_on_401
+    @retry_on_401_async
     async def evaluate(
             self, evaluator_input: Dict, evaluator_id: Optional[str] = None,
             evaluator_alias: Optional[str] = None, evaluator_version: Optional[str] = None

@@ -7,7 +7,7 @@ from altscore.altdata import AltDataSync, AltDataAsync
 from altscore.cms import CMSSync, CMSAsync
 from typing import Optional, Union
 import warnings
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 
 warnings.filterwarnings("ignore")
 

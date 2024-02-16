@@ -7,7 +7,7 @@ import httpx
 from pydantic import BaseModel, validator, Field
 from altscore.altdata.model.common_schemas import SourceConfig
 from altscore.altdata.utils.dataframes import df_to_base64
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from dateutil.parser import parse
 import json
 
@@ -293,7 +293,7 @@ class BatchAsync(BatchBase):
     def export_urls(self):
         return self.data.export_urls
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_status(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(self._status(batch_id=self.data.batch_id),
@@ -301,7 +301,7 @@ class BatchAsync(BatchBase):
             raise_for_status_improved(response)
             self.data.status = BatchStatus.parse_obj(response.json())
 
-    @retry_on_401
+    @retry_on_401_async
     async def retry(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(self._retry(batch_id=self.data.batch_id),

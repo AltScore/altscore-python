@@ -2,7 +2,7 @@ import httpx
 import json
 from altscore.borrower_central.helpers import build_headers
 from altscore.borrower_central.model.attachments import AttachmentAPIDTO, AttachmentInput
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from typing import Dict
 import stringcase
 
@@ -102,7 +102,7 @@ class GenericAsyncResource(GenericBase):
     def created_at(self):
         return self.data.created_at
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_attachments(self):
         if self.data.has_attachments:
             async with httpx.AsyncClient() as client:
@@ -115,7 +115,7 @@ class GenericAsyncResource(GenericBase):
                 self.attachments = [AttachmentAPIDTO.parse_obj(e) for e in response.json()]
         return self.attachments
 
-    @retry_on_401
+    @retry_on_401_async
     async def post_attachment(self, attachment: Dict):
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -126,7 +126,7 @@ class GenericAsyncResource(GenericBase):
             )
             raise_for_status_improved(response)
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_content(self):
         if self.resource in ["stores/packages"]:
             async with httpx.AsyncClient() as client:
@@ -273,7 +273,7 @@ class GenericAsyncModule:
     def print_retrieve_schema(self):
         print(json.dumps(self.retrieve_data_model.schema(), indent=2, ensure_ascii=False))
 
-    @retry_on_401
+    @retry_on_401_async
     async def retrieve(self, resource_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
@@ -293,7 +293,7 @@ class GenericAsyncModule:
 
             raise_for_status_improved(response)
 
-    @retry_on_401
+    @retry_on_401_async
     async def create(self, new_entity_data: Dict, update_if_exists: bool = False) -> str:
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
@@ -312,7 +312,7 @@ class GenericAsyncModule:
             raise_for_status_improved(response)
             return response.json()["id"]
 
-    @retry_on_401
+    @retry_on_401_async
     async def patch(self, resource_id: str, patch_data: Dict) -> str:
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.patch(
@@ -324,7 +324,7 @@ class GenericAsyncModule:
             raise_for_status_improved(response)
             return resource_id
 
-    @retry_on_401
+    @retry_on_401_async
     async def delete(self, resource_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.delete(
@@ -335,7 +335,7 @@ class GenericAsyncModule:
             raise_for_status_improved(response)
             return None
 
-    @retry_on_401
+    @retry_on_401_async
     async def query(self, **kwargs):
         query_params = {}
         for k, v in kwargs.items():

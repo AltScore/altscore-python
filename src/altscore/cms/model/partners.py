@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 import httpx
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule
 from altscore.cms.helpers import build_headers
 
@@ -90,7 +90,7 @@ class PartnersAsyncModule(GenericAsyncModule):
             resource_version="v2"
         )
 
-    @retry_on_401
+    @retry_on_401_async
     async def me(self) -> PartnerAsync:
         async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
             response = await client.get(

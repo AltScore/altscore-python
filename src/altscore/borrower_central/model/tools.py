@@ -1,5 +1,5 @@
 import httpx
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.borrower_central.helpers import build_headers
 
 
@@ -38,7 +38,7 @@ class ReportGeneratorAsyncModule:
     def build_headers(self):
         return build_headers(self)
 
-    @retry_on_401
+    @retry_on_401_async
     async def generate(self, report_request: dict) -> str:
         with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(

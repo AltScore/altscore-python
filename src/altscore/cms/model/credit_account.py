@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import httpx
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.cms.model.common import Money
 
 
@@ -70,7 +70,7 @@ class CreditAccountAsync:
         self.renew_token = renew_token
         self.data = data
 
-    @retry_on_401
+    @retry_on_401_async
     async def update(self, amount: str, currency: str, reason: str) -> None:
         """
         Updates credit account with the given amount and currency, and the reason for the update.

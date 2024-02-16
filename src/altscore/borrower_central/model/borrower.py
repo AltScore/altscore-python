@@ -14,7 +14,7 @@ from altscore.borrower_central.model.stages import StageSync, StageAsync
 from altscore.borrower_central.model.risk_ratings import RiskRatingSync, RiskRatingAsync
 from altscore.borrower_central.model.policy_alerts import AlertSync, AlertAsync
 
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.borrower_central.model.store_packages import PackageSync, PackageAsync
 from altscore.borrower_central.model.executions import ExecutionSync, ExecutionAsync
 from altscore.borrower_central.utils import clean_dict
@@ -225,7 +225,7 @@ class BorrowersAsyncModule:
     def build_headers(self):
         return build_headers(self)
 
-    @retry_on_401
+    @retry_on_401_async
     async def create(self, new_entity_data: dict):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
@@ -237,7 +237,7 @@ class BorrowersAsyncModule:
             raise_for_status_improved(response)
             return response.json()["id"]
 
-    @retry_on_401
+    @retry_on_401_async
     async def patch(self, resource_id: str, patch_data: dict):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.patch(
@@ -249,7 +249,7 @@ class BorrowersAsyncModule:
             raise_for_status_improved(response)
             return await self.retrieve(response.json()["id"])
 
-    @retry_on_401
+    @retry_on_401_async
     async def delete(self, resource_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.delete(
@@ -260,7 +260,7 @@ class BorrowersAsyncModule:
             raise_for_status_improved(response)
             return None
 
-    @retry_on_401
+    @retry_on_401_async
     async def retrieve(self, resource_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
@@ -278,7 +278,7 @@ class BorrowersAsyncModule:
                 )
             return None
 
-    @retry_on_401
+    @retry_on_401_async
     async def find_one_by_identity(self, identity_key: str, identity_value: str):
         """
         Exact match by identity
@@ -405,7 +405,7 @@ class BorrowerAsync(BorrowerBase):
         self.renew_token = renew_token
         self.data = data
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_stage(self) -> StageAsync:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
@@ -420,7 +420,7 @@ class BorrowerAsync(BorrowerBase):
                 data=response.json()
             )
 
-    @retry_on_401
+    @retry_on_401_async
     async def set_stage(self, stage: str, reference_id: Optional[str] = None):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
@@ -434,7 +434,7 @@ class BorrowerAsync(BorrowerBase):
             raise_for_status_improved(response)
             return None
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_risk_rating(self) -> RiskRatingAsync:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
@@ -449,7 +449,7 @@ class BorrowerAsync(BorrowerBase):
                 data=response.json()
             )
 
-    @retry_on_401
+    @retry_on_401_async
     async def set_risk_rating(self, risk_rating: str, reference_id: Optional[str] = None):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
@@ -463,7 +463,7 @@ class BorrowerAsync(BorrowerBase):
             raise_for_status_improved(response)
             return None
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_documents(self, **kwargs) -> List[DocumentAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._documents(self.data.id, **kwargs)
@@ -480,7 +480,7 @@ class BorrowerAsync(BorrowerBase):
                 data=document_data
             ) for document_data in data]
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_identity_by_key(self, key: str) -> Optional[IdentityAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._identities(self.data.id, key=key)
@@ -499,7 +499,7 @@ class BorrowerAsync(BorrowerBase):
                 data=data[0]
             )
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_borrower_field_by_key(self, key: str) -> Optional[BorrowerFieldAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._borrower_fields(self.data.id, key=key)
@@ -518,7 +518,7 @@ class BorrowerAsync(BorrowerBase):
                 data=data[0]
             )
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_identities(self, **kwargs) -> List[IdentityAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._identities(self.data.id, **kwargs)
@@ -535,7 +535,7 @@ class BorrowerAsync(BorrowerBase):
                 data=identity_data
             ) for identity_data in data]
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_addresses(self, **kwargs) -> List[AddressAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._addresses(self.data.id, **kwargs)
@@ -552,7 +552,7 @@ class BorrowerAsync(BorrowerBase):
                 data=address_data
             ) for address_data in data]
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_points_of_contact(self, **kwargs) -> List[PointOfContactAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._points_of_contact(self.data.id, **kwargs)
@@ -569,7 +569,7 @@ class BorrowerAsync(BorrowerBase):
                 data=point_of_contact_data
             ) for point_of_contact_data in data]
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_borrower_fields(self, **kwargs) -> List[BorrowerFieldAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._borrower_fields(self.data.id, **kwargs)
@@ -586,7 +586,7 @@ class BorrowerAsync(BorrowerBase):
                 data=borrower_field_data
             ) for borrower_field_data in data]
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_authorizations(self, **kwargs) -> List[AuthorizationAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._authorizations(self.data.id, **kwargs)
@@ -603,7 +603,7 @@ class BorrowerAsync(BorrowerBase):
                 data=authorization_data
             ) for authorization_data in data]
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_relationships(self, **kwargs) -> List[RelationshipAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._relationships(self.data.id, **kwargs)
@@ -620,7 +620,7 @@ class BorrowerAsync(BorrowerBase):
                 data=relationship_data
             ) for relationship_data in data]
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_executions(self, **kwargs) -> List[ExecutionAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._executions(self.data.id, **kwargs)
@@ -637,7 +637,7 @@ class BorrowerAsync(BorrowerBase):
                 data=execution_data
             ) for execution_data in data]
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_packages(self, **kwargs) -> List[PackageAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._packages(self.data.id, **kwargs)
@@ -654,7 +654,7 @@ class BorrowerAsync(BorrowerBase):
                 data=package_data
             ) for package_data in data]
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_alerts(self, **kwargs) -> List[AlertAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._alerts(self.data.id, **kwargs)
@@ -672,7 +672,7 @@ class BorrowerAsync(BorrowerBase):
             ) for alert_data in data]
             return alerts
 
-    @retry_on_401
+    @retry_on_401_async
     async def associate_cms_client_id(self, cms_client_id: str):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
@@ -682,7 +682,7 @@ class BorrowerAsync(BorrowerBase):
             raise_for_status_improved(response)
             return None
 
-    @retry_on_401
+    @retry_on_401_async
     async def put_cms_client_ids(self, cms_client_ids: List[str]):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
@@ -695,7 +695,7 @@ class BorrowerAsync(BorrowerBase):
             raise_for_status_improved(response)
             return None
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_main_address(self) -> Optional[AddressAsync]:
         addresses = await self.get_addresses(sort_by="priority", per_page=1)
         if len(addresses) == 0:
@@ -703,7 +703,7 @@ class BorrowerAsync(BorrowerBase):
         else:
             return addresses[0]
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_main_point_of_contact(self, contact_method: str) -> Optional[PointOfContactAsync]:
         points_of_contact = await self.get_points_of_contact(
             contact_method=contact_method, sort_by="priority", per_page=1

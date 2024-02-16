@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List
 import httpx
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule
 from altscore.cms.model.common import Money, Schedule, Terms
 import datetime as dt
@@ -100,7 +100,7 @@ class DPAFlowAsync(DPABase):
         self.renew_token = renew_token
         self.data = data
 
-    @retry_on_401
+    @retry_on_401_async
     async def approve(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
@@ -111,7 +111,7 @@ class DPAFlowAsync(DPABase):
             raise_for_status_improved(response)
             self.data = DPAFlowAPIDTO.parse_obj(response.json())
 
-    @retry_on_401
+    @retry_on_401_async
     async def cancel(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
@@ -122,7 +122,7 @@ class DPAFlowAsync(DPABase):
             raise_for_status_improved(response)
             self.data = DPAFlowAPIDTO.parse_obj(response.json())
 
-    @retry_on_401
+    @retry_on_401_async
     async def submit_invoice(self, invoice: dict):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
@@ -192,7 +192,7 @@ class DPAFlowsAsyncModule(GenericAsyncModule):
             resource="dpas"
         )
 
-    @retry_on_401
+    @retry_on_401_async
     async def create(self, new_entity_data: dict):
         disbursement_date_str = \
             new_entity_data.get("disbursementDate") or new_entity_data.get("disbursement_date")

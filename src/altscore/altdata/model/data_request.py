@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Union
 from altscore.altdata.helpers import build_headers
 from altscore.altdata.model.common_schemas import SourceConfig
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 import json
 import httpx
 
@@ -244,7 +244,7 @@ class RequestAsyncModule:
     def build_headers(self):
         return build_headers(self)
 
-    @retry_on_401
+    @retry_on_401_async
     async def new_sync(self, input_keys: Union[InputKeys, Dict], sources_config: List[Union[Dict, SourceConfig]],
                        timeout: Optional[int] = None):
         if isinstance(input_keys, dict):
@@ -268,7 +268,7 @@ class RequestAsyncModule:
             sync_data_response = r.json()
             return RequestResult.from_api(sync_data_response)
 
-    @retry_on_401
+    @retry_on_401_async
     async def new_async(self, input_keys: Union[InputKeys, Dict], sources_config: List[Union[Dict, SourceConfig]]):
         if isinstance(input_keys, dict):
             # to validate the input keys
@@ -365,7 +365,7 @@ class AsyncRequestAsync(RequestsBase):
     def id(self):
         return self.request_id
 
-    @retry_on_401
+    @retry_on_401_async
     async def pull(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             r = await client.get(
@@ -375,7 +375,7 @@ class AsyncRequestAsync(RequestsBase):
             raise_for_status_improved(r)
             return RequestResult.from_api(r.json())
 
-    @retry_on_401
+    @retry_on_401_async
     async def get_status(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             r = await client.get(

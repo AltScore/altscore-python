@@ -1,7 +1,7 @@
 import httpx
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 
@@ -163,7 +163,7 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                          update_data_model=UpdateWorkflowDTO,
                          resource="workflows")
 
-    @retry_on_401
+    @retry_on_401_async
     async def retrieve_by_alias_version(self, alias: str, version: str):
         query_params = {
             "alias": alias,
@@ -189,7 +189,7 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                 return None
             return res[0]
 
-    @retry_on_401
+    @retry_on_401_async
     async def execute(self,
                       workflow_input: Dict,
                       workflow_id: Optional[str] = None,

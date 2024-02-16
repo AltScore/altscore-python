@@ -21,6 +21,23 @@ def retry_on_401(f):
     return wrapper
 
 
+def retry_on_401_async(f):
+    @wraps(f)
+    async def wrapper(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except HTTPStatusError as e:
+            if e.response.status_code == 401:
+                logger.info("Token expired, renewing and retrying")
+                args[0].renew_token()  # Assuming the first argument is self
+                logger.info("Token renewed, retrying")
+                return await f(*args, **kwargs)
+            else:
+                raise
+
+    return wrapper
+
+
 def raise_for_status_improved(httpx_request) -> None:
     request = httpx_request._request
     if request is None:
