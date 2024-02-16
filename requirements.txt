@@ -9,3 +9,4 @@ stringcase
 textual
 textual-dev
 pyjwt
+loguru
