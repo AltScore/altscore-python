@@ -25,7 +25,7 @@ def retry_on_401_async(f):
     @wraps(f)
     async def wrapper(*args, **kwargs):
         try:
-            return f(*args, **kwargs)
+            return await f(*args, **kwargs)
         except HTTPStatusError as e:
             if e.response.status_code == 401:
                 logger.info("Token expired, renewing and retrying")
