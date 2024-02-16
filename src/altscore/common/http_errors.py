@@ -1,6 +1,7 @@
 from json import loads
 from functools import wraps
 from httpx import HTTPStatusError
+from loguru import logger
 
 
 def retry_on_401(f):
@@ -10,7 +11,9 @@ def retry_on_401(f):
             return f(*args, **kwargs)
         except HTTPStatusError as e:
             if e.response.status_code == 401:
+                logger.info("Token expired, renewing and retrying")
                 args[0].renew_token()  # Assuming the first argument is self
+                logger.info("Token renewed, retrying")
                 return f(*args, **kwargs)
             else:
                 raise
