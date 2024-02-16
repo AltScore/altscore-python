@@ -21,7 +21,7 @@ def retry_on_401(f):
     return wrapper
 
 
-def retry_on_401_async(f):
+async def retry_on_401_async(f):
     @wraps(f)
     async def wrapper(*args, **kwargs):
         try:
