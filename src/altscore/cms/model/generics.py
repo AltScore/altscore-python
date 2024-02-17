@@ -23,6 +23,7 @@ class GenericSyncModule:
     def build_headers(self):
         return build_headers(self)
 
+    @retry_on_401
     def create(self, new_entity_data: dict):
         with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
             response = client.post(
@@ -34,6 +35,7 @@ class GenericSyncModule:
             raise_for_status_improved(response)
             return self.retrieve_data_model.parse_obj(response.json()).id
 
+    @retry_on_401
     def retrieve(self, resource_id: str):
         with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
             response = client.get(
@@ -45,10 +47,12 @@ class GenericSyncModule:
                 return self.sync_resource(
                     base_url=self.altscore_client._cms_base_url,
                     header_builder=self.build_headers,
+                    renew_token=self.renew_token,
                     data=self.retrieve_data_model.parse_obj(response.json())
                 )
             return None
 
+    @retry_on_401
     def patch(self, resource_id: str, patch_data: Dict) -> str:
         with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
             response = client.patch(
@@ -60,6 +64,7 @@ class GenericSyncModule:
             raise_for_status_improved(response)
             return resource_id
 
+    @retry_on_401
     def delete(self, resource_id: str):
         with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
             response = client.delete(
@@ -93,6 +98,7 @@ class GenericSyncModule:
         resources = [item for sublist in resources for item in sublist]
         return resources
 
+    @retry_on_401
     def query(self, **kwargs):
         query_params = {}
         for k, v in kwargs.items():
@@ -133,6 +139,7 @@ class GenericAsyncModule:
     def build_headers(self):
         return build_headers(self)
 
+    @retry_on_401_async
     async def create(self, new_entity_data: dict):
         async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
             response = await client.post(
@@ -144,6 +151,7 @@ class GenericAsyncModule:
             raise_for_status_improved(response)
             return self.retrieve_data_model.parse_obj(response.json()).id
 
+    @retry_on_401_async
     async def retrieve(self, resource_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
             response = await client.get(
@@ -155,12 +163,14 @@ class GenericAsyncModule:
                 return self.async_resource(
                     base_url=self.altscore_client._cms_base_url,
                     header_builder=self.build_headers,
+                    renew_token=self.renew_token,
                     data=self.retrieve_data_model.parse_obj(response.json())
                 )
             elif response.status_code in [403, 401]:
                 raise Exception("Unauthorized, check your API key")
             return None
 
+    @retry_on_401_async
     async def patch(self, resource_id: str, patch_data: Dict) -> str:
         async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
             response = await client.patch(
@@ -172,6 +182,7 @@ class GenericAsyncModule:
             raise_for_status_improved(response)
             return resource_id
 
+    @retry_on_401_async
     async def delete(self, resource_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
             response = await client.delete(
@@ -182,6 +193,7 @@ class GenericAsyncModule:
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401_async
     async def retrieve_all(self, **kwargs):
         query_params = {}
         for k, v in kwargs.items():
@@ -205,6 +217,7 @@ class GenericAsyncModule:
         resources = [item for sublist in resources for item in sublist]
         return resources
 
+    @retry_on_401_async
     async def query(self, **kwargs):
         query_params = {}
         for k, v in kwargs.items():
