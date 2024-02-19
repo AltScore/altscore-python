@@ -140,8 +140,11 @@ class AltScore(AltScoreBase):
     @property
     def partner_id(self) -> Optional[str]:
         if self._partner_id is None:
-            partner_id = self.cms.partners.me().data.partner_id
-            self._partner_id = partner_id
+            try:
+                partner_id = self.cms.partners.me().data.partner_id
+                self._partner_id = partner_id
+            except:
+                return None
         return self._partner_id
 
     def new_cms_client_from_borrower(
@@ -248,9 +251,11 @@ class AltScoreAsync(AltScoreBase):
     @property
     def partner_id(self) -> Optional[str]:
         if self._partner_id is None:
-            partner = asyncio.run(self.cms.partners.me())
-            partner_id = partner.data.partner_id
-            self._partner_id = partner_id
+            try:
+                partner_id = asyncio.run(self.cms.partners.me())
+                self._partner_id = partner_id.data.partner_id
+            except:
+                return None
         return self._partner_id
 
     async def new_cms_client_from_borrower(
