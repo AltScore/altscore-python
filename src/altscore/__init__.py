@@ -67,12 +67,15 @@ class AltScoreBase:
                 environment=self.environment,
                 tenant=self.tenant
             )
-        else:
+        elif isinstance(self._refresh_token, str):
             self.user_token, self._refresh_token = refresh_api_token(
                 refresh_token=self._refresh_token,
                 environment=self.environment,
                 tenant=self.tenant
             )
+        else:
+            raise ValueError("Authentication error, "
+                             "refresh token not found")
 
     def __repr__(self):
         return f"AltScore({self.tenant}, {self.environment})"
@@ -430,11 +433,11 @@ def refresh_api_token(
         headers["frontegg-tenant-id"] = tenant
     with httpx.Client() as client:
         response = client.post(
-            url=f"{auth_urls[environment]}/identity/resources/auth/v1/api-token/token/refresh",
+            url=f"{auth_urls[environment]}/identity/resources/auth/v2/api-token/token/refresh",
             data={
                 "refreshToken": refresh_token,
             }
         )
         raise_for_status_improved(response)
         data = response.json()
-        return data["accessToken"], data["refreshToken"]
+        return data["access_token"], data["refresh_token"]

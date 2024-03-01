@@ -9,6 +9,8 @@ altscore = AltScore(
 )
 # %%
 altscore.get_tenant_from_token()
+#%%
+altscore.renew_token()
 # %%
 req1 = altscore.altdata.requests.new_sync(
     input_keys={"personId": "1234567890"},

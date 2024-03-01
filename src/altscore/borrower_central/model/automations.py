@@ -29,14 +29,14 @@ class CreateAutomationDTO(BaseModel):
 
 class AutomationsSync(GenericSyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "automations", header_builder, AutomationAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "automations", header_builder, renew_token, AutomationAPIDTO.parse_obj(data))
 
 
 class AutomationsAsync(GenericAsyncResource):
 
-    def __init__(self, base_url, header_builder, data: Dict):
-        super().__init__(base_url, "automations", header_builder, AutomationAPIDTO.parse_obj(data))
+    def __init__(self, base_url, header_builder, renew_token, data: Dict):
+        super().__init__(base_url, "automations", header_builder, renew_token, AutomationAPIDTO.parse_obj(data))
 
 
 class AutomationsSyncModule(GenericSyncModule):
