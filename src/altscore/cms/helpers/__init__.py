@@ -8,8 +8,12 @@ def build_headers(module, partner_id: Optional[str] = None):
     elif isinstance(module.altscore_client.user_token, str):
         user_token = module.altscore_client.user_token.replace("Bearer ", "")
         headers["Authorization"] = f"Bearer {user_token}"
-    if isinstance(module.altscore_client.partner_id, str):
-        headers["X-PARTNER-ID"] = module.altscore_client.partner_id
+    # This is important to avoid infinite recursion
+    if partner_id is None:
+        return headers
     elif isinstance(partner_id, str):
         headers["X-PARTNER-ID"] = partner_id
+    # if it reaches here when querying the partner it will trigger an infinite recursion
+    elif isinstance(module.altscore_client.partner_id, str):
+        headers["X-PARTNER-ID"] = module.altscore_client.partner_id
     return headers
