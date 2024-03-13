@@ -93,7 +93,7 @@ class AltScoreBase:
         elif self.environment == "sandbox":
             return "https://bc.sandbox.altscore.ai"
         elif self.environment == "local":
-            return "http://localhost:8888"
+            return config("ALTSCORE_LOCAL_BC_URL", None)
         else:
             raise ValueError(f"Unknown environment: {self.environment}")
 
@@ -106,7 +106,7 @@ class AltScoreBase:
         elif self.environment == "sandbox":
             return "https://api.sandbox.altscore.ai"
         elif self.environment == "local":
-            return "http://localhost:8889"
+            return config("ALTSCORE_LOCAL_CMS_URL", None)
         else:
             raise ValueError(f"Unknown environment: {self.environment}")
 
@@ -376,7 +376,7 @@ def login_with_user_credentials(
         "production": "https://auth.altscore.ai",
         "sandbox": "https://auth.sandbox.altscore.ai",
         "staging": "https://altscore-stg.us.frontegg.com",
-        "local": "http://localhost:8887"
+        "local": config("ALTSCORE_LOCAL_AUTH_URL", None)
     }
     headers = {}
     if tenant != "default":
@@ -401,7 +401,7 @@ def login_with_client_credentials(
         "production": "https://auth.altscore.ai",
         "sandbox": "https://auth.sandbox.altscore.ai",
         "staging": "https://altscore-stg.us.frontegg.com",
-        "local": "http://localhost:8887"
+        "local": config("ALTSCORE_LOCAL_AUTH_URL", None)
     }
     headers = {}
     if tenant != "default":
@@ -426,7 +426,7 @@ def refresh_api_token(
         "production": "https://auth.altscore.ai",
         "sandbox": "https://auth.sandbox.altscore.ai",
         "staging": "https://altscore-stg.us.frontegg.com",
-        "local": "http://localhost:8887"
+        "local": config("ALTSCORE_LOCAL_AUTH_URL", None)
     }
     headers = {}
     if tenant != "default":
