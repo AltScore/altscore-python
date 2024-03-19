@@ -27,7 +27,7 @@ class DPAFlowAPIDTO(BaseModel):
     reference_id: str = Field(alias="referenceId")
     status: str = Field(alias="status")
     client: Client = Field(alias="client")
-    schedule: Schedule = Field(alias="schedule")
+    schedule: List[Schedule] = Field(alias="schedule")
     terms: Terms = Field(alias="terms")
     created_at: str = Field(alias="createdAt")
     updated_at: str = Field(alias="updatedAt")
@@ -103,7 +103,7 @@ class DPAFlowAsync(DPABase):
     @retry_on_401_async
     async def approve(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
-            response = await client.post(
+            response = await client.put(
                 self._approval(self.data.id),
                 headers=self._header_builder(),
                 timeout=30
@@ -152,11 +152,12 @@ class DPAFlowSync(DPABase):
         self.data: DPAFlowAPIDTO = data
 
     @retry_on_401
-    def approve(self):
+    def approve(self, new_entity_data: dict):
         with httpx.Client(base_url=self.base_url) as client:
-            response = client.post(
+            response = client.put(
                 self._approval(self.data.id),
                 headers=self._header_builder(),
+                json=CreateDPAFlowDTO.parse_obj(new_entity_data).dict(by_alias=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -172,6 +173,18 @@ class DPAFlowSync(DPABase):
             )
             raise_for_status_improved(response)
             self.data = DPAFlowAPIDTO.parse_obj(response.json())
+
+    @retry_on_401
+    def submit_invoice(self, invoice: dict):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.post(
+                self._invoice(self.data.id),
+                headers=self._header_builder(),
+                json=Invoice.parse_obj(invoice).dict(by_alias=True),
+                timeout=300
+            )
+            raise_for_status_improved(response)
+            return response.json()
 
     def __str__(self):
         return str(self.data)
