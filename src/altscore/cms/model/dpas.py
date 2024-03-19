@@ -41,7 +41,7 @@ class DPAFlowAPIDTO(BaseModel):
 class CreateDPAFlowDTO(BaseModel):
     amount: Money = Field(alias="amount")
     disbursement_date: str = Field(alias="disbursementDate")
-    external_id: str = Field(alias="externalId")
+    client_id: str = Field(alias="clientId", default=None)
 
     class Config:
         populate_by_name = True

@@ -1,7 +1,11 @@
 from altscore import AltScore
 from decouple import config
 
-altscore = AltScore(user_token=config("ALTSCORE_USER_TOKEN"), environment="staging")
+altscore = AltScore(
+    client_id=config("ALTSCORE_CLIENT_ID"),
+    client_secret=config("ALTSCORE_CLIENT_SECRET"),
+    environment="staging"
+)
 # %%
 altscore.borrower_central.data_models.create(
     {
@@ -35,9 +39,9 @@ if len(partners) == 0:
     partner_id = altscore.cms.partners.create(
         {
             "name": "Im Lender",
-            "shortName": "lender",
+            "shortName": "lender1",
             "email": "lender@lender.ai",
-            "taxId": "XAXX010101000"
+            "taxId": "XAXX010101001"
         }
     )
 else:
