@@ -56,13 +56,16 @@ class DebtAPIDTO(BaseModel):
     tenant: str = Field(alias="tenant")
     reference_id: str = Field(alias="referenceId")
     status: str = Field(alias="status")
+    sub_status: str = Field(alias="subStatus")
     client: Client = Field(alias="client")
     balance: Balance = Field(alias="balance")
+    closing_balance: Money = Field(alias="closingBalance")
     schedule: List[Schedule] = Field(alias="schedule")
     terms: Terms = Field(alias="terms")
     transactions: List[Transaction] = Field(alias="transactions")
     created_at: str = Field(alias="createdAt")
     updated_at: str = Field(alias="updatedAt")
+    version: int = Field(alias="version")
 
     class Config:
         populate_by_name = True
