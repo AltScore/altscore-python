@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 import httpx
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule
@@ -75,6 +75,19 @@ class Invoice(BaseModel):
         populate_by_alias = True
 
 
+class ApproveDPAFlowDTO(BaseModel):
+    amount: Money = Field(alias="amount")
+    disbursement_date: str = Field(alias="disbursementDate")
+    client_id: Optional[str] = Field(alias="clientId", default=None)
+    external_id: Optional[str] = Field(alias="externalId", default=None)
+    reference_id: Optional[str] = Field(alias="referenceId", default=None)
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        populate_by_alias = True
+
+
 class DPABase:
 
     @staticmethod
@@ -101,11 +114,12 @@ class DPAFlowAsync(DPABase):
         self.data = data
 
     @retry_on_401_async
-    async def approve(self):
+    async def approve(self, approve_data: dict):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
                 self._approval(self.data.id),
                 headers=self._header_builder(),
+                json=ApproveDPAFlowDTO.parse_obj(approve_data).dict(by_alias=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -123,11 +137,11 @@ class DPAFlowAsync(DPABase):
             self.data = DPAFlowAPIDTO.parse_obj(response.json())
 
     @retry_on_401_async
-    async def submit_invoice(self, invoice: dict):
+    async def submit_invoice(self, invoice_data: dict):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 self._invoice(self.data.id),
-                json=Invoice.parse_obj(invoice).dict(by_alias=True),
+                json=Invoice.parse_obj(invoice_data).dict(by_alias=True),
                 headers=self._header_builder(),
                 timeout=30
             )
@@ -152,12 +166,12 @@ class DPAFlowSync(DPABase):
         self.data: DPAFlowAPIDTO = data
 
     @retry_on_401
-    def approve(self, new_entity_data: dict):
+    def approve(self, approve_data: dict):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.put(
                 self._approval(self.data.id),
                 headers=self._header_builder(),
-                json=CreateDPAFlowDTO.parse_obj(new_entity_data).dict(by_alias=True),
+                json=ApproveDPAFlowDTO.parse_obj(approve_data).dict(by_alias=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -175,12 +189,12 @@ class DPAFlowSync(DPABase):
             self.data = DPAFlowAPIDTO.parse_obj(response.json())
 
     @retry_on_401
-    def submit_invoice(self, invoice: dict):
+    def submit_invoice(self, invoice_data: dict):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 self._invoice(self.data.id),
                 headers=self._header_builder(),
-                json=Invoice.parse_obj(invoice).dict(by_alias=True),
+                json=Invoice.parse_obj(invoice_data).dict(by_alias=True),
                 timeout=300
             )
             raise_for_status_improved(response)
