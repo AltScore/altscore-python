@@ -9,7 +9,7 @@ def build_headers(module, partner_id: Optional[str] = None):
         user_token = module.altscore_client.user_token.replace("Bearer ", "")
         headers["Authorization"] = f"Bearer {user_token}"
     # This is important to avoid infinite recursion
-    if partner_id is None:
+    if partner_id == "init":
         return headers
     elif isinstance(partner_id, str):
         headers["X-PARTNER-ID"] = partner_id

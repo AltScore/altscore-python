@@ -205,7 +205,7 @@ class PartnersSyncModule(GenericSyncModule):
             response = client.get(
                 "/v2/partners/me",
                 # This is important to avoid infinite recursion
-                headers=build_headers(self, partner_id=None),
+                headers=build_headers(self, partner_id="init"),
                 timeout=30
             )
             raise_for_status_improved(response)
