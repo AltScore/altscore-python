@@ -305,7 +305,7 @@ class BorrowersAsyncModule:
             return None
 
     @retry_on_401_async
-    def query(self, **kwargs):
+    async def query(self, **kwargs):
         query_params = {}
         for k, v in kwargs.items():
             if v is not None:
