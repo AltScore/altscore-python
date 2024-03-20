@@ -17,7 +17,7 @@ from altscore.borrower_central.model.policy_alerts import AlertSync, AlertAsync
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.borrower_central.model.store_packages import PackageSync, PackageAsync
 from altscore.borrower_central.model.executions import ExecutionSync, ExecutionAsync
-from altscore.borrower_central.utils import clean_dict
+from altscore.borrower_central.utils import clean_dict, convert_to_dash_case
 
 
 class BorrowerAPIDTO(BaseModel):
@@ -304,6 +304,28 @@ class BorrowersAsyncModule:
                         return await self.retrieve(identities_found_data[0]["borrowerId"])
             return None
 
+    @retry_on_401_async
+    def query(self, **kwargs):
+        query_params = {}
+        for k, v in kwargs.items():
+            if v is not None:
+                query_params[convert_to_dash_case(k)] = v
+
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                f"/v1/borrowers",
+                headers=self.build_headers(),
+                params=query_params,
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [BorrowerAsync(
+                base_url=self.altscore_client._borrower_central_base_url,
+                header_builder=self.build_headers,
+                renew_token=self.renew_token,
+                data=BorrowerAPIDTO.parse_obj(e)
+            ) for e in response.json()]
+
 
 class BorrowersSyncModule:
 
@@ -394,6 +416,28 @@ class BorrowersSyncModule:
                     if identities_found_data[0]["value"] == identity_value:
                         return self.retrieve(identities_found_data[0]["borrowerId"])
             return None
+
+    @retry_on_401
+    def query(self, **kwargs):
+        query_params = {}
+        for k, v in kwargs.items():
+            if v is not None:
+                query_params[convert_to_dash_case(k)] = v
+
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                f"/v1/borrowers",
+                headers=self.build_headers(),
+                params=query_params,
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [BorrowerSync(
+                base_url=self.altscore_client._borrower_central_base_url,
+                header_builder=self.build_headers,
+                renew_token=self.renew_token,
+                data=BorrowerAPIDTO.parse_obj(e)
+            ) for e in response.json()]
 
 
 class BorrowerAsync(BorrowerBase):

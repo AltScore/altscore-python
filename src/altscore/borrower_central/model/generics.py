@@ -4,7 +4,7 @@ from altscore.borrower_central.helpers import build_headers
 from altscore.borrower_central.model.attachments import AttachmentAPIDTO, AttachmentInput
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from typing import Dict
-import stringcase
+from altscore.borrower_central.utils import convert_to_dash_case
 
 
 class GenericBase:
@@ -356,8 +356,3 @@ class GenericAsyncModule:
                 renew_token=self.renew_token,
                 data=self.retrieve_data_model.parse_obj(e)
             ) for e in response.json()]
-
-
-def convert_to_dash_case(s):
-    snake_case = stringcase.snakecase(s)
-    return stringcase.spinalcase(snake_case)
