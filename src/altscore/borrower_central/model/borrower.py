@@ -450,6 +450,19 @@ class BorrowerAsync(BorrowerBase):
         self.data = data
 
     @retry_on_401_async
+    async def set_label(self, label: str):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.patch(
+                f"{self.base_url}/v1/borrowers/{self.data.id}",
+                headers=self._header_builder(),
+                json={
+                    "label": label,
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    @retry_on_401_async
     async def get_stage(self) -> StageAsync:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
@@ -772,6 +785,19 @@ class BorrowerSync(BorrowerBase):
         self._header_builder = header_builder
         self.renew_token = renew_token
         self.data = data
+
+    @retry_on_401
+    def set_label(self, label: str):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.patch(
+                f"{self.base_url}/v1/borrowers/{self.data.id}",
+                headers=self._header_builder(),
+                json={
+                    "label": label,
+                }
+            )
+            raise_for_status_improved(response)
+            return None
 
     @retry_on_401
     def get_stage(self):
