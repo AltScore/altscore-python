@@ -257,7 +257,7 @@ class DPAFlowsAsyncModule(GenericAsyncModule):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return self.retrieve_data_model.parse_obj(response.json()).id
+            return self.retrieve_data_model.parse_obj(response.json())
 
 
 class DPAFlowsSyncModule(GenericSyncModule):
@@ -310,4 +310,4 @@ class DPAFlowsSyncModule(GenericSyncModule):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return self.retrieve_data_model.parse_obj(response.json()).id
+            return self.retrieve_data_model.parse_obj(response.json())
