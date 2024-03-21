@@ -28,11 +28,11 @@ class AlertAPIDTO(BaseModel):
 
 class CreateAlert(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
-    rule_id: str = Field(alias="ruleId")
+    rule_id: Optional[str] = Field(alias="ruleId", default=None)
     rule_code: Optional[str] = Field(alias="ruleCode", default=None)
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
     level: int = Field(alias="level")
-    message: str = Field(alias="message")
+    message: Optional[str] = Field(alias="message", default=None)
 
     class Config:
         populate_by_name = True
