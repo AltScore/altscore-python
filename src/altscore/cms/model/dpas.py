@@ -239,6 +239,26 @@ class DPAFlowsAsyncModule(GenericAsyncModule):
             raise_for_status_improved(response)
             return self.retrieve_data_model.parse_obj(response.json()).id
 
+    @retry_on_401_async
+    async def simulate(self, new_entity_data: dict):
+        disbursement_date_str = \
+            new_entity_data.get("disbursementDate") or new_entity_data.get("disbursement_date")
+        if disbursement_date_str is None:
+            disbursement_date = dt.date.today().strftime("%Y-%m-%d")
+        else:
+            disbursement_date = date_parser(disbursement_date_str).strftime("%Y-%m-%d")
+        new_entity_data["disbursementDate"] = disbursement_date
+
+        async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
+            response = await client.post(
+                f"/{self.resource_version}/{self.resource}/simulations",
+                headers=self.build_headers(),
+                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return self.retrieve_data_model.parse_obj(response.json()).id
+
 
 class DPAFlowsSyncModule(GenericSyncModule):
 
@@ -265,6 +285,26 @@ class DPAFlowsSyncModule(GenericSyncModule):
         with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
             response = client.post(
                 f"/{self.resource_version}/{self.resource}",
+                headers=self.build_headers(),
+                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return self.retrieve_data_model.parse_obj(response.json()).id
+
+    @retry_on_401
+    def simuate(self, new_entity_data: dict):
+        disbursement_date_str = \
+            new_entity_data.get("disbursementDate") or new_entity_data.get("disbursement_date")
+        if disbursement_date_str is None:
+            disbursement_date = dt.date.today().strftime("%Y-%m-%d")
+        else:
+            disbursement_date = date_parser(disbursement_date_str).strftime("%Y-%m-%d")
+        new_entity_data["disbursementDate"] = disbursement_date
+
+        with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
+            response = client.post(
+                f"/{self.resource_version}/{self.resource}/simulations",
                 headers=self.build_headers(),
                 json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
                 timeout=30
