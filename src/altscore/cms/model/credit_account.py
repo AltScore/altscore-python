@@ -86,7 +86,7 @@ class CreditAccountAsync:
                     },
                     "reason": reason,
                 },
-                headers=self._header_builder(),
+                headers=self._header_builder(partner_id=self.data.partner_id),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -124,7 +124,7 @@ class CreditAccountSync:
                     },
                     "reason": reason,
                 },
-                headers=self._header_builder(),
+                headers=self._header_builder(partner_id=self.data.partner_id),
                 timeout=30
             )
             raise_for_status_improved(response)

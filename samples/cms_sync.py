@@ -4,11 +4,12 @@ from decouple import config
 altscore = AltScore(client_id=config("ALTSCORE_CLIENT_ID"), client_secret=config("ALTSCORE_CLIENT_SECRET"),
                     environment=config("ALTSCORE_ENVIRONMENT"))
 # %%
-me = altscore.partner_id
+partners = altscore.cms.partners.query(limit=10)
 # %%
 new_client = altscore.cms.clients.create(
     {
         "externalId": "test-12345678910",
+        "partnerId": partners[0].data.id,
         "legalName": "Test Client S.A",
         "taxId": "12345678910",
         "dba": "Test Client",
@@ -17,7 +18,10 @@ new_client = altscore.cms.clients.create(
     }
 )
 # %%
-client = altscore.cms.clients.retrieve_by_external_id(external_id="test-123456789")
+client = altscore.cms.clients.retrieve_by_external_id(external_id="test-12345678910",
+                                                      partner_id=partners[0].data.id)
+#%%
+client.enable()
 # %%
 ca = client.get_credit_account(product_family="dpa")
 # %%

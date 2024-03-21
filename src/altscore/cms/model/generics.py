@@ -20,8 +20,8 @@ class GenericSyncModule:
     def renew_token(self):
         return self.altscore_client.renew_token()
 
-    def build_headers(self):
-        return build_headers(self)
+    def build_headers(self, **kwargs):
+        return build_headers(self, **kwargs)
 
     @retry_on_401
     def create(self, new_entity_data: dict):
@@ -136,8 +136,8 @@ class GenericAsyncModule:
     def renew_token(self):
         return self.altscore_client.renew_token()
 
-    def build_headers(self):
-        return build_headers(self)
+    def build_headers(self, **kwargs):
+        return build_headers(self, **kwargs)
 
     @retry_on_401_async
     async def create(self, new_entity_data: dict):
