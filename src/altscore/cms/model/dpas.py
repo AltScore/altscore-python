@@ -128,7 +128,7 @@ class DPAFlowAsync(DPABase):
     @retry_on_401_async
     async def cancel(self):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
-            response = await client.post(
+            response = await client.put(
                 self._cancellation(self.data.id),
                 headers=self._header_builder(),
                 timeout=30
@@ -180,7 +180,7 @@ class DPAFlowSync(DPABase):
     @retry_on_401
     def cancel(self):
         with httpx.Client(base_url=self.base_url) as client:
-            response = client.post(
+            response = client.put(
                 self._cancellation(self.data.id),
                 headers=self._header_builder(),
                 timeout=30
