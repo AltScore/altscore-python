@@ -83,7 +83,7 @@ class ClientAsync(ClientBase):
             )
 
     @retry_on_401_async
-    async def enable(self):
+    async def enable(self, partner_id: Optional[str] = None):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
                 self._status(self.data.id),
@@ -91,13 +91,13 @@ class ClientAsync(ClientBase):
                     "status": "enabled"
                 },
                 timeout=30,
-                headers=self._header_builder()
+                headers=self._header_builder(partner_id=partner_id)
             )
             raise_for_status_improved(response)
             self.data = ClientAPIDTO.parse_obj(response.json())
 
     @retry_on_401_async
-    async def disable(self):
+    async def disable(self, partner_id: Optional[str] = None):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
                 self._status(self.data.id),
@@ -105,7 +105,7 @@ class ClientAsync(ClientBase):
                     "status": "disabled"
                 },
                 timeout=30,
-                headers=self._header_builder()
+                headers=self._header_builder(partner_id=partner_id)
             )
             raise_for_status_improved(response)
             self.data = ClientAPIDTO.parse_obj(response.json())
@@ -142,7 +142,7 @@ class ClientSync(ClientBase):
             )
 
     @retry_on_401
-    def enable(self):
+    def enable(self, partner_id: Optional[str] = None):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.put(
                 self._status(self.data.id),
@@ -150,13 +150,13 @@ class ClientSync(ClientBase):
                     "status": "enabled"
                 },
                 timeout=30,
-                headers=self._header_builder()
+                headers=self._header_builder(partner_id=partner_id)
             )
             raise_for_status_improved(response)
             self.data = ClientAPIDTO.parse_obj(response.json())
 
     @retry_on_401
-    def disable(self):
+    def disable(self, partner_id: Optional[str] = None):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.put(
                 self._status(self.data.id),
@@ -164,7 +164,7 @@ class ClientSync(ClientBase):
                     "status": "disabled"
                 },
                 timeout=30,
-                headers=self._header_builder()
+                headers=self._header_builder(partner_id=partner_id)
             )
             raise_for_status_improved(response)
             self.data = ClientAPIDTO.parse_obj(response.json())
