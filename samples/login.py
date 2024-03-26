@@ -5,7 +5,7 @@ from altscore.altdata.schemas import InputKeys, SourceConfig
 altscore = AltScore(
     client_id=config("ALTSCORE_CLIENT_ID"),
     client_secret=config("ALTSCORE_CLIENT_SECRET"),
-    environment="production"
+    environment="staging"
 )
 # %%
 altscore.get_tenant_from_token()

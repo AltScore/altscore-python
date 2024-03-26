@@ -72,7 +72,7 @@ class AddressAPIDTO(BaseModel):
         return str
 
 
-class CreateAddressAPIDTO(BaseModel):
+class CreateAddressDTO(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
     label: Optional[str] = Field(alias="label", default=None)
     street1: str = Field(alias="street1")
@@ -138,7 +138,7 @@ class AddressesSyncModule(GenericSyncModule):
         super().__init__(altscore_client,
                          sync_resource=AddressSync,
                          retrieve_data_model=AddressAPIDTO,
-                         create_data_model=CreateAddressAPIDTO,
+                         create_data_model=CreateAddressDTO,
                          update_data_model=UpdateAddressDTO,
                          resource="addresses")
 
@@ -149,6 +149,6 @@ class AddressesAsyncModule(GenericAsyncModule):
         super().__init__(altscore_client,
                          async_resource=AddressAsync,
                          retrieve_data_model=AddressAPIDTO,
-                         create_data_model=CreateAddressAPIDTO,
+                         create_data_model=CreateAddressDTO,
                          update_data_model=UpdateAddressDTO,
                          resource="addresses")

@@ -21,7 +21,7 @@ new_client = altscore.cms.clients.create(
 client = altscore.cms.clients.retrieve_by_external_id(external_id="test-12345678910",
                                                       partner_id=partners[0].data.id)
 #%%
-client.enable()
+client.disable()
 # %%
 ca = client.get_credit_account(product_family="dpa")
 # %%

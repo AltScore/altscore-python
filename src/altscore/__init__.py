@@ -8,6 +8,7 @@ from altscore.cms import CMSSync, CMSAsync
 from typing import Optional, Union
 import warnings
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
+from loguru import logger
 
 warnings.filterwarnings("ignore")
 
@@ -68,11 +69,20 @@ class AltScoreBase:
                 tenant=self.tenant
             )
         elif isinstance(self._refresh_token, str):
-            self.user_token, self._refresh_token = refresh_api_token(
-                refresh_token=self._refresh_token,
-                environment=self.environment,
-                tenant=self.tenant
-            )
+            try:
+                self.user_token, self._refresh_token = refresh_api_token(
+                    refresh_token=self._refresh_token,
+                    environment=self.environment,
+                    tenant=self.tenant
+                )
+            # If the refresh token is invalid, we need to re-authenticate
+            except:
+                logger.info("Refresh token invalid, re-authenticating, make sure ALTSCORE_CLIENT_ID and "
+                            "ALTSCORE_CLIENT_SECRET are set as environment variables")
+                self.auth(
+                    client_id=config("ALTSCORE_CLIENT_ID"),
+                    client_secret=config("ALTSCORE_CLIENT_SECRET")
+                )
         else:
             raise ValueError("Authentication error, "
                              "refresh token not found")
@@ -150,83 +160,6 @@ class AltScore(AltScoreBase):
                 return None
         return self._partner_id
 
-    def new_cms_client_from_borrower(
-            self, borrower_id: str,
-            legal_name_identity_key: Optional[str] = None,
-            tax_id_identity_key: Optional[str] = None,
-            external_id_identity_key: str = None,
-            dba_identity_key: Optional[str] = None,
-            partner_id: Optional[str] = None
-    ) -> str:
-
-        def find_identity_value_or_error(_borrower, identity_key):
-            identity = _borrower.get_identity_by_key(key=identity_key)
-            if identity is None:
-                raise LookupError(f"Identity {identity_key} not found for borrower {borrower_id}")
-            else:
-                return identity.data.value
-
-        borrower = self.borrower_central.borrowers.retrieve(borrower_id)
-        if borrower is None:
-            raise LookupError(f"Borrower {borrower_id} not found")
-
-        if external_id_identity_key is not None:
-            external_id = find_identity_value_or_error(borrower, external_id_identity_key)
-        else:
-            external_id = borrower_id
-
-        if legal_name_identity_key is not None:
-            legal_name = find_identity_value_or_error(borrower, legal_name_identity_key)
-        else:
-            legal_name = "N/A"
-
-        if borrower.data.persona == "business":
-            if dba_identity_key is not None:
-                dba = find_identity_value_or_error(borrower, dba_identity_key)
-            else:
-                dba = legal_name
-        else:
-            dba = "N/A"
-
-        if tax_id_identity_key is not None:
-            tax_id = find_identity_value_or_error(borrower, tax_id_identity_key)
-        else:
-            tax_id = "N/A"
-
-        address = borrower.get_main_address()
-        if address is None:
-            address = "N/A"
-        else:
-            address = address.data.get_address_str()
-
-        email = borrower.get_main_point_of_contact(contact_method="email")
-        if email is None:
-            email = "N/A"
-        else:
-            email = email.data.value
-
-        phone = borrower.get_main_point_of_contact(contact_method="phone")
-        if phone is None:
-            phone = "N/A"
-        else:
-            phone = phone.data.value
-
-        client_data = {
-            "externalId": external_id,
-            "legalName": legal_name,
-            "taxId": tax_id,
-            "dba": dba,
-            "address": address,
-            "emailAddress": email,
-            "phoneNumber": phone
-        }
-        if partner_id is not None:
-            client_data["partnerId"] = partner_id
-
-        client_id = self.cms.clients.create(new_entity_data=client_data)
-        borrower.associate_cms_client_id(client_id)
-        return client_id
-
 
 class AltScoreAsync(AltScoreBase):
     _async_mode = True
@@ -260,79 +193,6 @@ class AltScoreAsync(AltScoreBase):
             except:
                 return None
         return self._partner_id
-
-    async def new_cms_client_from_borrower(
-            self, borrower_id: str, legal_name_identity_key: str, tax_id_identity_key: str,
-            external_id_identity_key: str = None, dba_identity_key: Optional[str] = None,
-            partner_id: Optional[str] = None
-    ) -> str:
-        async def find_identity_value_or_error(_borrower, identity_key):
-            identity = await _borrower.get_identity_by_key(key=identity_key)
-            if identity is None:
-                raise LookupError(f"Identity {identity_key} not found for borrower {borrower_id}")
-            else:
-                return identity.data.value
-
-        borrower = await self.borrower_central.borrowers.retrieve(borrower_id)
-        if borrower is None:
-            raise LookupError(f"Borrower {borrower_id} not found")
-
-        if external_id_identity_key is not None:
-            external_id = await find_identity_value_or_error(borrower, external_id_identity_key)
-        else:
-            external_id = borrower_id
-
-        if legal_name_identity_key is not None:
-            legal_name = await find_identity_value_or_error(borrower, legal_name_identity_key)
-        else:
-            legal_name = "N/A"
-
-        if borrower.data.persona == "business":
-            if dba_identity_key is not None:
-                dba = await find_identity_value_or_error(borrower, dba_identity_key)
-            else:
-                dba = legal_name
-        else:
-            dba = "N/A"
-
-        if tax_id_identity_key is not None:
-            tax_id = await find_identity_value_or_error(borrower, tax_id_identity_key)
-        else:
-            tax_id = "N/A"
-
-        address = await borrower.get_main_address()
-        if address is None:
-            address = "N/A"
-        else:
-            address = address.data.get_address_str()
-
-        email = await borrower.get_main_point_of_contact(contact_method="email")
-        if email is None:
-            email = "N/A"
-        else:
-            email = email.data.value
-
-        phone = await borrower.get_main_point_of_contact(contact_method="phone")
-        if phone is None:
-            phone = "N/A"
-        else:
-            phone = phone.data.value
-
-        client_data = {
-            "externalId": external_id,
-            "legalName": legal_name,
-            "taxId": tax_id,
-            "dba": dba,
-            "address": address,
-            "emailAddress": email,
-            "phoneNumber": phone
-        }
-        if partner_id is not None:
-            client_data["partnerId"] = partner_id
-
-        client_id = await self.cms.clients.create(new_entity_data=client_data)
-        await borrower.associate_cms_client_id(client_id)
-        return client_id
 
 
 def borrower_sign_up_with_form(
