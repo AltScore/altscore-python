@@ -57,7 +57,7 @@ class SecretsSyncModule(GenericSyncModule):
                          resource="stores/secrets")
 
 
-class PackagesAsyncModule(GenericAsyncModule):
+class SecretsAsyncModule(GenericAsyncModule):
 
     def __init__(self, altscore_client):
         super().__init__(altscore_client,

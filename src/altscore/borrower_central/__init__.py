@@ -13,6 +13,7 @@ from altscore.borrower_central.model.points_of_contact import PointOfContactAsyn
 from altscore.borrower_central.model.relationships import RelationshipsAsyncModule, RelationshipsSyncModule
 from altscore.borrower_central.model.store_packages import PackagesAsyncModule, PackagesSyncModule
 from altscore.borrower_central.model.store_sources import SourcesAsyncModule, SourcesSyncModule
+from altscore.borrower_central.model.store_secrets import SecretsAsyncModule, SecretsSyncModule
 from altscore.borrower_central.model.workflows import WorkflowsAsyncModule, WorkflowsSyncModule
 from altscore.borrower_central.model.evaluators import EvaluatorAsyncModule, EvaluatorSyncModule
 from altscore.borrower_central.model.forms import FormsAsyncModule, FormsSyncModule
@@ -46,6 +47,7 @@ class BorrowerCentralAsync:
         self.otp_templates = OTPTemplatesAsyncModule(altscore_client)
         self.store_packages = PackagesAsyncModule(altscore_client)
         self.store_sources = SourcesAsyncModule(altscore_client)
+        self.store_secrets = SecretsAsyncModule(altscore_client)
         self.evaluators = EvaluatorAsyncModule(altscore_client)
         self.forms = FormsAsyncModule(altscore_client)
         self.alerts = AlertsAsyncModule(altscore_client)
@@ -75,6 +77,7 @@ class BorrowerCentralSync:
         self.otp_templates = OTPTemplatesSyncModule(altscore_client)
         self.store_packages = PackagesSyncModule(altscore_client)
         self.store_sources = SourcesSyncModule(altscore_client)
+        self.store_secrets = SecretsSyncModule(altscore_client)
         self.evaluators = EvaluatorSyncModule(altscore_client)
         self.forms = FormsSyncModule(altscore_client)
         self.alerts = AlertsSyncModule(altscore_client)
