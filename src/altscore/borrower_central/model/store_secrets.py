@@ -15,6 +15,7 @@ class SecretAPIDTO(BaseModel):
 
 
 class CreateSecretDTO(BaseModel):
+    id: Optional[str] = Field(alias="id", default=None)
     secret: Dict[str, str] = Field(alias="secret")
     ttl_minutes: Optional[int] = Field(alias="ttlMinutes", default=None)
     to_delete_at: Optional[str] = Field(alias="toDeleteAt", default=None)
