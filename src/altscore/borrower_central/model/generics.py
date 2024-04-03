@@ -198,9 +198,9 @@ class GenericSyncModule:
             total_count = int(response.headers["x-total-count"])
         resources = []
         # TODO: this is not optimal, we should use asyncio.gather and a batch size
-        total_pages = total_count // per_page + 1
+        total_pages = (total_count // per_page) + 1
         if total_pages > 1:
-            pages = range(1, total_pages)
+            pages = range(1, total_pages + 1)
         else:
             pages = [1]
         for page in pages:
@@ -342,9 +342,9 @@ class GenericAsyncModule:
             total_count = int(response.headers["x-total-count"])
         resources = []
         # TODO: this is not optimal, we should use asyncio.gather and a batch size
-        total_pages = total_count // per_page + 1
+        total_pages = (total_count // per_page) + 1
         if total_pages > 1:
-            pages = range(1, total_pages)
+            pages = range(1, total_pages + 1)
         else:
             pages = [1]
         for page in pages:
