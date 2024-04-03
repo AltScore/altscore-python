@@ -85,14 +85,18 @@ class DPASettingsPenalty(BaseModel):
         populate_by_alias = True
 
 
+class DPASettingsDisbursement(BaseModel):
+    disburse_to: Optional[str] = Field(alias="disburseTo", default="")
+
+
 class DPASettingsAPIDTO(BaseModel):
     defaults: Optional[DPASettingsDefaults] = Field(alias="defaults", default=None)
-    disbursement: Optional[str] = Field(alias="disbursement", default=None)
+    disbursement: Optional[DPASettingsDisbursement] = Field(alias="disbursement", default=None)
     interest_rates: List[DPASettingssInterestRates] = Field(alias="interestRates", default=None)
     invoice_over_limit: Optional[float] = Field(alias="invoiceOverLimit", default=None)
     on_approve_flow_reserve_all_assigned_amount: Optional[bool] = \
         Field(alias="onApproveFlowReserveAllAssignedAmount", default=None)
-    pentalties: List[DPASettingsPenalty] = Field(alias="pentalties", default=[])
+    penalties: List[DPASettingsPenalty] = Field(alias="penalties", default=[])
     reserve_on_start: Optional[bool] = Field(alias="reserveOnStart", default=None)
     tax_rate: Optional[float] = Field(alias="taxRate", default=None)
     timezone: Optional[str] = Field(alias="timezone", default=None)
