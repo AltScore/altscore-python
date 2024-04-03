@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Literal, Dict
 import httpx
 import asyncio
 
@@ -29,6 +29,24 @@ class BorrowerAPIDTO(BaseModel):
     label: Optional[str] = Field(alias="label")
     tags: List[str] = Field(alias="tags", default=[])
     cms_client_ids: Optional[List[str]] = Field(alias="cmsClientIds", default=[])
+    created_at: str = Field(alias="createdAt")
+    updated_at: Optional[str] = Field(alias="updatedAt")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class BorrowerSummaryAPIDTO(BaseModel):
+    id: str = Field(alias="id")
+    persona: str = Field(alias="persona")
+    label: Optional[str] = Field(alias="label")
+    identities: Optional[List[Dict]] = Field(alias="identities", default=[])
+    points_of_contact: Optional[List[Dict]] = Field(alias="pointsOfContact", default=[])
+    tags: List[str] = Field(alias="tags", default=[])
+    stage: Optional[str] = Field(alias="stage", default=None)
+    risk_rating: Optional[str] = Field(alias="riskRating", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
 
@@ -328,6 +346,27 @@ class BorrowersAsyncModule:
                 data=BorrowerAPIDTO.parse_obj(e)
             ) for e in response.json()]
 
+    @retry_on_401_async
+    async def query_summary(self, by: Optional[Literal["self", "identity"]] = None, search: Optional[str] = None,
+                            **kwargs):
+        query_params = {
+            "by": by,
+            "search": search
+        }
+        for k, v in kwargs.items():
+            if v is not None:
+                query_params[convert_to_dash_case(k)] = v
+        query_params = clean_dict(query_params)
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                f"/v1/borrowers-summary",
+                headers=self.build_headers(),
+                params=query_params,
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [BorrowerSummaryAPIDTO.parse_obj(e) for e in response.json()]
+
 
 class BorrowersSyncModule:
 
@@ -440,6 +479,27 @@ class BorrowersSyncModule:
                 renew_token=self.renew_token,
                 data=BorrowerAPIDTO.parse_obj(e)
             ) for e in response.json()]
+
+    @retry_on_401
+    def query_summary(self, by: Optional[Literal["self", "identity"]] = None, search: Optional[str] = None,
+                      **kwargs):
+        query_params = {
+            "by": by,
+            "search": search
+        }
+        for k, v in kwargs.items():
+            if v is not None:
+                query_params[convert_to_dash_case(k)] = v
+        query_params = clean_dict(query_params)
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                f"/v1/borrowers-summary",
+                headers=self.build_headers(),
+                params=query_params,
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [BorrowerSummaryAPIDTO.parse_obj(e) for e in response.json()]
 
 
 class BorrowerAsync(BorrowerBase):

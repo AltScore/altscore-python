@@ -9,3 +9,4 @@ altscore = AltScore(
 #%%
 secret = altscore.borrower_central.store_secrets.retrieve("workflows")
 #%%
+borrowers = altscore.borrower_central.borrowers.query_summary(per_page=100)
