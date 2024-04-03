@@ -3,22 +3,15 @@ from decouple import config
 import asyncio
 
 
-async def get_borrower():
+async def test():
     altscore = AltScore(
         client_id=config("ALTSCORE_CLIENT_ID"),
         client_secret=config("ALTSCORE_CLIENT_SECRET"),
-        environment="staging"
+        environment=config("ALTSCORE_ENVIRONMENT")
     )
-    borrower = await altscore.borrower_central.borrowers.retrieve("dfaab9fd-d4eb-4f53-9070-f2605c4cc9e2")
-    authorizations = await borrower.get_authorizations(key="bureau_authorization")
-
-    if len(authorizations) > 0:
-        last_auth = authorizations[0]
-        await last_auth.get_signatures()
-
-        print(authorizations[0].flat_data)
-    return borrower
+    data_models = await altscore.borrower_central.data_models.retrieve_all()
+    print(data_models)
 
 
 if __name__ == '__main__':
-    asyncio.run(get_borrower())
+    asyncio.run(test())
