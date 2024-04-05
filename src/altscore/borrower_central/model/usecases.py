@@ -8,9 +8,9 @@ class UsecasesAPDTO(BaseModel):
     id: str = Field(alias="id")
     name: str = Field(alias="name")
     description: str = Field(alias="description")
-    rootTaskInstanceAlias: str = Field(alias="rootTaskInstanceAlias")
-    rootTaskInstanceInput: Dict = Field(alias="rootTaskInstanceInput")
-    taskInstances: Dict = Field(alias="taskInstances")
+    root_task_instance_alias: str = Field(alias="rootTaskInstanceAlias")
+    root_task_instance_input: Dict = Field(alias="rootTaskInstanceInput")
+    task_instances: Dict = Field(alias="taskInstances")
 
     class Config:
         populate_by_name = True
@@ -21,9 +21,9 @@ class UsecasesAPDTO(BaseModel):
 class CreateUsecaseDTO(BaseModel):
     name: str = Field(alias="name")
     description: str = Field(alias="description")
-    rootTaskInstanceAlias: str = Field(alias="rootTaskInstanceAlias")
-    rootTaskInstanceInput: Dict = Field(alias="rootTaskInstanceInput")
-    taskInstances: Dict = Field(alias="taskInstances")
+    root_task_instance_alias: str = Field(alias="rootTaskInstanceAlias")
+    root_task_instance_input: Dict = Field(alias="rootTaskInstanceInput")
+    task_instances: Dict = Field(alias="taskInstances")
 
     class Config:
         populate_by_name = True
@@ -33,9 +33,9 @@ class CreateUsecaseDTO(BaseModel):
 class UpdateUsecaseDTO(BaseModel):
     name: Optional[str] = Field(alias="name")
     description: Optional[str] = Field(alias="description")
-    rootTaskInstanceAlias: Optional[str] = Field(alias="rootTaskInstanceAlias")
-    rootTaskInstanceInput: Optional[Dict] = Field(alias="rootTaskInstanceInput")
-    taskInstances: Optional[Dict] = Field(alias="taskInstances")
+    root_task_instance_alias: Optional[str] = Field(alias="rootTaskInstanceAlias")
+    root_task_instance_input: Optional[Dict] = Field(alias="rootTaskInstanceInput")
+    task_instances: Optional[Dict] = Field(alias="taskInstances")
 
     class Config:
         populate_by_name = True
