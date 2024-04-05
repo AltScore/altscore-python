@@ -10,3 +10,4 @@ textual
 textual-dev
 pyjwt
 loguru
+pydantic
