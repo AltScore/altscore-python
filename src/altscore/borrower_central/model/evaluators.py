@@ -144,7 +144,7 @@ class EvaluatorSync(GenericSyncResource):
         super().__init__(base_url, "evaluators", header_builder, renew_token, EvaluatorAPIDTO.parse_obj(data))
 
     @retry_on_401
-    def evaluate(self, evaluator_input: EvaluatorInput) -> EvaluatorOutput:
+    def evaluate(self, evaluator_input: EvaluatorInput) -> EvaluatorOutput | EvaluatorOutputError:
         with httpx.Client() as client:
             response = client.post(
                 f"{self.base_url}/{self.resource}/{self.data.id}/evaluate",
@@ -153,7 +153,10 @@ class EvaluatorSync(GenericSyncResource):
                 timeout=300
             )
             raise_for_status_improved(response)
-            return EvaluatorOutput.parse_obj(response.json())
+            if "traceback" in response.json():
+                return EvaluatorOutputError.parse_obj(response.json())
+            else:
+                return EvaluatorOutput.parse_obj(response.json())
 
 
 class EvaluatorAsync(GenericAsyncResource):
@@ -162,7 +165,7 @@ class EvaluatorAsync(GenericAsyncResource):
         super().__init__(base_url, "evaluators", header_builder, renew_token, EvaluatorAPIDTO.parse_obj(data))
 
     @retry_on_401_async
-    async def evaluate(self, evaluator_input: EvaluatorInput) -> EvaluatorOutput:
+    async def evaluate(self, evaluator_input: EvaluatorInput) -> EvaluatorOutput | EvaluatorOutputError:
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"{self.base_url}/{self.resource}/{self.data.id}/evaluate",
@@ -171,7 +174,10 @@ class EvaluatorAsync(GenericAsyncResource):
                 timeout=300
             )
             raise_for_status_improved(response)
-            return EvaluatorOutput.parse_obj(response.json())
+            if "traceback" in response.json():
+                return EvaluatorOutputError.parse_obj(response.json())
+            else:
+                return EvaluatorOutput.parse_obj(response.json())
 
 
 class EvaluatorSyncModule(GenericSyncModule):
@@ -191,7 +197,7 @@ class EvaluatorSyncModule(GenericSyncModule):
     def evaluate(
             self, evaluator_input: Dict, evaluator_id: Optional[str] = None,
             evaluator_alias: Optional[str] = None, evaluator_version: Optional[str] = None
-    ) -> EvaluatorOutput:
+    ) -> EvaluatorOutput | EvaluatorOutputError:
 
         if evaluator_id is not None:
             url = f"{self.altscore_client._borrower_central_base_url}/v1/evaluators/{evaluator_id}/evaluate"
@@ -208,7 +214,10 @@ class EvaluatorSyncModule(GenericSyncModule):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return EvaluatorOutput.parse_obj(response.json())
+            if "traceback" in response.json():
+                return EvaluatorOutputError.parse_obj(response.json())
+            else:
+                return EvaluatorOutput.parse_obj(response.json())
 
 
 class EvaluatorAsyncModule(GenericAsyncModule):
