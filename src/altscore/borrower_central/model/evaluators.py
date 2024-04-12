@@ -228,7 +228,7 @@ class EvaluatorAsyncModule(GenericAsyncModule):
     async def evaluate(
             self, evaluator_input: Dict, evaluator_id: Optional[str] = None,
             evaluator_alias: Optional[str] = None, evaluator_version: Optional[str] = None
-    ) -> EvaluatorOutput:
+    ) -> EvaluatorOutput | EvaluatorOutputError:
 
         if evaluator_id is not None:
             url = f"{self.altscore_client._borrower_central_base_url}/v1/evaluators/{evaluator_id}/evaluate"
