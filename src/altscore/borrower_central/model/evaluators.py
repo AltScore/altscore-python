@@ -119,10 +119,12 @@ class MetricOutput(BaseModel):
 
 class EvaluatorOutput(BaseModel):
     score: Optional[ScoreOutput] = Field(alias="score", default=None)
-    scorecard: List[ScoreCardRuleOutput] = Field(alias="scorecard", default=[])
-    metrics: List[MetricOutput] = Field(alias="metrics", default=[])
-    rules: List[BusinessRuleOutput] = Field(alias="rules", default=[])
-    decision: str = Field(alias="decision")
+    scorecard: Optional[List[ScoreCardRuleOutput]] = Field(alias="scorecard", default=[])
+    metrics: Optional[List[MetricOutput]] = Field(alias="metrics", default=[])
+    rules: Optional[List[BusinessRuleOutput]] = Field(alias="rules", default=[])
+    decision: Optional[str] = Field(alias="decision", default=None)
+    details: Optional[str] = Field(alias="details", default=None)
+    traceback: Optional[List[str]] = Field(alias="traceback", default=None)
 
     class Config:
         allow_population_by_field_name = True
