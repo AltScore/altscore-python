@@ -129,6 +129,15 @@ class EvaluatorOutput(BaseModel):
         allow_population_by_alias = True
 
 
+class EvaluatorOutputError(BaseModel):
+    detail: str = Field(alias="detail")
+    traceback: List[str] = Field(alias="traceback")
+
+    class Config:
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
 class EvaluatorSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
@@ -236,4 +245,7 @@ class EvaluatorAsyncModule(GenericAsyncModule):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return EvaluatorOutput.parse_obj(response.json())
+            if "traceback" in response.json():
+                return EvaluatorOutputError.parse_obj(response.json())
+            else:
+                return EvaluatorOutput.parse_obj(response.json())
