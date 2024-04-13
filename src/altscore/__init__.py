@@ -5,6 +5,7 @@ from decouple import config
 from altscore.borrower_central import BorrowerCentralAsync, BorrowerCentralSync
 from altscore.altdata import AltDataSync, AltDataAsync
 from altscore.cms import CMSSync, CMSAsync
+from altscore.macros import MacrosSync, MacrosAsync
 from typing import Optional, Union
 import warnings
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
@@ -149,6 +150,7 @@ class AltScore(AltScoreBase):
         self.borrower_central = BorrowerCentralSync(self)
         self.altdata = AltDataSync(self)
         self.cms = CMSSync(self)
+        self.macros = MacrosSync(self)
 
     @property
     def partner_id(self) -> Optional[str]:
@@ -183,6 +185,7 @@ class AltScoreAsync(AltScoreBase):
         self.borrower_central = BorrowerCentralAsync(self)
         self.altdata = AltDataAsync(self)
         self.cms = CMSAsync(self)
+        self.macros = MacrosAsync(self)
 
     @property
     def partner_id(self) -> Optional[str]:

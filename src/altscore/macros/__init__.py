@@ -10,17 +10,17 @@ class MacrosSync:
         self.altscore_client = altscore_client
 
     def create_borrower(self, borrower_data: dict) -> BorrowerSync:
-        identites_to_create, borrower_fields_to_create = validate_borrower_data(borrower_data)
-        borrower_id = self.altscore_client.borrower_central.create(
+        identities_to_create, borrower_fields_to_create = validate_borrower_data(borrower_data)
+        borrower_id = self.altscore_client.borrower_central.borrowers.create(
             {
                 "label": borrower_data.get("label"),
                 "persona": borrower_data["persona"],
             }
         )
-        for identity_key in identites_to_create:
+        for identity_key in identities_to_create:
             key = identity_key.split(".")[-1]
             value = borrower_data[identity_key]
-            self.altscore_client.borrower_central.identites.create(
+            self.altscore_client.borrower_central.identities.create(
                 {
                     "borrower_id": borrower_id,
                     "key": key,
@@ -176,18 +176,18 @@ class MacrosAsync:
         self.altscore_client = altscore_client
 
     async def create_borrower(self, borrower_data: dict) -> BorrowerAsync:
-        identites_to_create, borrower_fields_to_create = validate_borrower_data(borrower_data)
-        borrower_id = await self.altscore_client.borrower_central.create(
+        identities_to_create, borrower_fields_to_create = validate_borrower_data(borrower_data)
+        borrower_id = await self.altscore_client.borrower_central.borrowers.create(
             {
                 "label": borrower_data.get("label"),
                 "persona": borrower_data["persona"],
             }
         )
         calls = []
-        for identity_key in identites_to_create:
+        for identity_key in identities_to_create:
             key = identity_key.split(".")[-1]
             value = borrower_data[identity_key]
-            calls.append(self.altscore_client.borrower_central.identites.create(
+            calls.append(self.altscore_client.borrower_central.identities.create(
                 {
                     "borrower_id": borrower_id,
                     "key": key,

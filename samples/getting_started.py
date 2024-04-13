@@ -23,12 +23,33 @@ altscore.borrower_central.borrowers.create(
     }
 )
 #%%
-# Create a borrower
-altscore.borrower_central.borrowers.create(
+# Create a borrower with macro
+borrower = altscore.macros.create_borrower(
     {
-        "label": "Ivan Mena",
-        "flag": "red",
-        "persona": "individual"
+        "label": "Juan Perez 3",
+        "persona": "individual",
+        "identity.person_id": "1234567890",
+        "identity.full_name": "Juan Perez",
+        "points_of_contact": [
+            {
+                "contactMethod": "email",
+                "value": "sample@sample.com"
+            },
+            {
+                "contactMethod": "phone",
+                "value": "1234567890"
+            }
+        ],
+        "addresses": [
+            {
+                "street1": "Av. Paseo de la Reforma 123",
+                "neighborhood": "Juarez",
+                "city": "Ciudad de Mexico",
+                "state": "CDMX",
+                "zipCode": "06600",
+                "country": "MEX"
+            }
+        ]
     }
 )
 #%%
