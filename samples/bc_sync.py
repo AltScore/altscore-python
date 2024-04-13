@@ -1,13 +1,20 @@
 from altscore import AltScore
 from decouple import config
 
-altscore = AltScore(api_key=config("ALTSCORE_API_KEY"), environment="sandbox")
+altscore = AltScore(
+    client_id=config("ALTSCORE_CLIENT_ID"),
+    client_secret=config("ALTSCORE_CLIENT_SECRET"),
+    environment=config("ALTSCORE_ENVIRONMENT")
+)
 # %%
-b1 = altscore.borrower_central.borrowers.retrieve("e7b20bd9-53ba-4a9f-8206-cc13f8b25739")
+# List all borrowers
+borrowers = altscore.borrower_central.borrowers.query()
+# %%
+b1 = altscore.borrower_central.borrowers.retrieve(borrowers[0].data.id)
 i1 = b1.get_identities()
 print(i1[1])
 #%%
-b1.set_stage("verified")
+b1.set_current_step("new")
 b1.set_risk_rating("A")
 #%%
 stage = b1.get_stage()
@@ -16,6 +23,8 @@ print(stage)
 print(risk_rating)
 #%%
 borrower = altscore.borrower_central.borrowers.find_one_by_identity("full_name", "")
+#%%
+borrower1 = altscore.borrower_central.borrowers.query_summary(by="identity", search="Paulo")
 # %%
 documents = borrower.get_documents()
 attachments = documents[0].get_attachments()

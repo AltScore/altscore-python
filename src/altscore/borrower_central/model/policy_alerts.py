@@ -14,9 +14,9 @@ class AlertAPIDTO(BaseModel):
     level: int = Field(alias="level")
     message: str = Field(alias="message")
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
-    is_dismissed: bool = Field(alias="isDismissed")
-    dismissed_by: Optional[str] = Field(alias="dismissedBy")
-    dismissed_at: Optional[str] = Field(alias="dismissedAt")
+    is_acknowledged: bool = Field(alias="isAcknowledged")
+    acknowledged_by: Optional[str] = Field(alias="acknowledgedBy")
+    acknowledged_at: Optional[str] = Field(alias="acknowledgedAt")
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
 
@@ -40,9 +40,9 @@ class CreateAlert(BaseModel):
         allow_population_by_alias = True
 
 
-class DismissAlert(BaseModel):
-    dismissed_by: str = Field(alias="dismissedBy")
-    dismissed_at: Optional[str] = Field(alias="dismissedAt")
+class AcknowledgeAlert(BaseModel):
+    acknowledged_by: str = Field(alias="acknowledgedBy")
+    acknowledged_at: Optional[str] = Field(alias="acknowledgedAt")
 
     class Config:
         populate_by_name = True
@@ -56,11 +56,12 @@ class AlertSync(GenericSyncResource):
         super().__init__(base_url, "alerts", header_builder, renew_token, AlertAPIDTO.parse_obj(data))
 
     @retry_on_401
-    def dismiss(self, dismissed_by: str, dismissed_at: Optional[str] = None) -> str:
+    def acknowledge(self, acknowledged_by: str, acknowledged_at: Optional[str] = None) -> str:
         with httpx.Client(base_url=self.base_url._borrower_central_base_url) as client:
-            data = DismissAlert(dismissed_by=dismissed_by, dismissed_at=dismissed_at).dict(by_alias=True)
+            data = AcknowledgeAlert(acknowledged_by=acknowledged_by, acknowledged_at=acknowledged_at).dict(
+                by_alias=True)
             response = client.put(
-                f"{self.resource}/{self.data.id}/dismiss",
+                f"{self.resource}/{self.data.id}/acknowledge",
                 json=data,
                 headers=self._header_builder(),
             )
@@ -74,11 +75,12 @@ class AlertAsync(GenericAsyncResource):
         super().__init__(base_url, "alerts", header_builder, renew_token, AlertAPIDTO.parse_obj(data))
 
     @retry_on_401_async
-    async def dismiss(self, dismissed_by: str, dismissed_at: Optional[str] = None) -> str:
+    async def acknowledge(self, acknowledged_by: str, acknowledged_at: Optional[str] = None) -> str:
         async with httpx.AsyncClient(base_url=self.base_url._borrower_central_base_url) as client:
-            data = DismissAlert(dismissed_by=dismissed_by, dismissed_at=dismissed_at).dict(by_alias=True)
+            data = AcknowledgeAlert(acknowledged_by=acknowledged_by, acknowledged_at=acknowledged_at).dict(
+                by_alias=True)
             response = await client.put(
-                f"{self.resource}/{self.data.id}/dismiss",
+                f"{self.resource}/{self.data.id}/acknowledge",
                 json=data,
                 headers=self._header_builder(),
             )

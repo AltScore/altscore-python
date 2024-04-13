@@ -13,6 +13,7 @@ from altscore.borrower_central.model.authorizations import AuthorizationSync, Au
 from altscore.borrower_central.model.relationships import RelationshipSync, RelationshipAsync
 
 from altscore.borrower_central.model.stages import StageSync, StageAsync
+from altscore.borrower_central.model.steps import StepSync, StepAsync
 from altscore.borrower_central.model.risk_ratings import RiskRatingSync, RiskRatingAsync
 from altscore.borrower_central.model.policy_alerts import AlertSync, AlertAsync
 
@@ -27,6 +28,7 @@ class BorrowerAPIDTO(BaseModel):
     persona: str = Field(alias="persona")
     avatar_url: Optional[str] = Field(alias="avatarUrl")
     label: Optional[str] = Field(alias="label")
+    flag: Optional[str] = Field(alias="flag", default=None)
     tags: List[str] = Field(alias="tags", default=[])
     cms_client_ids: Optional[List[str]] = Field(alias="cmsClientIds", default=[])
     created_at: str = Field(alias="createdAt")
@@ -38,14 +40,60 @@ class BorrowerAPIDTO(BaseModel):
         allow_population_by_alias = True
 
 
+class SimplifiedIdentity(BaseModel):
+    id: str = Field(alias="id")
+    key: str = Field(alias="key")
+    label: str = Field(alias="label")
+    value: str = Field(alias="value")
+    priority: Optional[int] = Field(alias="priority")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class SimplifiedField(BaseModel):
+    id: str = Field(alias="id")
+    key: str = Field(alias="key")
+    label: str = Field(alias="label")
+    value: str = Field(alias="value")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class SimplifiedPointOfContact(BaseModel):
+    id: str = Field(alias="id")
+    signatures: Optional[List[str]] = Field(alias="signatures")
+    priority: int = Field(alias="priority"),
+    value: str = Field(alias="value")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class CurrentStep(BaseModel):
+    order: int = Field(alias="order")
+    key: str = Field(alias="key")
+    label: str = Field(alias="label")
+
+
 class BorrowerSummaryAPIDTO(BaseModel):
     id: str = Field(alias="id")
     persona: str = Field(alias="persona")
     label: Optional[str] = Field(alias="label")
-    identities: Optional[List[Dict]] = Field(alias="identities", default=[])
-    points_of_contact: Optional[List[Dict]] = Field(alias="pointsOfContact", default=[])
+    flag: Optional[str] = Field(alias="flag")
+    identities: Optional[List[SimplifiedIdentity]] = Field(alias="identities", default=[])
+    fields: Optional[List[SimplifiedField]] = Field(alias="fields", default=[])
+    points_of_contact: Optional[List[SimplifiedPointOfContact]] = Field(alias="pointsOfContact", default=[])
     tags: List[str] = Field(alias="tags", default=[])
     stage: Optional[str] = Field(alias="stage", default=None)
+    current_step: Optional[CurrentStep] = Field(alias="currentStep", default=None)
     risk_rating: Optional[str] = Field(alias="riskRating", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
@@ -59,6 +107,7 @@ class BorrowerSummaryAPIDTO(BaseModel):
 class CreateBorrowerDTO(BaseModel):
     persona: str = Field(alias="persona")
     label: Optional[str] = Field(alias="label")
+    flag: Optional[str] = Field(alias="flag", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
     class Config:
@@ -69,6 +118,7 @@ class CreateBorrowerDTO(BaseModel):
 
 class UpdateBorrowerDTO(BaseModel):
     label: Optional[str] = Field(alias="label", default=None)
+    flag: Optional[str] = Field(alias="flag", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
     class Config:
@@ -540,6 +590,33 @@ class BorrowerAsync(BorrowerBase):
             )
 
     @retry_on_401_async
+    async def get_current_step(self) -> StepAsync:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/steps/current",
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
+            return StepAsync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                renew_token=self.renew_token,
+                data=response.json()
+            )
+
+    @retry_on_401_async
+    async def set_current_step(self, key: str):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.put(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/steps/current",
+                json={
+                    "key": key
+                },
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401_async
     async def set_stage(self, stage: str, reference_id: Optional[str] = None):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
@@ -904,6 +981,33 @@ class BorrowerSync(BorrowerBase):
                 renew_token=self.renew_token,
                 data=response.json()
             )
+
+    @retry_on_401
+    def get_current_step(self) -> StepSync:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.get(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/step/current",
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
+            return StepSync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                renew_token=self.renew_token,
+                data=response.json()
+            )
+
+    @retry_on_401
+    def set_current_step(self, key: str):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.put(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/steps/current",
+                json={
+                    "key": key
+                },
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
 
     @retry_on_401
     def set_stage(self, stage: str, reference_id: Optional[str] = None):
