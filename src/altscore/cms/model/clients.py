@@ -2,7 +2,8 @@ from pydantic import BaseModel, Field
 from typing import Optional
 import httpx
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
-from altscore.cms.model.credit_account import CreditAccountSync, CreditAccountAsync, CreditAccountAPIDTO
+from altscore.cms.model.credit_accounts import CreditAccountSync, CreditAccountAsync, CreditAccountAPIDTO
+from altscore.cms.model.payment_accounts import PaymentAccountAPIDTO, CreatePaymentAccountDTO
 from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule
 import datetime as dt
 
@@ -55,6 +56,14 @@ class ClientBase:
     @staticmethod
     def _status(client_id: str):
         return f"/v2/clients/{client_id}/status"
+
+    @staticmethod
+    def _get_payments_accounts(client_id: str):
+        return f"/v1/payments/accounts/{client_id}"
+
+    @staticmethod
+    def _create_payment_account():
+        return f"/v1/payments/accounts"
 
 
 class ClientAsync(ClientBase):
@@ -109,6 +118,32 @@ class ClientAsync(ClientBase):
             )
             raise_for_status_improved(response)
             self.data = ClientAPIDTO.parse_obj(response.json())
+
+    @retry_on_401_async
+    async def get_payment_accounts(self):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
+                self._get_payments_accounts(self.data.id),
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                timeout=30
+            )
+            return PaymentAccountAPIDTO.parse_obj(response.json())
+
+    @retry_on_401_async
+    async def create_payment_account(self, auto_create_references: bool = True):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.post(
+                self._create_payment_account(),
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                json=CreatePaymentAccountDTO.parse_obj({
+                    "partner_id": self.data.partner_id,
+                    "client_id": self.data.id,
+                    "auto_create_references": auto_create_references
+                }).dict(by_alias=True),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return PaymentAccountAPIDTO.parse_obj(response.json())
 
     def __str__(self):
         return str(self.data)
@@ -168,6 +203,32 @@ class ClientSync(ClientBase):
             )
             raise_for_status_improved(response)
             self.data = ClientAPIDTO.parse_obj(response.json())
+
+    @retry_on_401
+    def get_payment_accounts(self):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.get(
+                self._get_payments_accounts(self.data.id),
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                timeout=30
+            )
+            return PaymentAccountAPIDTO.parse_obj(response.json())
+
+    @retry_on_401
+    def create_payment_account(self, auto_create_references: bool = True):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.post(
+                self._create_payment_account(),
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                json=CreatePaymentAccountDTO.parse_obj({
+                    "partner_id": self.data.partner_id,
+                    "client_id": self.data.id,
+                    "auto_create_references": auto_create_references
+                }).dict(by_alias=True),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return PaymentAccountAPIDTO.parse_obj(response.json())
 
     def __str__(self):
         return str(self.data)
