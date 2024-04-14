@@ -986,7 +986,7 @@ class BorrowerSync(BorrowerBase):
     def get_current_step(self) -> StepSync:
         with httpx.Client(base_url=self.base_url) as client:
             response = client.get(
-                f"{self.base_url}/v1/borrowers/{self.data.id}/step/current",
+                f"{self.base_url}/v1/borrowers/{self.data.id}/steps/current",
                 headers=self._header_builder()
             )
             raise_for_status_improved(response)
