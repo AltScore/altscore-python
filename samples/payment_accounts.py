@@ -12,6 +12,8 @@ client = altscore.cms.clients.retrieve_by_external_id("0000012")
 #%%
 payment_reference = client.get_payment_accounts()
 #%%
+active_reference = payment_reference.get_active_references_by_provider("dapp")
+#%%
 client = altscore.cms.clients.retrieve_by_external_id("0000001")
 client.create_payment_account()
 #%%

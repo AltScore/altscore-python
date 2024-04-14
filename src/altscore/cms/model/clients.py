@@ -120,17 +120,20 @@ class ClientAsync(ClientBase):
             self.data = ClientAPIDTO.parse_obj(response.json())
 
     @retry_on_401_async
-    async def get_payment_accounts(self):
+    async def get_payment_accounts(self) -> Optional[PaymentAccountAPIDTO]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
                 self._get_payments_accounts(self.data.id),
                 headers=self._header_builder(partner_id=self.data.partner_id),
                 timeout=30
             )
+            if response.status_code == 404:
+                return None
+            raise_for_status_improved(response)
             return PaymentAccountAPIDTO.parse_obj(response.json())
 
     @retry_on_401_async
-    async def create_payment_account(self, auto_create_references: bool = True):
+    async def create_payment_account(self, auto_create_references: bool = True) -> PaymentAccountAPIDTO:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 self._create_payment_account(),
@@ -205,17 +208,20 @@ class ClientSync(ClientBase):
             self.data = ClientAPIDTO.parse_obj(response.json())
 
     @retry_on_401
-    def get_payment_accounts(self):
+    def get_payment_accounts(self) -> Optional[PaymentAccountAPIDTO]:
         with httpx.Client(base_url=self.base_url) as client:
             response = client.get(
                 self._get_payments_accounts(self.data.id),
                 headers=self._header_builder(partner_id=self.data.partner_id),
                 timeout=30
             )
+            if response.status_code == 404:
+                return None
+            raise_for_status_improved(response)
             return PaymentAccountAPIDTO.parse_obj(response.json())
 
     @retry_on_401
-    def create_payment_account(self, auto_create_references: bool = True):
+    def create_payment_account(self, auto_create_references: bool = True) -> PaymentAccountAPIDTO:
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 self._create_payment_account(),
