@@ -8,22 +8,33 @@ altscore = AltScore(
 )
 # %%
 # List all borrowers
-borrowers = altscore.borrower_central.borrowers.query()
+borrowers = altscore.borrower_central.borrowers.retrieve_all()
+# %%
+import random
+for i in range(34):
+    b_id = altscore.borrower_central.borrowers.create(
+        {
+            "persona": "individual",
+            "label": f"test-{random.randint(1, 1000)}",
+        }
+    )
+    b = altscore.borrower_central.borrowers.retrieve(b_id)
+    b.set_current_step(random.choice(["new", "pre_approved", "approved", "activated", "active"]))
 # %%
 b1 = altscore.borrower_central.borrowers.retrieve(borrowers[0].data.id)
 i1 = b1.get_identities()
 print(i1[1])
-#%%
+# %%
 b1.set_current_step("new")
 b1.set_risk_rating("A")
-#%%
+# %%
 stage = b1.get_stage()
 risk_rating = b1.get_risk_rating()
 print(stage)
 print(risk_rating)
-#%%
+# %%
 borrower = altscore.borrower_central.borrowers.find_one_by_identity("full_name", "")
-#%%
+# %%
 borrower1 = altscore.borrower_central.borrowers.query_summary(by="identity", search="Paulo")
 # %%
 documents = borrower.get_documents()
@@ -51,7 +62,7 @@ pc = borrower.get_points_of_contact(contact_method="phone", sort_by="priority", 
 legal_rep = borrower.get_relationships()
 # %%
 store_source_id = altscore.borrower_central.store_sources.create_altdata("MEX-PUB-0003", "v1")
-#%%
+# %%
 store_source = altscore.borrower_central.store_sources.retrieve("AD_MEX-PUB-0003_v1")
 # %%
 store_package = altscore.borrower_central.store_packages.create(
@@ -62,7 +73,7 @@ store_package = altscore.borrower_central.store_packages.create(
         "label": "test package",
     }
 )
-#%%
+# %%
 import datetime as dt
 
 execution_id = altscore.borrower_central.executions.create(

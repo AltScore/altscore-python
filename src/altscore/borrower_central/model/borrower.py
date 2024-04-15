@@ -417,6 +417,35 @@ class BorrowersAsyncModule:
             raise_for_status_improved(response)
             return [BorrowerSummaryAPIDTO.parse_obj(e) for e in response.json()]
 
+    @retry_on_401_async
+    async def retrieve_all(self, **kwargs):
+        query_params = {}
+        per_page = 10
+        for k, v in kwargs.items():
+            if v is not None:
+                query_params[convert_to_dash_case(k)] = v
+        query_params["per-page"] = per_page
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                f"/v1/borrowers",
+                params=query_params,
+                headers=self.build_headers(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            total_count = int(response.headers["x-total-count"])
+        resources = []
+        # TODO: this is not optimal, we should use asyncio.gather and a batch size
+        total_pages = (total_count // per_page) + 1
+        if total_pages > 1:
+            pages = range(1, total_pages + 1)
+        else:
+            pages = [1]
+        for page in pages:
+            resources.append(await self.query(page=page, per_page=per_page, **kwargs))
+        resources = [item for sublist in resources for item in sublist]
+        return resources
+
 
 class BorrowersSyncModule:
 
@@ -550,6 +579,36 @@ class BorrowersSyncModule:
             )
             raise_for_status_improved(response)
             return [BorrowerSummaryAPIDTO.parse_obj(e) for e in response.json()]
+
+    @retry_on_401
+    def retrieve_all(self, **kwargs):
+        query_params = {}
+        per_page = 10
+        for k, v in kwargs.items():
+            if v is not None:
+                query_params[convert_to_dash_case(k)] = v
+        query_params["per-page"] = per_page
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                f"/v1/borrowers",
+                params=query_params,
+                headers=self.build_headers(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            total_count = int(response.headers["x-total-count"])
+        resources = []
+        # TODO: this is not optimal, we should use asyncio.gather and a batch size
+        total_pages = (total_count // per_page) + 1
+        if total_pages > 1:
+            pages = range(1, total_pages + 1)
+        else:
+            pages = [1]
+        for page in pages:
+            r = self.query(page=page, per_page=per_page, **kwargs)
+            resources.append(r)
+        resources = [item for sublist in resources for item in sublist]
+        return resources
 
 
 class BorrowerAsync(BorrowerBase):
