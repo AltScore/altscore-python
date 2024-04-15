@@ -166,9 +166,9 @@ class GenericAsyncModule:
                     renew_token=self.renew_token,
                     data=self.retrieve_data_model.parse_obj(response.json())
                 )
-            elif response.status_code in [403, 401]:
-                raise Exception("Unauthorized, check your API key")
-            return None
+            elif response.status_code in [404]:
+                return None
+            raise_for_status_improved(response)
 
     @retry_on_401_async
     async def patch(self, resource_id: str, patch_data: Dict) -> str:
