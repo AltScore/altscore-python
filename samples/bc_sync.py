@@ -9,6 +9,10 @@ altscore = AltScore(
 # %%
 # List all borrowers
 borrowers = altscore.borrower_central.borrowers.retrieve_all()
+#%%
+borrowers_summary = altscore.borrower_central.borrowers.query_summary(
+    per_page=10000
+)
 # %%
 import random
 for i in range(34):

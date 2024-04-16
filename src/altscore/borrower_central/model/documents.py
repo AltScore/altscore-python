@@ -8,6 +8,7 @@ class DocumentsAPIDTO(BaseModel):
     id: str = Field(alias="id")
     borrower_id: str = Field(alias="borrowerId")
     key: str = Field(alias="key")
+    label: Optional[str] = Field(alias="label", default=None)
     value: Optional[Any] = Field(alias="value")
     tags: List[str] = Field(alias="tags")
     created_at: str = Field(alias="createdAt")
