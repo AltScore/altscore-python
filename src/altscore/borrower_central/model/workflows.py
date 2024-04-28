@@ -8,7 +8,7 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
 
 class WorkflowDataAPIDTO(BaseModel):
     id: str = Field(alias="id")
-    execution_mode: str = Field(alias="executionMode")
+    execution_mode: Optional[str] = Field(alias="executionMode", default=None)
     alias: str = Field(alias="alias")
     version: str = Field(alias="version")
     label: Optional[str] = Field(alias="label")
