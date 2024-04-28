@@ -35,7 +35,7 @@ class CreateWorkflowDTO(BaseModel):
     label: Optional[str] = Field(alias="label")
     alias: str = Field(alias="alias")
     version: str = Field(alias="version")
-    execution_mode: str = Field(alias="executionMode")
+    execution_mode: Optional[str] = Field(alias="executionMode", default=None)
     description: Optional[str] = Field(alias="description")
     context: Optional[str] = Field(alias="context", default=None)
     flow_definition: Optional[dict] = Field(alias="flowDefinition", default=None)
