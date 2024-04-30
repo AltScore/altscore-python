@@ -24,6 +24,12 @@ class RuleAPIDTO(BaseModel):
         allow_population_by_field_name = True
         allow_population_by_alias = True
 
+    def get_alert_by_level(self, level: int):
+        for alert in self.alerts:
+            if alert.level == level:
+                return alert
+        return None
+
 
 class CreateRuleDTO(BaseModel):
     label: str = Field(alias="label")
