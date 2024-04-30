@@ -131,13 +131,18 @@ class WorkflowsSyncModule(GenericSyncModule):
                 workflow_id: Optional[str] = None,
                 workflow_alias: Optional[str] = None,
                 workflow_version: Optional[str] = None,
+                execution_mode: Optional[str] = None
                 ):
+        headers = self.build_headers()
+        if execution_mode is not None:
+            headers["X-Execution-Mode"] = execution_mode
+
         if workflow_id is not None:
             with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
                 response = client.post(
                     f"/v1/workflows/{workflow_id}/execute",
                     json=workflow_input,
-                    headers=self.build_headers(),
+                    headers=headers,
                     timeout=900
                 )
                 raise_for_status_improved(response)
@@ -148,7 +153,7 @@ class WorkflowsSyncModule(GenericSyncModule):
                 response = client.post(
                     f"/v1/workflows/{workflow_alias}/{workflow_version}/execute",
                     json=workflow_input,
-                    headers=self.build_headers(),
+                    headers=headers,
                     timeout=900
                 )
                 raise_for_status_improved(response)
@@ -199,13 +204,17 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                       workflow_id: Optional[str] = None,
                       workflow_alias: Optional[str] = None,
                       workflow_version: Optional[str] = None,
+                      execution_mode: Optional[str] = None
                       ):
+        headers = self.build_headers()
+        if execution_mode is not None:
+            headers["X-Execution-Mode"] = execution_mode
         if workflow_id is not None:
             async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
                 response = await client.post(
                     f"/v1/workflows/{workflow_id}/execute",
                     json=workflow_input,
-                    headers=self.build_headers(),
+                    headers=headers,
                     timeout=900
                 )
                 raise_for_status_improved(response)
@@ -216,7 +225,7 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                 response = await client.post(
                     f"/v1/workflows/{workflow_alias}/{workflow_version}/execute",
                     json=workflow_input,
-                    headers=self.build_headers(),
+                    headers=headers,
                     timeout=900
                 )
                 raise_for_status_improved(response)
