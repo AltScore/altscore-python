@@ -2,6 +2,8 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
+import httpx
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 
 
 class RuleAlert(BaseModel):
@@ -56,6 +58,30 @@ class RulesSyncModule(GenericSyncModule):
                          update_data_model=CreateRuleDTO,
                          resource="rules")
 
+    @retry_on_401
+    def retrieve_by_code(self, code: str):
+        query_params = {
+            "code": code
+        }
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                f"/v1/{self.resource}",
+                headers=self.build_headers(),
+                params=query_params,
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            res = [self.sync_resource(
+                base_url=self.altscore_client._borrower_central_base_url,
+                header_builder=self.build_headers,
+                renew_token=self.renew_token,
+                data=self.retrieve_data_model.parse_obj(e)
+            ) for e in response.json()]
+
+            if len(res) == 0:
+                return None
+            return res[0]
+
 
 class RulesAsyncModule(GenericAsyncModule):
 
@@ -66,3 +92,27 @@ class RulesAsyncModule(GenericAsyncModule):
                          create_data_model=CreateRuleDTO,
                          update_data_model=CreateRuleDTO,
                          resource="rules")
+
+    @retry_on_401_async
+    async def retrieve_by_code(self, code: str):
+        query_params = {
+            "code": code
+        }
+        async with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                f"/v1/{self.resource}",
+                headers=self.build_headers(),
+                params=query_params,
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            res = [self.async_resource(
+                base_url=self.altscore_client._borrower_central_base_url,
+                header_builder=self.build_headers,
+                renew_token=self.renew_token,
+                data=self.retrieve_data_model.parse_obj(e)
+            ) for e in response.json()]
+
+            if len(res) == 0:
+                return None
+            return res[0]

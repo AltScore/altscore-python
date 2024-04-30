@@ -77,6 +77,8 @@ store_package = altscore.borrower_central.store_packages.create(
         "label": "test package",
     }
 )
+#%%
+rule = altscore.borrower_central.rules.retrieve_by_code("KYC-001")
 # %%
 import datetime as dt
 
