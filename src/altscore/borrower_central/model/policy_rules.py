@@ -104,7 +104,7 @@ class RulesAsyncModule(GenericAsyncModule):
         query_params = {
             "code": code
         }
-        async with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
                 f"/v1/{self.resource}",
                 headers=self.build_headers(),

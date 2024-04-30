@@ -79,6 +79,7 @@ store_package = altscore.borrower_central.store_packages.create(
 )
 #%%
 rule = altscore.borrower_central.rules.retrieve_by_code("KYC-001")
+alert = rule.data.get_alert_by_level(-1)
 # %%
 import datetime as dt
 
