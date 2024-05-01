@@ -970,30 +970,32 @@ class BorrowerAsync(BorrowerBase):
 
     @retry_on_401
     async def map_identities_and_fields_onto_dict(self, mapping_dict: dict):
-        identities_to_query = {k: 1 for k in mapping_dict.keys() if k.startswith("identity.")}
+        identities_to_query = {k: 1 for k in mapping_dict.values() if k.startswith("identity.")}
         malformed_identities = [k for k in identities_to_query if len(k.split(".")[-1]) == 0]
-        borrower_fields_to_query = {k: 1 for k in mapping_dict.keys() if k.startswith("borrower_field.")}
+        borrower_fields_to_query = {k: 1 for k in mapping_dict.values() if k.startswith("borrower_field.")}
         malformed_fields = [k for k in borrower_fields_to_query if len(k.split(".")[-1]) == 0]
         if len(malformed_fields + malformed_identities) > 0:
             raise ValueError(f"Found malformed keys: {malformed_fields + malformed_identities}")
         calls = []
         for identity_key in identities_to_query:
             calls.append(
-                self.get_identity_by_key(identity_key)
+                self.get_identity_by_key(identity_key.replace("identity.", ""))
             )
         for field_key in borrower_fields_to_query:
             calls.append(
-                self.get_borrower_field_by_key(field_key)
+                self.get_borrower_field_by_key(field_key.replace("borrower_field.", ""))
             )
-        value_maps = {}
         calls = await asyncio.gather(*calls)
+        value_maps = {}
         for element in calls:
-            if identities_to_query.get(element.data.key) is not None:
+            if element is None:
+                pass
+            elif element.resource == "identities":
                 value_maps[f"identity.{element.data.key}"] = element.data.value
-            elif borrower_fields_to_query.get(element.data.key) is not None:
+            elif element.resource == "borrower-fields":
                 value_maps[f"borrower_field.{element.data.key}"] = element.data.value
         mapped_dict = {}
-        for k, v_map in mapping_dict:
+        for k, v_map in mapping_dict.items():
             mapped_dict[k] = value_maps.get(v_map)
         return mapped_dict
 
@@ -1363,29 +1365,31 @@ class BorrowerSync(BorrowerBase):
 
     @retry_on_401
     def map_identities_and_fields_onto_dict(self, mapping_dict: dict):
-        identities_to_query = {k: 1 for k in mapping_dict.keys() if k.startswith("identity.")}
+        identities_to_query = {k: 1 for k in mapping_dict.values() if k.startswith("identity.")}
         malformed_identities = [k for k in identities_to_query if len(k.split(".")[-1]) == 0]
-        borrower_fields_to_query = {k: 1 for k in mapping_dict.keys() if k.startswith("borrower_field.")}
+        borrower_fields_to_query = {k: 1 for k in mapping_dict.values() if k.startswith("borrower_field.")}
         malformed_fields = [k for k in borrower_fields_to_query if len(k.split(".")[-1]) == 0]
         if len(malformed_fields + malformed_identities) > 0:
             raise ValueError(f"Found malformed keys: {malformed_fields + malformed_identities}")
         calls = []
         for identity_key in identities_to_query:
             calls.append(
-                self.get_identity_by_key(identity_key)
+                self.get_identity_by_key(identity_key.replace("identity.", ""))
             )
         for field_key in borrower_fields_to_query:
             calls.append(
-                self.get_borrower_field_by_key(field_key)
+                self.get_borrower_field_by_key(field_key.replace("borrower_field.", ""))
             )
         value_maps = {}
         for element in calls:
-            if identities_to_query.get(element.data.key) is not None:
+            if element is None:
+                pass
+            elif element.resource == "identities":
                 value_maps[f"identity.{element.data.key}"] = element.data.value
-            elif borrower_fields_to_query.get(element.data.key) is not None:
+            elif element.resource == "borrower-fields":
                 value_maps[f"borrower_field.{element.data.key}"] = element.data.value
         mapped_dict = {}
-        for k, v_map in mapping_dict:
+        for k, v_map in mapping_dict.items():
             mapped_dict[k] = value_maps.get(v_map)
         return mapped_dict
 

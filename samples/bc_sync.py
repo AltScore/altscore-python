@@ -8,13 +8,21 @@ altscore = AltScore(
 )
 # %%
 # List all borrowers
-borrowers = altscore.borrower_central.borrowers.retrieve_all()
-#%%
+borrower = altscore.borrower_central.borrowers.retrieve('d9898645-71cb-46b6-bc4f-deb920422569')
+# %%
+b_data = borrower.map_identities_and_fields_onto_dict(
+    {
+        "pdv_name": "identity.pdv_name",
+        "nationality": "borrower_field.nationality"
+    }
+)
+# %%
 borrowers_summary = altscore.borrower_central.borrowers.query_summary(
-    per_page=10000
+    per_page=1
 )
 # %%
 import random
+
 for i in range(34):
     b_id = altscore.borrower_central.borrowers.create(
         {
@@ -77,7 +85,7 @@ store_package = altscore.borrower_central.store_packages.create(
         "label": "test package",
     }
 )
-#%%
+# %%
 rule = altscore.borrower_central.rules.retrieve_by_code("KYC-001")
 alert = rule.data.get_alert_by_level(-1)
 # %%
