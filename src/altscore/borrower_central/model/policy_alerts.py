@@ -14,6 +14,7 @@ class AlertAPIDTO(BaseModel):
     level: int = Field(alias="level")
     message: str = Field(alias="message")
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
+    execution_id: Optional[str] = Field(alias="executionId", default=None)
     is_acknowledged: bool = Field(alias="isAcknowledged")
     acknowledged_by: Optional[str] = Field(alias="acknowledgedBy")
     acknowledged_at: Optional[str] = Field(alias="acknowledgedAt")
@@ -31,6 +32,7 @@ class CreateAlert(BaseModel):
     rule_id: Optional[str] = Field(alias="ruleId", default=None)
     rule_code: Optional[str] = Field(alias="ruleCode", default=None)
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
+    execution_id: Optional[str] = Field(alias="executionId", default=None)
     level: int = Field(alias="level")
     message: Optional[str] = Field(alias="message", default=None)
 
