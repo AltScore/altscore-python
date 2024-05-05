@@ -211,7 +211,7 @@ class BorrowerBase:
         return f"{self.base_url}/v1/documents", clean_dict(query)
 
     def _points_of_contact(
-            self, borrower_id: str, contact_method: Optional[str], priority: Optional[int] = None,
+            self, borrower_id: str, contact_method: Optional[str] = None, priority: Optional[int] = None,
             sort_by: Optional[str] = None, per_page: Optional[int] = None, page: Optional[int] = None,
             sort_direction: Optional[str] = None
     ) -> (str, dict):
@@ -257,7 +257,7 @@ class BorrowerBase:
         return f"{self.base_url}/v1/borrower-fields", clean_dict(query)
 
     def _packages(
-            self, borrower_id: str, source_id: Optional[str], sort_by: Optional[str] = None,
+            self, borrower_id: str, source_id: Optional[str] = None, sort_by: Optional[str] = None,
             per_page: Optional[int] = None, page: Optional[int] = None, sort_direction: Optional[str] = None
     ) -> (str, dict):
         query = {
@@ -271,7 +271,7 @@ class BorrowerBase:
         return f"{self.base_url}/v1/stores/packages", clean_dict(query)
 
     def _executions(
-            self, borrower_id: str, execution_id: Optional[str], workflow_id: Optional[str],
+            self, borrower_id: str, execution_id: Optional[str] = None, workflow_id: Optional[str] = None,
             sort_by: Optional[str] = None, per_page: Optional[int] = None, page: Optional[int] = None,
             sort_direction: Optional[str] = None
     ) -> (str, dict):
@@ -287,9 +287,9 @@ class BorrowerBase:
         return f"{self.base_url}/v1/executions", clean_dict(query)
 
     def _alerts(
-            self, borrower_id: str, alert_id: Optional[str], rule_id: Optional[str],
-            rule_code: Optional[str], level: Optional[str], reference_id: Optional[str],
-            is_dismissed: Optional[bool]
+            self, borrower_id: str, alert_id: Optional[str] = None, rule_id: Optional[str] = None,
+            rule_code: Optional[str] = None, level: Optional[str] = None, reference_id: Optional[str] = None,
+            is_acknowledged: Optional[bool] = None
     ) -> (str, dict):
         query = {
             "borrower-id": borrower_id,
@@ -298,7 +298,7 @@ class BorrowerBase:
             "rule-code": rule_code,
             "level": level,
             "reference-id": reference_id,
-            "is-dismissed": is_dismissed
+            "is-acknowledged": is_acknowledged
         }
         return f"{self.base_url}/v1/alerts", clean_dict(query)
 
