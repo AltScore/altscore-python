@@ -15,6 +15,8 @@ from altscore.borrower_central.model.relationships import RelationshipSync, Rela
 from altscore.borrower_central.model.stages import StageSync, StageAsync
 from altscore.borrower_central.model.steps import StepSync, StepAsync
 from altscore.borrower_central.model.risk_ratings import RiskRatingSync, RiskRatingAsync
+from altscore.borrower_central.model.repayment_risk_ratings import RepaymentRiskRatingSync, RepaymentRiskRatingAsync
+from altscore.borrower_central.model.flags import FlagSync, FlagAsync
 from altscore.borrower_central.model.policy_alerts import AlertSync, AlertAsync
 
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
@@ -23,13 +25,28 @@ from altscore.borrower_central.model.executions import ExecutionSync, ExecutionA
 from altscore.borrower_central.utils import clean_dict, convert_to_dash_case
 
 
+class StepDataInBorrower(BaseModel):
+    step_id: str = Field(alias="stepId")
+    order: int = Field(alias="order")
+    key: str = Field(alias="key")
+    created_at: str = Field(alias="createdAt")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
 class BorrowerAPIDTO(BaseModel):
     id: str = Field(alias="id")
     persona: str = Field(alias="persona")
     avatar_url: Optional[str] = Field(alias="avatarUrl")
     label: Optional[str] = Field(alias="label")
-    flag: Optional[str] = Field(alias="flag", default=None)
     tags: List[str] = Field(alias="tags", default=[])
+    flag: Optional[str] = Field(alias="flag", default=None)
+    risk_rating: Optional[str] = Field(alias="riskRating", default=None)
+    repayment_risk_rating: Optional[int] = Field(alias="repaymentRiskRating", default=None)
+    current_step: Optional[StepDataInBorrower] = Field(alias="currentStep", default=None)
     cms_client_ids: Optional[List[str]] = Field(alias="cmsClientIds", default=[])
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
@@ -93,8 +110,9 @@ class BorrowerSummaryAPIDTO(BaseModel):
     points_of_contact: Optional[List[SimplifiedPointOfContact]] = Field(alias="pointsOfContact", default=[])
     tags: List[str] = Field(alias="tags", default=[])
     stage: Optional[str] = Field(alias="stage", default=None)
-    current_step: Optional[CurrentStep] = Field(alias="currentStep", default=None)
     risk_rating: Optional[str] = Field(alias="riskRating", default=None)
+    repayment_risk_rating: Optional[int] = Field(alias="repaymentRiskRating", default=None)
+    current_step: Optional[StepDataInBorrower] = Field(alias="currentStep", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
 
@@ -107,6 +125,8 @@ class BorrowerSummaryAPIDTO(BaseModel):
 class CreateBorrowerDTO(BaseModel):
     persona: str = Field(alias="persona")
     label: Optional[str] = Field(alias="label")
+    risk_rating: Optional[str] = Field(alias="riskRating", default=None)
+    repayment_risk_rating: Optional[int] = Field(alias="repaymentRiskRating", default=None)
     flag: Optional[str] = Field(alias="flag", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
@@ -118,7 +138,6 @@ class CreateBorrowerDTO(BaseModel):
 
 class UpdateBorrowerDTO(BaseModel):
     label: Optional[str] = Field(alias="label", default=None)
-    flag: Optional[str] = Field(alias="flag", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
     class Config:
@@ -338,7 +357,6 @@ class BorrowersAsyncModule:
                 headers=self.build_headers(),
                 timeout=120,
             )
-            raise_for_status_improved(response)
             if response.status_code == 200:
                 return BorrowerAsync(
                     base_url=self.altscore_client._borrower_central_base_url,
@@ -346,7 +364,9 @@ class BorrowersAsyncModule:
                     renew_token=self.renew_token,
                     data=BorrowerAPIDTO.parse_obj(response.json())
                 )
-            return None
+            elif response.status_code in [404]:
+                return None
+            raise_for_status_improved(response)
 
     @retry_on_401_async
     async def find_one_by_identity(self, identity_key: str, identity_value: str):
@@ -501,7 +521,6 @@ class BorrowersSyncModule:
                 headers=self.build_headers(),
                 timeout=120
             )
-            raise_for_status_improved(response)
             if response.status_code == 200:
                 return BorrowerSync(
                     base_url=self.altscore_client._borrower_central_base_url,
@@ -509,7 +528,9 @@ class BorrowersSyncModule:
                     renew_token=self.renew_token,
                     data=BorrowerAPIDTO.parse_obj(response.json())
                 )
-            return None
+            elif response.status_code in [404]:
+                return None
+            raise_for_status_improved(response)
 
     @retry_on_401
     def find_one_by_identity(self, identity_key: str, identity_value: str):
@@ -705,6 +726,21 @@ class BorrowerAsync(BorrowerBase):
             )
 
     @retry_on_401_async
+    async def get_repayment_risk_rating(self) -> RepaymentRiskRatingAsync:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/repayment-risk-rating",
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
+            return RepaymentRiskRatingAsync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                renew_token=self.renew_token,
+                data=response.json()
+            )
+
+    @retry_on_401_async
     async def set_risk_rating(self, risk_rating: str, reference_id: Optional[str] = None):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
@@ -712,6 +748,34 @@ class BorrowerAsync(BorrowerBase):
                 headers=self._header_builder(),
                 json={
                     "value": risk_rating,
+                    "referenceId": reference_id
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    @retry_on_401_async
+    async def set_repayment_risk_rating(self, risk_rating: str, reference_id: Optional[str] = None):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.put(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/repayment-risk-rating",
+                headers=self._header_builder(),
+                json={
+                    "value": risk_rating,
+                    "referenceId": reference_id
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    @retry_on_401_async
+    async def set_flag(self, flag: str, reference_id: Optional[str] = None):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.put(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/flag",
+                headers=self._header_builder(),
+                json={
+                    "value": flag,
                     "referenceId": reference_id
                 }
             )
@@ -1085,7 +1149,7 @@ class BorrowerSync(BorrowerBase):
             return None
 
     @retry_on_401
-    def get_risk_rating(self):
+    def get_risk_rating(self) -> RiskRatingSync:
         with httpx.Client(base_url=self.base_url) as client:
             response = client.get(
                 f"{self.base_url}/v1/borrowers/{self.data.id}/risk-rating",
@@ -1100,6 +1164,21 @@ class BorrowerSync(BorrowerBase):
             )
 
     @retry_on_401
+    def get_repayment_risk_rating(self) -> RepaymentRiskRatingSync:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.get(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/repayment-risk-rating",
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
+            return RepaymentRiskRatingSync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                renew_token=self.renew_token,
+                data=response.json()
+            )
+
+    @retry_on_401
     def set_risk_rating(self, risk_rating: str, reference_id: Optional[str] = None):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.put(
@@ -1107,6 +1186,34 @@ class BorrowerSync(BorrowerBase):
                 headers=self._header_builder(),
                 json={
                     "value": risk_rating,
+                    "referenceId": reference_id
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    @retry_on_401
+    def set_repayment_risk_rating(self, risk_rating: str, reference_id: Optional[str] = None):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.put(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/repayment-risk-rating",
+                headers=self._header_builder(),
+                json={
+                    "value": risk_rating,
+                    "referenceId": reference_id
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    @retry_on_401
+    def set_flag(self, flag: str, reference_id: Optional[str] = None):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.put(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/flag",
+                headers=self._header_builder(),
+                json={
+                    "value": flag,
                     "referenceId": reference_id
                 }
             )

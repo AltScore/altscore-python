@@ -27,8 +27,8 @@ class CreateBorrowerFieldDTO(BaseModel):
     form_id: Optional[str] = Field(alias="formId", default=None)
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
     key: str = Field(alias="key")
-    value: str = Field(alias="value")
-    data_type: str = Field(alias="dataType")
+    value: Any = Field(alias="value")
+    data_type: Optional[str] = Field(alias="dataType")
     tags: List[str] = Field(alias="tags", default=[])
 
     class Config:
