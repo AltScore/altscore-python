@@ -289,7 +289,8 @@ class BorrowerBase:
     def _alerts(
             self, borrower_id: str, alert_id: Optional[str] = None, rule_id: Optional[str] = None,
             rule_code: Optional[str] = None, level: Optional[str] = None, reference_id: Optional[str] = None,
-            is_acknowledged: Optional[bool] = None
+            is_acknowledged: Optional[bool] = None, sort_by: Optional[str] = None, per_page: Optional[int] = None,
+            page: Optional[int] = None, sort_direction: Optional[str] = None
     ) -> (str, dict):
         query = {
             "borrower-id": borrower_id,
@@ -298,7 +299,11 @@ class BorrowerBase:
             "rule-code": rule_code,
             "level": level,
             "reference-id": reference_id,
-            "is-acknowledged": is_acknowledged
+            "is-acknowledged": is_acknowledged,
+            "sort-by": sort_by,
+            "per-page": per_page,
+            "page": page,
+            "sort-direction": sort_direction
         }
         return f"{self.base_url}/v1/alerts", clean_dict(query)
 
