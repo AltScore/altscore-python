@@ -17,11 +17,10 @@ class CreateExecutionDTO(BaseModel):
     billable_id: Optional[str] = Field(alias="billableId", default=None)
     batch_id: Optional[str] = Field(alias="batchId", default=None)
 
-
-class Config:
-    populate_by_name = True
-    allow_population_by_field_name = True
-    allow_population_by_alias = True
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
 
 
 class ExecutionAPIDTO(BaseModel):
