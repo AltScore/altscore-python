@@ -15,6 +15,7 @@ class CreateExecutionDTO(BaseModel):
     workflow_version: Optional[str] = Field(alias="workflowVersion", default=None)
     borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
     billable_id: Optional[str] = Field(alias="billableId", default=None)
+    batch_id: Optional[str] = Field(alias="batchId", default=None)
 
     class Config:
         populate_by_name = True
