@@ -109,7 +109,6 @@ class UpdateAddressDTO(BaseModel):
     country: Optional[str] = Field(alias="country", default=None)
     lat: Optional[float] = Field(alias="lat", default=None)
     lon: Optional[float] = Field(alias="lon", default=None)
-    longitude: Optional[float] = Field(alias="longitude", default=None)
     priority: Optional[int] = Field(alias="priority", default=None)
     is_home: Optional[bool] = Field(alias="isHome", default=None)
     is_work: Optional[bool] = Field(alias="isWork", default=None)
