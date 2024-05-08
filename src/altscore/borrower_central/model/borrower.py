@@ -24,6 +24,8 @@ from altscore.borrower_central.model.store_packages import PackageSync, PackageA
 from altscore.borrower_central.model.executions import ExecutionSync, ExecutionAsync
 from altscore.borrower_central.utils import clean_dict, convert_to_dash_case
 
+from loguru import logger
+
 
 class StepDataInBorrower(BaseModel):
     step_id: str = Field(alias="stepId")
@@ -471,6 +473,45 @@ class BorrowersAsyncModule:
         resources = [item for sublist in resources for item in sublist]
         return resources
 
+    @retry_on_401_async
+    async def summary_retrieve_all(self, **kwargs):
+        query_params = {}
+        kwargs_allowed = {}
+        per_page = 50
+        for k, v in kwargs.items():
+            if k in ["by", "search", "borrower_id"]:
+                logger.warning(f"Skipping {k} as it is not allowed in summary retrieve all")
+                continue
+            if v is not None:
+                kwargs_allowed[k] = v
+                query_params[convert_to_dash_case(k)] = v
+        query_params["per-page"] = per_page
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                f"/v1/borrowers-summary",
+                params=query_params,
+                headers=self.build_headers(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            total_count = int(response.headers["x-total-count"])
+        total_pages = (total_count // per_page) + 1
+        if total_pages > 1:
+            pages = range(1, total_pages + 1)
+        else:
+            pages = [1]
+
+        results = []
+        page_chunks = [pages[i:i + 5] for i in range(0, len(pages), 5)]
+        for page_chunk in page_chunks:
+            calls = []
+            for page in page_chunk:
+                calls.append(self.query_summary(page=page, per_page=per_page, **kwargs_allowed))
+            results += await asyncio.gather(*calls)
+
+        results = [item for sublist in results for item in sublist]
+        return results
+
 
 class BorrowersSyncModule:
 
@@ -632,6 +673,42 @@ class BorrowersSyncModule:
             pages = [1]
         for page in pages:
             r = self.query(page=page, per_page=per_page, **kwargs)
+            resources.append(r)
+        resources = [item for sublist in resources for item in sublist]
+        return resources
+
+
+    @retry_on_401
+    def summary_retrieve_all(self, **kwargs):
+        query_params = {}
+        kwargs_allowed = {}
+        per_page = 50
+        for k, v in kwargs.items():
+            if k in ["by", "search", "borrower_id"]:
+                logger.warning(f"Skipping {k} as it is not allowed in summary retrieve all")
+                continue
+            if v is not None:
+                kwargs_allowed[k] = v
+                query_params[convert_to_dash_case(k)] = v
+        query_params["per-page"] = per_page
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                f"/v1/borrowers-summary",
+                params=query_params,
+                headers=self.build_headers(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            total_count = int(response.headers["x-total-count"])
+        resources = []
+        # TODO: this is not optimal, we should use asyncio.gather and a batch size
+        total_pages = (total_count // per_page) + 1
+        if total_pages > 1:
+            pages = range(1, total_pages + 1)
+        else:
+            pages = [1]
+        for page in pages:
+            r = self.query_summary(page=page, per_page=per_page, **kwargs_allowed)
             resources.append(r)
         resources = [item for sublist in resources for item in sublist]
         return resources

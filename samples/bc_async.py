@@ -9,7 +9,7 @@ altscore = AltScore(
     environment=config("ALTSCORE_ENVIRONMENT")
 )
 #%%
-# borrowers = asyncio.run(altscore.borrower_central.borrowers.retrieve_all())
+borrowers = asyncio.run(altscore.borrower_central.borrowers.summary_retrieve_all())
 #%%
 borrower = asyncio.run(altscore.borrower_central.borrowers.retrieve('d9898645-71cb-46b6-bc4f-deb920422569'))
 # %%
