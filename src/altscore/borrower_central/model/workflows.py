@@ -35,6 +35,7 @@ class CreateWorkflowDTO(BaseModel):
     label: Optional[str] = Field(alias="label")
     alias: str = Field(alias="alias")
     version: str = Field(alias="version")
+    type: Optional[str] = Field(alias="type", default=None)
     execution_mode: Optional[str] = Field(alias="executionMode", default=None)
     description: Optional[str] = Field(alias="description")
     context: Optional[str] = Field(alias="context", default=None)
@@ -51,6 +52,7 @@ class CreateWorkflowDTO(BaseModel):
 class UpdateWorkflowDTO(BaseModel):
     label: Optional[str] = Field(alias="label")
     description: Optional[str] = Field(alias="description")
+    type: Optional[str] = Field(alias="type", default=None)
     route: Optional[Lambda] = Field(alias="route", default=None)
     flow_definition: Optional[dict] = Field(alias="flowDefinition", default=None)
     input_schema: Optional[str] = Field(alias="inputSchema", default=None)
