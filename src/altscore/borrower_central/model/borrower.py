@@ -437,7 +437,7 @@ class BorrowersAsyncModule:
                 f"/v1/borrowers-summary",
                 headers=self.build_headers(),
                 params=query_params,
-                timeout=30
+                timeout=120
             )
             raise_for_status_improved(response)
             return [BorrowerSummaryAPIDTO.parse_obj(e) for e in response.json()]
@@ -601,7 +601,7 @@ class BorrowersSyncModule:
                 f"/v1/borrowers-summary",
                 headers=self.build_headers(),
                 params=query_params,
-                timeout=30
+                timeout=120
             )
             raise_for_status_improved(response)
             return [BorrowerSummaryAPIDTO.parse_obj(e) for e in response.json()]
