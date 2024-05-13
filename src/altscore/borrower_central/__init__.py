@@ -24,6 +24,7 @@ from altscore.borrower_central.model.automations import AutomationsAsyncModule, 
 from altscore.borrower_central.model.stages import StagesAsyncModule, StagesSyncModule
 from altscore.borrower_central.model.risk_ratings import RiskRatingsAsyncModule, RiskRatingsSyncModule
 from altscore.borrower_central.model.usecases import UsecasesAsyncModule, UsecasesSyncModule
+from altscore.borrower_central.model.metrics import MetricsAsyncModule, MetricsSyncModule
 
 
 class BorrowerCentralAsync:
@@ -34,6 +35,7 @@ class BorrowerCentralAsync:
         self.automations = AutomationsAsyncModule(altscore_client)
         self.borrowers = BorrowersAsyncModule(altscore_client)
         self.borrower_fields = BorrowerFieldsAsyncModule(altscore_client)
+        self.metrics = MetricsAsyncModule(altscore_client)
         self.data_models = DataModelAsyncModule(altscore_client)
         self.documents = DocumentsAsyncModule(altscore_client)
         self.stages = StagesAsyncModule(altscore_client)
@@ -65,6 +67,7 @@ class BorrowerCentralSync:
         self.automations = AutomationsSyncModule(altscore_client)
         self.borrowers = BorrowersSyncModule(altscore_client)
         self.borrower_fields = BorrowerFieldsSyncModule(altscore_client)
+        self.metrics = MetricsSyncModule(altscore_client)
         self.data_models = DataModelSyncModule(altscore_client)
         self.documents = DocumentsSyncModule(altscore_client)
         self.stages = StagesSyncModule(altscore_client)
