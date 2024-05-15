@@ -18,6 +18,7 @@ from altscore.borrower_central.model.risk_ratings import RiskRatingSync, RiskRat
 from altscore.borrower_central.model.repayment_risk_ratings import RepaymentRiskRatingSync, RepaymentRiskRatingAsync
 from altscore.borrower_central.model.flags import FlagSync, FlagAsync
 from altscore.borrower_central.model.policy_alerts import AlertSync, AlertAsync
+from altscore.borrower_central.model.metrics import MetricSync, MetricAsync
 
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.borrower_central.model.store_packages import PackageSync, PackageAsync
@@ -197,6 +198,21 @@ class BorrowerBase:
             "sort-direction": sort_direction
         }
         return f"{self.base_url}/v1/identities", clean_dict(query)
+
+    def _metrics(
+            self, borrower_id: str, sort_by: Optional[str] = None,
+            key: Optional[str] = None, per_page: Optional[int] = None, page: Optional[int] = None,
+            sort_direction: Optional[str] = None
+    ) -> (str, dict):
+        query = {
+            "borrower-id": borrower_id,
+            "key": key,
+            "sort-by": sort_by,
+            "per-page": per_page,
+            "page": page,
+            "sort-direction": sort_direction
+        }
+        return f"{self.base_url}/v1/metrics", clean_dict(query)
 
     def _documents(
             self, borrower_id: str, key: Optional[str] = None, sort_by: Optional[str] = None,
@@ -677,7 +693,6 @@ class BorrowersSyncModule:
         resources = [item for sublist in resources for item in sublist]
         return resources
 
-
     @retry_on_401
     def summary_retrieve_all(self, **kwargs):
         query_params = {}
@@ -894,6 +909,25 @@ class BorrowerAsync(BorrowerBase):
             if len(data) == 0:
                 return None
             return IdentityAsync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                renew_token=self.renew_token,
+                data=data[0]
+            )
+
+    @retry_on_401_async
+    async def get_metric_by_key(self, key: str) -> Optional[MetricAsync]:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            url, query = self._metrics(self.data.id, key=key)
+            response = await client.get(
+                url,
+                headers=self._header_builder(),
+                params=query
+            )
+            data = response.json()
+            if len(data) == 0:
+                return None
+            return MetricAsync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
                 renew_token=self.renew_token,
@@ -1332,6 +1366,25 @@ class BorrowerSync(BorrowerBase):
             if len(data) == 0:
                 return None
             return IdentitySync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                renew_token=self.renew_token,
+                data=data[0]
+            )
+
+    @retry_on_401
+    def get_metric_by_key(self, key: str) -> Optional[MetricSync]:
+        with httpx.Client(base_url=self.base_url) as client:
+            url, query = self._metrics(self.data.id, key=key)
+            response = client.get(
+                url,
+                headers=self._header_builder(),
+                params=query
+            )
+            data = response.json()
+            if len(data) == 0:
+                return None
+            return MetricSync(
                 base_url=self.base_url,
                 header_builder=self._header_builder,
                 renew_token=self.renew_token,

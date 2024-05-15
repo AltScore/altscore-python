@@ -141,6 +141,9 @@ class GenericAsyncResource(GenericBase):
     def __str__(self):
         return str(self.data)
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.data.id})"
+
 
 class GenericSyncModule:
 
