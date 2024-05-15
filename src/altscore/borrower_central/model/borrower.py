@@ -65,6 +65,7 @@ class SimplifiedIdentity(BaseModel):
     label: str = Field(alias="label")
     value: str = Field(alias="value")
     priority: Optional[int] = Field(alias="priority")
+    created_at: str = Field(alias="createdAt")
 
     class Config:
         populate_by_name = True
@@ -77,6 +78,7 @@ class SimplifiedField(BaseModel):
     key: str = Field(alias="key")
     label: str = Field(alias="label")
     value: str = Field(alias="value")
+    created_at: str = Field(alias="createdAt")
 
     class Config:
         populate_by_name = True
