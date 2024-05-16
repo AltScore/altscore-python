@@ -1197,7 +1197,7 @@ class BorrowerAsync(BorrowerBase):
         return mapped_dict
 
     @retry_on_401_async
-    async def send_sms(self, message: str, point_of_contact_id: Optional[str]):
+    async def send_sms(self, message: str, point_of_contact_id: Optional[str] = None):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 f"{self.base_url}/v1/borrowers/{self.data.id}/communications/sms",
@@ -1684,7 +1684,7 @@ class BorrowerSync(BorrowerBase):
         return mapped_dict
 
     @retry_on_401
-    def send_sms(self, message: str, point_of_contact_id: Optional[str]):
+    def send_sms(self, message: str, point_of_contact_id: Optional[str] = None):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 f"{self.base_url}/v1/borrowers/{self.data.id}/communications/sms",
