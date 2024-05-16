@@ -6,6 +6,16 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
     GenericSyncModule, GenericAsyncModule
 
 
+class WorkflowSchedule(BaseModel):
+    cron: str = Field(alias="cron")
+    utc_delta_hours: int = Field(alias="utcDeltaHours", default=0, ge=-12, le=14)
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
 class WorkflowDataAPIDTO(BaseModel):
     id: str = Field(alias="id")
     execution_mode: Optional[str] = Field(alias="executionMode", default=None)
@@ -17,6 +27,7 @@ class WorkflowDataAPIDTO(BaseModel):
     context: Optional[str] = Field(alias="context")
     input_schema: Optional[str] = Field(alias="inputSchema", default=None)
     flow_definition: Optional[dict] = Field(alias="flowDefinition")
+    schedule: Optional[WorkflowSchedule] = Field(alias="schedule", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
 
@@ -42,6 +53,7 @@ class CreateWorkflowDTO(BaseModel):
     flow_definition: Optional[dict] = Field(alias="flowDefinition", default=None)
     input_schema: Optional[str] = Field(alias="inputSchema", default=None)
     route: Optional[Lambda] = Field(alias="route", default=None)
+    schedule: Optional[WorkflowSchedule] = Field(alias="schedule", default=None)
 
     class Config:
         populate_by_name = True
@@ -56,6 +68,7 @@ class UpdateWorkflowDTO(BaseModel):
     route: Optional[Lambda] = Field(alias="route", default=None)
     flow_definition: Optional[dict] = Field(alias="flowDefinition", default=None)
     input_schema: Optional[str] = Field(alias="inputSchema", default=None)
+    schedule: Optional[WorkflowSchedule] = Field(alias="schedule", default=None)
 
     class Config:
         populate_by_name = True

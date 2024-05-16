@@ -1022,6 +1022,23 @@ class BorrowerAsync(BorrowerBase):
             ) for borrower_field_data in data]
 
     @retry_on_401_async
+    async def get_metrics(self, **kwargs) -> List[MetricAsync]:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            url, query = self._metrics(self.data.id, **kwargs)
+            response = await client.get(
+                url,
+                headers=self._header_builder(),
+                params=query
+            )
+            data = response.json()
+            return [MetricAsync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                renew_token=self.renew_token,
+                data=borrower_field_data
+            ) for borrower_field_data in data]
+
+    @retry_on_401_async
     async def get_authorizations(self, **kwargs) -> List[AuthorizationAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._authorizations(self.data.id, **kwargs)
@@ -1148,7 +1165,7 @@ class BorrowerAsync(BorrowerBase):
         else:
             return points_of_contact[0]
 
-    @retry_on_401
+    @retry_on_401_async
     async def map_identities_and_fields_onto_dict(self, mapping_dict: dict):
         identities_to_query = {k: 1 for k in mapping_dict.values() if k.startswith("identity.")}
         malformed_identities = [k for k in identities_to_query if len(k.split(".")[-1]) == 0]
@@ -1178,6 +1195,20 @@ class BorrowerAsync(BorrowerBase):
         for k, v_map in mapping_dict.items():
             mapped_dict[k] = value_maps.get(v_map)
         return mapped_dict
+
+    @retry_on_401_async
+    async def send_sms(self, message: str, point_of_contact_id: Optional[str]):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.post(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/communications/sms",
+                headers=self._header_builder(),
+                json={
+                    "message": message,
+                    "pointOfContactId": point_of_contact_id
+                }
+            )
+            raise_for_status_improved(response)
+            return None
 
     def __str__(self):
         return str(self.data)
@@ -1479,6 +1510,23 @@ class BorrowerSync(BorrowerBase):
             ) for borrower_field_data in data]
 
     @retry_on_401
+    def get_metrics(self, **kwargs) -> List[MetricSync]:
+        with httpx.Client(base_url=self.base_url) as client:
+            url, query = self._metrics(self.data.id, **kwargs)
+            response = client.get(
+                url,
+                headers=self._header_builder(),
+                params=query
+            )
+            data = response.json()
+            return [MetricSync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                renew_token=self.renew_token,
+                data=borrower_field_data
+            ) for borrower_field_data in data]
+
+    @retry_on_401
     def get_authorizations(self, **kwargs) -> List[AuthorizationSync]:
         with httpx.Client(base_url=self.base_url) as client:
             url, query = self._authorizations(self.data.id, **kwargs)
@@ -1634,6 +1682,20 @@ class BorrowerSync(BorrowerBase):
         for k, v_map in mapping_dict.items():
             mapped_dict[k] = value_maps.get(v_map)
         return mapped_dict
+
+    @retry_on_401
+    def send_sms(self, message: str, point_of_contact_id: Optional[str]):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.post(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/communications/sms",
+                headers=self._header_builder(),
+                json={
+                    "message": message,
+                    "pointOfContactId": point_of_contact_id
+                }
+            )
+            raise_for_status_improved(response)
+            return None
 
     def __str__(self):
         return str(self.data)
