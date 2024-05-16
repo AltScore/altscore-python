@@ -1,9 +1,10 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 import httpx
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.cms.model.credit_accounts import CreditAccountSync, CreditAccountAsync, CreditAccountAPIDTO
-from altscore.cms.model.payment_accounts import PaymentAccountAPIDTO, CreatePaymentAccountDTO
+from altscore.cms.model.payment_accounts import PaymentAccountAPIDTO, CreatePaymentAccountDTO, \
+    CreatePaymentReferenceDTO, Reference
 from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule
 import datetime as dt
 
@@ -64,6 +65,15 @@ class ClientBase:
     @staticmethod
     def _create_payment_account():
         return f"/v1/payments/accounts"
+
+    @staticmethod
+    def _create_payment_reference(client_id: str):
+        return f"/v1/payments/accounts/{client_id}/references"
+
+# TODO for future use for cancel reference
+    @staticmethod
+    def _cancel_payment_reference(client_id: str, reference_id: str):
+        return f"/v1/payments/accounts/{client_id}/references{reference_id}/cancellation"
 
 
 class ClientAsync(ClientBase):
@@ -147,6 +157,20 @@ class ClientAsync(ClientBase):
             )
             raise_for_status_improved(response)
             return PaymentAccountAPIDTO.parse_obj(response.json())
+
+    @retry_on_401_async
+    async def create_payment_reference(self, provider: str = None) -> List[Reference]:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.post(
+                self._create_payment_reference(self.data.id),
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                json=CreatePaymentReferenceDTO.parse_obj({
+                    "provider": provider
+                }).dict(by_alias=True, exclude_none=True),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [Reference.parse_obj(e) for e in response.json()]
 
     def __str__(self):
         return str(self.data)
@@ -235,6 +259,20 @@ class ClientSync(ClientBase):
             )
             raise_for_status_improved(response)
             return PaymentAccountAPIDTO.parse_obj(response.json())
+
+    @retry_on_401
+    def create_payment_reference(self, provider: str = None) -> List[Reference]:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.post(
+                self._create_payment_reference(self.data.id),
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                json=CreatePaymentReferenceDTO.parse_obj({
+                    "provider": provider
+                }).dict(by_alias=True, exclude_none=True),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [Reference.parse_obj(e) for e in response.json()]
 
     def __str__(self):
         return str(self.data)
