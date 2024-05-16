@@ -51,3 +51,12 @@ class CreatePaymentAccountDTO(BaseModel):
         populate_by_name = True
         allow_population_by_field_name = True
         populate_by_alias = True
+
+
+class CreatePaymentReferenceDTO(BaseModel):
+    provider: str = Field(alias="provider", default=None)
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        populate_by_alias = True
