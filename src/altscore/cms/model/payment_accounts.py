@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
@@ -54,7 +54,7 @@ class CreatePaymentAccountDTO(BaseModel):
 
 
 class CreatePaymentReferenceDTO(BaseModel):
-    provider: str = Field(alias="provider", default=None)
+    provider: Optional[str] = Field(alias="provider", default=None)
 
     class Config:
         populate_by_name = True
