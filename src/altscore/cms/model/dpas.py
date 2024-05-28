@@ -42,6 +42,7 @@ class CreateDPAFlowDTO(BaseModel):
     amount: Money = Field(alias="amount")
     disbursement_date: str = Field(alias="disbursementDate")
     client_id: str = Field(alias="clientId", default=None)
+    reference_id: str = Field(alias="referenceId", default=None)
 
     class Config:
         populate_by_name = True
@@ -114,12 +115,22 @@ class DPAFlowAsync(DPABase):
         self.data = data
 
     @retry_on_401_async
-    async def approve(self, approve_data: dict):
+    async def approve(self, approve_data: Optional[dict] = None):
+        if approve_data is None:
+            approve_data = {
+                "amount": {
+                    "amount": self.data.terms.principal.amount,
+                    "currency": self.data.terms.principal.currency
+                },
+                "clientId": self.data.client.id,
+                "disbursementDate": self.data.terms.disbursement_date,
+                "referenceId": self.data.reference_id,
+            }
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
                 self._approval(self.data.id),
                 headers=self._header_builder(),
-                json=ApproveDPAFlowDTO.parse_obj(approve_data).dict(by_alias=True),
+                json=ApproveDPAFlowDTO.parse_obj(approve_data).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -166,12 +177,22 @@ class DPAFlowSync(DPABase):
         self.data: DPAFlowAPIDTO = data
 
     @retry_on_401
-    def approve(self, approve_data: dict):
+    def approve(self, approve_data: Optional[dict] = None):
+        if approve_data is None:
+            approve_data = {
+                "amount": {
+                    "amount": self.data.terms.principal.amount,
+                    "currency": self.data.terms.principal.currency
+                },
+                "clientId": self.data.client.id,
+                "disbursementDate": self.data.terms.disbursement_date,
+                "referenceId": self.data.reference_id,
+            }
         with httpx.Client(base_url=self.base_url) as client:
             response = client.put(
                 self._approval(self.data.id),
                 headers=self._header_builder(),
-                json=ApproveDPAFlowDTO.parse_obj(approve_data).dict(by_alias=True),
+                json= ApproveDPAFlowDTO.parse_obj(approve_data).dict(by_alias=True,  exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -281,19 +302,18 @@ class DPAFlowsSyncModule(GenericSyncModule):
         else:
             disbursement_date = date_parser(disbursement_date_str).strftime("%Y-%m-%d")
         new_entity_data["disbursementDate"] = disbursement_date
-
         with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
             response = client.post(
                 f"/{self.resource_version}/{self.resource}",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
+                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
             return self.retrieve_data_model.parse_obj(response.json()).id
 
     @retry_on_401
-    def simuate(self, new_entity_data: dict):
+    def simulate(self, new_entity_data: dict):
         disbursement_date_str = \
             new_entity_data.get("disbursementDate") or new_entity_data.get("disbursement_date")
         if disbursement_date_str is None:
