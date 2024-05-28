@@ -131,9 +131,6 @@ class DebtBase:
     def _penalties(debt_id: str):
         return f"/v1/debts/{debt_id}/penalties"
 
-    @staticmethod
-    def _debt():
-        return f"/v1/debts"
 
 
 class DebtAsync(DebtBase):
