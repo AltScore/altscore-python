@@ -222,11 +222,14 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                       workflow_id: Optional[str] = None,
                       workflow_alias: Optional[str] = None,
                       workflow_version: Optional[str] = None,
-                      execution_mode: Optional[str] = None
+                      execution_mode: Optional[str] = None,
+                      batch_id: Optional[str] = None
                       ):
         headers = self.build_headers()
         if execution_mode is not None:
             headers["X-Execution-Mode"] = execution_mode
+        if batch_id is not None:
+            headers["X-Batch-Id"] = batch_id
         if workflow_id is not None:
             async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
                 response = await client.post(
