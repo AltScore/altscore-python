@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Optional
 
 
 class Money(BaseModel):
@@ -48,6 +49,7 @@ class Terms(BaseModel):
     interest_tax: int = Field(alias="interestTax")
     principal: Money = Field(alias="principal")
     repayEvery: int = Field(alias="repayEvery")
+    sub_total_amount: Optional[Money] = Field(alias="subTotalAmount", default=None)
 
     class Config:
         populate_by_name = True
