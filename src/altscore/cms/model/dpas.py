@@ -66,7 +66,7 @@ class InvoiceInstallment(BaseModel):
 class Invoice(BaseModel):
     amount: Money = Field(alias="amount")
     invoice_date: str = Field(alias="invoiceDate")
-    installments: List[InvoiceInstallment] = Field(alias="installments")
+    installments: Optional[List[InvoiceInstallment]] = Field(alias="installments", default=None)
     notes: str = Field(alias="notes")
     reference_id: str = Field(alias="referenceId")
 
@@ -152,7 +152,7 @@ class DPAFlowAsync(DPABase):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 self._invoice(self.data.id),
-                json=Invoice.parse_obj(invoice_data).dict(by_alias=True),
+                json=Invoice.parse_obj(invoice_data).dict(by_alias=True, exclude_none=True),
                 headers=self._header_builder(),
                 timeout=30
             )
@@ -215,7 +215,7 @@ class DPAFlowSync(DPABase):
             response = client.post(
                 self._invoice(self.data.id),
                 headers=self._header_builder(),
-                json=Invoice.parse_obj(invoice_data).dict(by_alias=True),
+                json=Invoice.parse_obj(invoice_data).dict(by_alias=True,exclude_none=True),
                 timeout=300
             )
             raise_for_status_improved(response)
