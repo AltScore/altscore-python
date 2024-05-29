@@ -45,3 +45,5 @@ updated_settings = altscore.cms.partners.update_dpa_settings(
     }
 )
 #%%
+deb1 = active_debts[0]
+#%%
