@@ -30,7 +30,7 @@ flowId = altscore.cms.dpas.create(new_entity_data={
         "currency": "MXN"
     },
     "clientId": ca.data.client_id,
-    "disbursementDate": "2024-05-26",
+    "disbursementDate": "2024-05-28",
     "referenceId": "PO-1234",
 })
 #%%
@@ -38,8 +38,8 @@ flow = altscore.cms.dpas.retrieve(flowId)
 #%%
 flow.approve()
 #%%
-debt_id=altscore.cms.debts.create(flow.data.id)
-debt=altscore.cms.debts.retrieve(debt_id)
+debt_id = altscore.cms.debts.create(flow.data.id)
+debt = altscore.cms.debts.retrieve(debt_id)
 print(debt)
 #%%
 # %%
