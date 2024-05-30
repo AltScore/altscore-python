@@ -41,7 +41,8 @@ class DPAFlowAPIDTO(BaseModel):
 class CreateDPAFlowDTO(BaseModel):
     amount: Money = Field(alias="amount")
     disbursement_date: str = Field(alias="disbursementDate")
-    client_id: str = Field(alias="clientId", default=None)
+    client_id: Optional[str] = Field(alias="clientId", default=None)
+    external_id: Optional[str] = Field(alias="externalId", default=None)
 
     class Config:
         populate_by_name = True
@@ -119,7 +120,7 @@ class DPAFlowAsync(DPABase):
             response = await client.put(
                 self._approval(self.data.id),
                 headers=self._header_builder(),
-                json=ApproveDPAFlowDTO.parse_obj(approve_data).dict(by_alias=True),
+                json=ApproveDPAFlowDTO.parse_obj(approve_data).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -141,7 +142,7 @@ class DPAFlowAsync(DPABase):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 self._invoice(self.data.id),
-                json=Invoice.parse_obj(invoice_data).dict(by_alias=True),
+                json=Invoice.parse_obj(invoice_data).dict(by_alias=True, exclude_none=True),
                 headers=self._header_builder(),
                 timeout=30
             )
@@ -171,7 +172,10 @@ class DPAFlowSync(DPABase):
             response = client.put(
                 self._approval(self.data.id),
                 headers=self._header_builder(),
-                json=ApproveDPAFlowDTO.parse_obj(approve_data).dict(by_alias=True),
+                json=ApproveDPAFlowDTO.parse_obj(approve_data).dict(
+                    by_alias=True,
+                    exclude_none=True
+                ),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -194,7 +198,10 @@ class DPAFlowSync(DPABase):
             response = client.post(
                 self._invoice(self.data.id),
                 headers=self._header_builder(),
-                json=Invoice.parse_obj(invoice_data).dict(by_alias=True),
+                json=Invoice.parse_obj(invoice_data).dict(
+                    by_alias=True,
+                    exclude_none=True
+                ),
                 timeout=300
             )
             raise_for_status_improved(response)
@@ -233,7 +240,10 @@ class DPAFlowsAsyncModule(GenericAsyncModule):
             response = await client.post(
                 f"/{self.resource_version}/{self.resource}",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
+                json=self.create_data_model.parse_obj(new_entity_data).dict(
+                    by_alias=True,
+                    exclude_none=True
+                ),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -253,7 +263,10 @@ class DPAFlowsAsyncModule(GenericAsyncModule):
             response = await client.post(
                 f"/{self.resource_version}/{self.resource}/simulations",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
+                json=self.create_data_model.parse_obj(new_entity_data).dict(
+                    by_alias=True,
+                    exclude_none=True
+                ),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -286,7 +299,10 @@ class DPAFlowsSyncModule(GenericSyncModule):
             response = client.post(
                 f"/{self.resource_version}/{self.resource}",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
+                json=self.create_data_model.parse_obj(new_entity_data).dict(
+                    by_alias=True,
+                    exclude_none=True
+                ),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -306,7 +322,10 @@ class DPAFlowsSyncModule(GenericSyncModule):
             response = client.post(
                 f"/{self.resource_version}/{self.resource}/simulations",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
+                json=self.create_data_model.parse_obj(new_entity_data).dict(
+                    by_alias=True,
+                    exclude_none=True
+                ),
                 timeout=30
             )
             raise_for_status_improved(response)

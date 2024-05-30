@@ -17,6 +17,7 @@ class CreateExecutionDTO(BaseModel):
     borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
     billable_id: Optional[str] = Field(alias="billableId", default=None)
     batch_id: Optional[str] = Field(alias="batchId", default=None)
+    tags: Optional[List[str]] = Field(alias="tags", default=[])
 
     class Config:
         populate_by_name = True
@@ -35,6 +36,7 @@ class ExecutionAPIDTO(BaseModel):
     billable_id: Optional[str] = Field(alias="billableId")
     borrower_id: Optional[str] = Field(alias="borrowerId")
     status: Optional[str] = Field(alias="status", default=None)
+    tags: Optional[List[str]] = Field(alias="tags", default=[])
     is_success: Optional[bool] = Field(alias="isSuccess", default=None)
     is_billable: Optional[bool] = Field(alias="isBillable", default=None)
     is_re_scoring: Optional[bool] = Field(alias="isReScoring", default=None)

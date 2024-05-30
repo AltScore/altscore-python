@@ -1,6 +1,6 @@
 import httpx
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
@@ -147,13 +147,18 @@ class WorkflowsSyncModule(GenericSyncModule):
                 workflow_alias: Optional[str] = None,
                 workflow_version: Optional[str] = None,
                 execution_mode: Optional[str] = None,
-                batch_id: Optional[str] = None
+                batch_id: Optional[str] = None,
+                tags: Optional[List[str]] = None
                 ):
         headers = self.build_headers()
         if execution_mode is not None:
             headers["X-Execution-Mode"] = execution_mode
         if batch_id is not None:
             headers["X-Batch-Id"] = batch_id
+
+        if tags is not None:
+            tags = ",".join(tags)
+            headers["x-tags"] = tags
 
         if workflow_id is not None:
             with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
@@ -223,13 +228,19 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                       workflow_alias: Optional[str] = None,
                       workflow_version: Optional[str] = None,
                       execution_mode: Optional[str] = None,
-                      batch_id: Optional[str] = None
+                      batch_id: Optional[str] = None,
+                      tags: Optional[List[str]] = None
                       ):
         headers = self.build_headers()
         if execution_mode is not None:
             headers["X-Execution-Mode"] = execution_mode
         if batch_id is not None:
             headers["X-Batch-Id"] = batch_id
+
+        if tags is not None:
+            tags = ",".join(tags)
+            headers["x-tags"] = tags
+
         if workflow_id is not None:
             async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
                 response = await client.post(
