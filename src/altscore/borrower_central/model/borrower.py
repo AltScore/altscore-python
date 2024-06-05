@@ -64,7 +64,7 @@ class SimplifiedIdentity(BaseModel):
     id: str = Field(alias="id")
     key: str = Field(alias="key")
     label: str = Field(alias="label")
-    value: str = Field(alias="value")
+    value: Optional[str] = Field(alias="value")
     priority: Optional[int] = Field(alias="priority")
 
     class Config:
@@ -77,7 +77,7 @@ class SimplifiedField(BaseModel):
     id: str = Field(alias="id")
     key: str = Field(alias="key")
     label: str = Field(alias="label")
-    value: str = Field(alias="value")
+    value: Optional[str] = Field(alias="value")
 
     class Config:
         populate_by_name = True
