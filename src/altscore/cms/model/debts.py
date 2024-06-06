@@ -115,7 +115,7 @@ class Penalty(BaseModel):
 
 class CreateDebt(BaseModel):
     flow_id: str = Field(alias="flowId")
-    disbursed_at: Optional[dt.date] = Field(alias="disbursedAt", default=None)
+    disbursed_at: Optional[str] = Field(alias="disbursedAt", default=None)
     amount: Optional[Money] = Field(alias="amount", default=None)
 
     class Config:
@@ -274,17 +274,25 @@ class DebtsAsyncModule(GenericAsyncModule):
         )
 
     @retry_on_401
-    async def create(self, flow_id: str, disbursement_date: Optional[dt.date] = None,
-                     amount: Optional[Money] = None) -> str:
+    async def create(self, flow_id: str, disbursement_date: Optional[str] = None, amount: Optional[dict] = None) -> str:
+        if disbursement_date is not None:
+            try:
+                disbursement_date = dt.datetime.strptime(disbursement_date, "%Y-%m-%d")
+            except ValueError:
+                raise ValueError("Invalid disbursement date, must be in the format YYYY-MM-DD")
+        if amount is not None:
+            amount = Money.parse_obj(amount)
+
+        create_debt = CreateDebt.parse_obj({
+            "amount": amount.dict(by_alias=True) if amount else None,
+            "disbursed_at": disbursement_date.strftime("%Y-%m-%d") if disbursement_date else None,
+            "flow_id": flow_id,
+        })
         async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
             response = await client.post(
                 f"/{self.resource_version}/{self.resource}",
                 headers=self.build_headers(),
-                json=CreateDebt.parse_obj({
-                    "amount": amount,
-                    "disbursementDate": disbursement_date.strftime("%Y-%m-%d") if disbursement_date else None,
-                    "flowId": flow_id,
-                }).dict(by_alias=True, exclude_none=True),
+                json=create_debt.dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -305,16 +313,24 @@ class DebtsSyncModule(GenericSyncModule):
         )
 
     @retry_on_401
-    def create(self, flow_id: str, disbursement_date: Optional[dt.date] = None, amount: Optional[Money] = None) -> str:
+    def create(self, flow_id: str, disbursement_date: Optional[str] = None, amount: Optional[dict] = None) -> str:
+        if disbursement_date is not None:
+            try:
+                disbursement_date = dt.datetime.strptime(disbursement_date, "%Y-%m-%d")
+            except ValueError:
+                raise ValueError("Invalid disbursement date, must be in the format YYYY-MM-DD")
+        if amount is not None:
+            amount = Money.parse_obj(amount)
+        create_debt = CreateDebt.parse_obj({
+            "amount": amount.dict(by_alias=True) if amount else None,
+            "disbursed_at": disbursement_date.strftime("%Y-%m-%d") if disbursement_date else None,
+            "flow_id": flow_id,
+        })
         with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
             response = client.post(
                 f"/{self.resource_version}/{self.resource}",
                 headers=self.build_headers(),
-                json=CreateDebt.parse_obj({
-                    "amount": amount,
-                    "disbursementDate": disbursement_date.strftime("%Y-%m-%d") if disbursement_date else None,
-                    "flowId": flow_id,
-                }).dict(by_alias=True, exclude_none=True),
+                json=create_debt.dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
