@@ -113,15 +113,26 @@ class Penalty(BaseModel):
     type: str = Field(alias="type")
 
 
+class CreateDebt(BaseModel):
+    flow_id: str = Field(alias="flowId")
+    disbursed_at: Optional[dt.date] = Field(alias="disbursedAt", default=None)
+    amount: Optional[Money] = Field(alias="amount", default=None)
+
+    class Config:
+        allow_population_by_field_name = True
+        populate_by_alias = True
+        populate_by_name = True
+
+
 class DebtBase:
 
     @staticmethod
-    def _payments(flow_id: str):
-        return f"/v1/dpas/{flow_id}/payments"
+    def _payments(debt_id: str):
+        return f"/v1/debts/{debt_id}/payments"
 
     @staticmethod
-    def _penalties(flow_id: str):
-        return f"/v1/dpas/{flow_id}/penalties"
+    def _penalties(debt_id: str):
+        return f"/v1/debts/{debt_id}/penalties"
 
 
 class DebtAsync(DebtBase):
@@ -138,7 +149,7 @@ class DebtAsync(DebtBase):
     async def get_payments(self) -> List[Payment]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
-                self._payments(self.data.flow_id),
+                self._payments(self.data.id),
                 headers=self._header_builder(),
                 timeout=30
             )
@@ -154,7 +165,7 @@ class DebtAsync(DebtBase):
             notes = ""
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
-                self._payments(self.data.flow_id),
+                self._payments(self.data.id),
                 json={
                     "amount": {
                         "amount": amount,
@@ -173,7 +184,7 @@ class DebtAsync(DebtBase):
     async def get_penalties(self) -> List[Penalty]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
-                self._penalties(self.data.flow_id),
+                self._penalties(self.data.id),
                 headers=self._header_builder(),
                 timeout=30
             )
@@ -262,6 +273,24 @@ class DebtsAsyncModule(GenericAsyncModule):
             resource="debts"
         )
 
+    @retry_on_401
+    async def create(self, flow_id: str, disbursement_date: Optional[dt.date] = None,
+                     amount: Optional[Money] = None) -> str:
+        async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
+            response = await client.post(
+                f"/{self.resource_version}/{self.resource}",
+                headers=self.build_headers(),
+                json=CreateDebt.parse_obj({
+                    "amount": amount,
+                    "disbursementDate": disbursement_date.strftime("%Y-%m-%d") if disbursement_date else None,
+                    "flowId": flow_id,
+                }).dict(by_alias=True, exclude_none=True),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            response_json = response.json()
+            return response_json.get("debtId")
+
 
 class DebtsSyncModule(GenericSyncModule):
 
@@ -274,3 +303,20 @@ class DebtsSyncModule(GenericSyncModule):
             update_data_model=None,
             resource="debts"
         )
+
+    @retry_on_401
+    def create(self, flow_id: str, disbursement_date: Optional[dt.date] = None, amount: Optional[Money] = None) -> str:
+        with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
+            response = client.post(
+                f"/{self.resource_version}/{self.resource}",
+                headers=self.build_headers(),
+                json=CreateDebt.parse_obj({
+                    "amount": amount,
+                    "disbursementDate": disbursement_date.strftime("%Y-%m-%d") if disbursement_date else None,
+                    "flowId": flow_id,
+                }).dict(by_alias=True, exclude_none=True),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            response_json = response.json()
+            return response_json.get("debtId")

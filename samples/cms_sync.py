@@ -24,8 +24,26 @@ client = altscore.cms.clients.retrieve_by_external_id(external_id="test-12345678
 client.disable()
 # %%
 ca = client.get_credit_account(product_family="dpa")
+flowId = altscore.cms.dpas.create(new_entity_data={
+    "amount": {
+        "amount": "100",
+        "currency": "MXN"
+    },
+    "clientId": ca.data.client_id,
+    "disbursementDate": "2024-05-28",
+    "referenceId": "PO-1234",
+})
+#%%
+flow = altscore.cms.dpas.retrieve(flowId)
+#%%
+flow.approve()
+#%%
+debt_id = altscore.cms.debts.create(flow.data.id)
+debt = altscore.cms.debts.retrieve(debt_id)
+print(debt)
+#%%
 # %%
-ca.update(amount="100000.00", currency="ARS", reason="Línea inicial")
+ca.update(amount="100000.00", currency="MXN", reason="Línea inicial")
 # %%
 print(ca.data)
 # %%
