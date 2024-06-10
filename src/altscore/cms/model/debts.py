@@ -212,7 +212,7 @@ class DebtSync(DebtBase):
     def get_payments(self) -> List[Payment]:
         with httpx.Client(base_url=self.base_url) as client:
             response = client.get(
-                self._payments(self.data.flow_id),
+                self._payments(self.data.id),
                 headers=self._header_builder(),
                 timeout=30
             )
@@ -228,7 +228,7 @@ class DebtSync(DebtBase):
             notes = ""
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
-                self._payments(self.data.flow_id),
+                self._payments(self.data.id),
                 json={
                     "amount": {
                         "amount": amount,
@@ -247,7 +247,7 @@ class DebtSync(DebtBase):
     def get_penalties(self) -> List[Penalty]:
         with httpx.Client(base_url=self.base_url) as client:
             response = client.get(
-                self._penalties(self.data.flow_id),
+                self._penalties(self.data.id),
                 headers=self._header_builder(),
                 timeout=30
             )
