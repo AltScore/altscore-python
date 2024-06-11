@@ -116,6 +116,7 @@ class BorrowerSummaryAPIDTO(BaseModel):
     risk_rating: Optional[str] = Field(alias="riskRating", default=None)
     repayment_risk_rating: Optional[int] = Field(alias="repaymentRiskRating", default=None)
     current_step: Optional[StepDataInBorrower] = Field(alias="currentStep", default=None)
+    cms_client_ids: Optional[List[str]] = Field(alias="cmsClientIds", default=[])
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
 
