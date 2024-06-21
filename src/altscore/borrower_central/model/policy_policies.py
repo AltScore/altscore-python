@@ -21,7 +21,7 @@ class PolicyVersion(BaseModel):
 
 class PolicyAPIDTO(BaseModel):
     id: str = Field(alias="id")
-    label: str = Field(alias="label")
+    label: Optional[str] = Field(alias="label", default=None)
     language: Optional[str] = Field(alias="language", default=None)
     key: str = Field(alias="key", default=None)
     version: int = Field(alias="version")
@@ -41,6 +41,7 @@ class PolicyAPIDTO(BaseModel):
 
 class CreatePolicyDTO(BaseModel):
     key: str = Field(alias="key")
+    label: Optional[str] = Field(alias="label", default=None)
     short_text: Optional[str] = Field(alias="shortText")
     long_text: Optional[str] = Field(alias="longText")
     policy_url: Optional[str] = Field(alias="policyUrl")
@@ -53,6 +54,7 @@ class CreatePolicyDTO(BaseModel):
 
 
 class UpdatePolicyDTO(BaseModel):
+    label: Optional[str] = Field(alias="label", default=None)
     short_text: Optional[str] = Field(alias="shortText", default=None)
     long_text: Optional[str] = Field(alias="longText", default=None)
     policy_url: Optional[str] = Field(alias="policyUrl", default=None)
