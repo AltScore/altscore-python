@@ -4,6 +4,17 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
     GenericSyncModule, GenericAsyncModule
 
 
+class HistoricValue(BaseModel):
+    reference_id: str = Field(alias="referenceId")  # this is the id an identifier for the source of the value
+    value: Any = Field(alias="value")
+    updated_at: str = Field(alias="updatedAt")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
 class BorrowerFieldAPIDTO(BaseModel):
     id: str = Field(alias="id")
     borrower_id: str = Field(alias="borrowerId")
@@ -11,7 +22,7 @@ class BorrowerFieldAPIDTO(BaseModel):
     label: str = Field(alias="label")
     value: Any = Field(alias="value")
     data_type: str = Field(alias="dataType")
-    history: List[Dict] = Field(alias="history")
+    history: List[HistoricValue] = Field(alias="history")
     tags: List[str] = Field(alias="tags", default=[])
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")

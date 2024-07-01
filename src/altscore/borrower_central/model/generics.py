@@ -218,7 +218,7 @@ class GenericSyncModule:
             response = client.post(
                 f"/v1/{self.resource}",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
+                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             if response.status_code == 409 and update_if_exists:

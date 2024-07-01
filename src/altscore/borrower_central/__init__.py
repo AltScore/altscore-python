@@ -26,6 +26,7 @@ from altscore.borrower_central.model.risk_ratings import RiskRatingsAsyncModule,
 from altscore.borrower_central.model.usecases import UsecasesAsyncModule, UsecasesSyncModule
 from altscore.borrower_central.model.metrics import MetricsAsyncModule, MetricsSyncModule
 from altscore.borrower_central.model.policy_policies import PolicyAsyncModule, PolicySyncModule
+from altscore.borrower_central.model.kpis import KpisAsyncModule, KpisSyncModule
 
 
 class BorrowerCentralAsync:
@@ -59,6 +60,7 @@ class BorrowerCentralAsync:
         self.policies = PolicyAsyncModule(altscore_client)
         self.sat_integration = SatIntegrationAsyncModule(altscore_client)
         self.usecases = UsecasesAsyncModule(altscore_client)
+        self.kpis = KpisAsyncModule(altscore_client)
 
 
 class BorrowerCentralSync:
@@ -92,3 +94,4 @@ class BorrowerCentralSync:
         self.policies = PolicySyncModule(altscore_client)
         self.sat_integration = SatIntegrationSyncModule(altscore_client)
         self.usecases = UsecasesSyncModule(altscore_client)
+        self.kpis = KpisSyncModule(altscore_client)

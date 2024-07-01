@@ -6,6 +6,18 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
     GenericSyncModule, GenericAsyncModule
 
 
+class HistoricValue(BaseModel):
+    execution_id: Optional[str] = Field(alias="executionId", default=None)
+    reference_id: Optional[str] = Field(alias="referenceId", default=None)
+    value: Any = Field(alias="value")
+    updated_at: str = Field(alias="updatedAt")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
 class MetricsAPIDTO(BaseModel):
     id: str = Field(alias="id")
     borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
@@ -13,7 +25,7 @@ class MetricsAPIDTO(BaseModel):
     label: str = Field(alias="label")
     value: Any = Field(alias="value")
     data_type: str = Field(alias="dataType")
-    history: List[Dict] = Field(alias="history")
+    history: List[HistoricValue] = Field(alias="history")
     tags: List[str] = Field(alias="tags", default=[])
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
@@ -44,6 +56,7 @@ class UpdateMetric(BaseModel):
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
     execution_id: Optional[str] = Field(alias="executionId", default=None)
     value: Optional[str] = Field(alias="value")
+    date: Optional[str] = Field(alias="date", default=None)
     data_type: Optional[str] = Field(alias="dataType")
     tags: List[str] = Field(alias="tags", default=[])
 

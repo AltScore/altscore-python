@@ -113,10 +113,3 @@ execution.put_state(saved_state)
 saved_state2 = execution.get_state()
 assert saved_state.state["message"] == saved_state2.state["message"]
 # %%
-await altscore.borrower_central.workflows.execute(
-    workflow_alias="demo",
-    workflow_version="v1",
-    workflow_input={
-        "borrowerId": "e7b20bd9-53ba-4a9f-8206-cc13f8b25739",
-    }
-)
