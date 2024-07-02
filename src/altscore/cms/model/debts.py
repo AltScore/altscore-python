@@ -273,7 +273,7 @@ class DebtsAsyncModule(GenericAsyncModule):
             resource="debts"
         )
 
-    @retry_on_401
+    @retry_on_401_async
     async def create(self, flow_id: str, disbursement_date: Optional[str] = None, amount: Optional[dict] = None) -> str:
         if disbursement_date is not None:
             try:

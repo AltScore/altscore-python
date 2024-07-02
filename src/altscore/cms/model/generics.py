@@ -75,6 +75,7 @@ class GenericSyncModule:
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401
     def retrieve_all(self, **kwargs):
         query_params = {}
         for k, v in kwargs.items():
