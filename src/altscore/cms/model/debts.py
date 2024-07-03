@@ -9,12 +9,12 @@ import datetime as dt
 
 
 class Balance(BaseModel):
-    fees: Money = Field(alias="fees")
-    interest: Money = Field(alias="interest")
-    principal: Money = Field(alias="principal")
-    taxes: Money = Field(alias="taxes")
-    penalties: Money = Field(alias="penalties")
-    total: Money = Field(alias="total")
+    fees: Optional[Money] = Field(alias="fees")
+    interest: Optional[Money] = Field(alias="interest")
+    principal: Optional[Money] = Field(alias="principal")
+    taxes: Optional[Money] = Field(alias="taxes")
+    penalties: Optional[Money] = Field(alias="penalties")
+    total: Optional[Money] = Field(alias="total")
 
     class Config:
         populate_by_name = True
@@ -37,7 +37,7 @@ class Client(BaseModel):
 
 class Transaction(BaseModel):
     id: str = Field(alias="transactionId")
-    breakdown: List[Balance] = Field(alias="breakdown")
+    breakdown: Optional[List[Balance]] = Field(alias="breakdown")
     amount: Money = Field(alias="amount")
     type: str = Field(alias="type")
     date: str = Field(alias="date")
