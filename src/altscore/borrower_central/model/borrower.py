@@ -150,6 +150,24 @@ class UpdateBorrowerDTO(BaseModel):
         populate_by_alias = True
 
 
+class BorrowerLoginAPIDTO(BaseModel):
+    otp_id: str = Field(alias="otpId")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class BorrowerExportAPIDTO(BaseModel):
+    signed_url: str = Field(alias="signedUrl")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
 class BorrowerBase:
     resource = "borrowers"
 
@@ -529,6 +547,28 @@ class BorrowersAsyncModule:
         results = [item for sublist in results for item in sublist]
         return results
 
+    @retry_on_401_async
+    async def commands_borrower_login(self, borrower_id: str):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.post(
+                f"/{borrower_id}/commands/login",
+                headers=self.build_headers(),
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return BorrowerLoginAPIDTO.parse_obj(response.json())
+
+    @retry_on_401_async
+    async def commands_export(self):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.post(
+                "/v1/borrowers/commands/export",
+                headers=self.build_headers(),
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return BorrowerExportAPIDTO.parse_obj(response.json())
+
 
 class BorrowersSyncModule:
 
@@ -728,6 +768,28 @@ class BorrowersSyncModule:
             resources.append(r)
         resources = [item for sublist in resources for item in sublist]
         return resources
+
+    @retry_on_401
+    def commands_borrower_login(self, borrower_id: str):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.post(
+                f"/{borrower_id}/commands/login",
+                headers=self.build_headers(),
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return BorrowerLoginAPIDTO.parse_obj(response.json())
+
+    @retry_on_401
+    def commands_export(self):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.post(
+                "/v1/borrowers/commands/export",
+                headers=self.build_headers(),
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return BorrowerExportAPIDTO.parse_obj(response.json())
 
 
 class BorrowerAsync(BorrowerBase):

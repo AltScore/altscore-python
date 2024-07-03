@@ -1,5 +1,7 @@
+import httpx
 from pydantic import BaseModel, Field
 from typing import Optional, Dict
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 
@@ -29,6 +31,13 @@ class CreateStepDTO(BaseModel):
         allow_population_by_alias = True
 
 
+class BorrowerStepSummaryAPIDTO(BaseModel):
+    order: int = Field(alias="order")
+    step: str = Field(alias="step")
+    count: int = Field(alias="count")
+    label: str = Field(alias="label")
+
+
 class StepSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
@@ -51,6 +60,17 @@ class StepsSyncModule(GenericSyncModule):
                          update_data_model=None,
                          resource="steps")
 
+    @retry_on_401
+    def get_borrower_summary(self):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                f"/v1/{self.resource}/borrower-summary",
+                headers=self.build_headers(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+        return [BorrowerStepSummaryAPIDTO.parse_obj(data) for data in response.json()]
+
 
 class StepsAsyncModule(GenericAsyncModule):
 
@@ -61,3 +81,14 @@ class StepsAsyncModule(GenericAsyncModule):
                          create_data_model=CreateStepDTO,
                          update_data_model=None,
                          resource="steps")
+
+    @retry_on_401_async
+    async def get_borrower_summary(self):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                f"/v1/{self.resource}/borrower-summary",
+                headers=self.build_headers(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+        return [BorrowerStepSummaryAPIDTO.parse_obj(data) for data in response.json()]
