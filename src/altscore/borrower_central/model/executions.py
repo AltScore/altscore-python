@@ -3,6 +3,7 @@ from typing import Optional, Dict, Any, List
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule, convert_to_dash_case
 from altscore.borrower_central.model.attachments import AttachmentInput, AttachmentAPIDTO
+from altscore.borrower_central.model.workflows import WorkflowExecutionResponseAPIDTO
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 import httpx
 import datetime as dt
@@ -228,6 +229,20 @@ class ExecutionSync(GenericSyncResource):
             raise_for_status_improved(response)
             self.get_output()
 
+    @retry_on_401
+    def retry(self, execution_mode: Optional[str] = None):
+        headers = self._header_builder()
+        if execution_mode is not None:
+            headers["X-Execution-Mode"] = execution_mode
+        with httpx.Client() as client:
+            response = client.post(
+                f"{self.base_url}/v1/{self.resource}/{self.data.id}/retry",
+                headers=headers,
+                timeout=900
+            )
+            raise_for_status_improved(response)
+            return WorkflowExecutionResponseAPIDTO.parse_obj(response.json())
+
 
 class ExecutionAsync(GenericAsyncResource):
     output: ExecutionOutputDataAPIDTO
@@ -305,6 +320,20 @@ class ExecutionAsync(GenericAsyncResource):
             )
             raise_for_status_improved(response)
             await self.get_output()
+
+    @retry_on_401_async
+    async def retry(self, execution_mode: Optional[str] = None):
+        headers = self._header_builder()
+        if execution_mode is not None:
+            headers["X-Execution-Mode"] = execution_mode
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{self.base_url}/v1/{self.resource}/{self.data.id}/retry",
+                headers=headers,
+                timeout=900
+            )
+            raise_for_status_improved(response)
+            return WorkflowExecutionResponseAPIDTO.parse_obj(response.json())
 
 
 class ExecutionSyncModule(GenericSyncModule):
