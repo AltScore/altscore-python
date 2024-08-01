@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 
 
 class Money(BaseModel):
@@ -41,15 +41,30 @@ class InterestRate(BaseModel):
         populate_by_alias = True
 
 
+class TermsPenalties(BaseModel):
+    charge_code: str = Field(alias="chargeCode")
+    compute_every: int = Field(alias="computeEvery")
+    enabled: Optional[bool] = Field(alias="enabled")
+    grace_period: int = Field(alias="gracePeriod")
+    rate: InterestRate = Field(alias="rate")
+    times_to_compute: int = Field(alias="timesToCompute")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        populate_by_alias = True
+
+
 class Terms(BaseModel):
     amortization_type: str = Field(alias="amortizationType")
-    disbursement_date: str = Field(alias="disbursementDate")
+    disbursement_date: Optional[str] = Field(alias="disbursementDate")
     installments: int = Field(alias="installments")
     interest_rate: InterestRate = Field(alias="interestRate")
     interest_tax: int = Field(alias="interestTax")
-    principal: Money = Field(alias="principal")
+    principal: Optional[Money] = Field(alias="principal")
     repayEvery: int = Field(alias="repayEvery")
     sub_total_amount: Optional[Money] = Field(alias="subTotalAmount", default=None)
+    penalties: Optional[List[TermsPenalties]] = Field(alias="penalties", default=None)
 
     class Config:
         populate_by_name = True
