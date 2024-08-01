@@ -76,7 +76,7 @@ class SimplifiedIdentity(BaseModel):
 class SimplifiedField(BaseModel):
     id: str = Field(alias="id")
     key: str = Field(alias="key")
-    label: str = Field(alias="label")
+    label: Optional[str] = Field(alias="label")
     value: Optional[str] = Field(alias="value")
 
     class Config:
