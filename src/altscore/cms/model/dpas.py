@@ -43,6 +43,7 @@ class CreateDPAFlowDTO(BaseModel):
     disbursement_date: str = Field(alias="disbursementDate")
     client_id: str = Field(alias="clientId", default=None)
     reference_id: str = Field(alias="referenceId", default=None)
+    terms: Optional[Terms] = Field(alias="terms")
 
     class Config:
         populate_by_name = True
@@ -192,7 +193,7 @@ class DPAFlowSync(DPABase):
             response = client.put(
                 self._approval(self.data.id),
                 headers=self._header_builder(),
-                json= ApproveDPAFlowDTO.parse_obj(approve_data).dict(by_alias=True,  exclude_none=True),
+                json=ApproveDPAFlowDTO.parse_obj(approve_data).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -215,7 +216,7 @@ class DPAFlowSync(DPABase):
             response = client.post(
                 self._invoice(self.data.id),
                 headers=self._header_builder(),
-                json=Invoice.parse_obj(invoice_data).dict(by_alias=True,exclude_none=True),
+                json=Invoice.parse_obj(invoice_data).dict(by_alias=True, exclude_none=True),
                 timeout=300
             )
             raise_for_status_improved(response)
@@ -239,6 +240,9 @@ class DPAFlowsAsyncModule(GenericAsyncModule):
             update_data_model=None,
             resource="dpas"
         )
+
+    def renew_token(self):
+        self.altscore_client.renew_token()
 
     @retry_on_401_async
     async def create(self, new_entity_data: dict):
@@ -298,6 +302,9 @@ class DPAFlowsSyncModule(GenericSyncModule):
             update_data_model=None,
             resource="dpas"
         )
+
+    def renew_token(self):
+        self.altscore_client.renew_token()
 
     @retry_on_401
     def create(self, new_entity_data: dict):
