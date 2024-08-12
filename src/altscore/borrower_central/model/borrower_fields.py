@@ -1,3 +1,5 @@
+import httpx
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
@@ -39,7 +41,7 @@ class CreateBorrowerFieldDTO(BaseModel):
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
     key: str = Field(alias="key")
     value: Any = Field(alias="value")
-    data_type: Optional[str] = Field(alias="dataType")
+    data_type: Optional[str] = Field(alias="dataType", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
     class Config:
@@ -53,7 +55,7 @@ class UpdateBorrowerFieldDTO(BaseModel):
     form_id: Optional[str] = Field(alias="formId", default=None)
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
     value: Optional[str] = Field(alias="value")
-    data_type: Optional[str] = Field(alias="dataType")
+    data_type: Optional[str] = Field(alias="dataType", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
     class Config:
@@ -84,6 +86,27 @@ class BorrowerFieldsSyncModule(GenericSyncModule):
                          update_data_model=UpdateBorrowerFieldDTO,
                          resource="borrower-fields")
 
+    @retry_on_401
+    def find_by_key(self, key: str, borrower_id: str):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            fields_found_req = client.get(
+                f"/v1/borrower-fields",
+                params={
+                    "key": key,
+                    "borrower-id": borrower_id,
+                    "per-page": 1,
+                    "page": 1
+                },
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            raise_for_status_improved(fields_found_req)
+            fields_found_data = fields_found_req.json()
+            if len(fields_found_data) == 0:
+                return None
+            else:
+                return self.retrieve(fields_found_data[0]["id"])
+
 
 class BorrowerFieldsAsyncModule(GenericAsyncModule):
 
@@ -94,3 +117,24 @@ class BorrowerFieldsAsyncModule(GenericAsyncModule):
                          create_data_model=CreateBorrowerFieldDTO,
                          update_data_model=UpdateBorrowerFieldDTO,
                          resource="borrower-fields")
+
+    @retry_on_401_async
+    async def find_by_key(self, key: str, borrower_id: str):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            fields_found_req = await client.get(
+                f"/v1/borrower-fields",
+                params={
+                    "key": key,
+                    "borrower-id": borrower_id,
+                    "per-page": 1,
+                    "page": 1
+                },
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            raise_for_status_improved(fields_found_req)
+            fields_found_data = fields_found_req.json()
+            if len(fields_found_data) == 0:
+                return None
+            else:
+                return self.retrieve(fields_found_data[0]["id"])

@@ -1,3 +1,5 @@
+import httpx
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
@@ -66,6 +68,27 @@ class IdentitiesSyncModule(GenericSyncModule):
                          update_data_model=UpdateIdentityDTO,
                          resource="identities")
 
+    @retry_on_401
+    def find_by_key(self, key: str, borrower_id: str):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            identities_found_req = client.get(
+                f"/v1/identities",
+                params={
+                    "key": key,
+                    "borrower-id": borrower_id,
+                    "per-page": 1,
+                    "page": 1
+                },
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            raise_for_status_improved(identities_found_req)
+            identities_found_data = identities_found_req.json()
+            if len(identities_found_data) == 0:
+                return None
+            else:
+                return self.retrieve(identities_found_data[0]["id"])
+
 
 class IdentitiesAsyncModule(GenericAsyncModule):
 
@@ -76,3 +99,24 @@ class IdentitiesAsyncModule(GenericAsyncModule):
                          create_data_model=CreateIdentityDTO,
                          update_data_model=UpdateIdentityDTO,
                          resource="identities")
+
+    @retry_on_401_async
+    async def find_by_key(self, key: str, borrower_id: str):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            identities_found_req = await client.get(
+                f"/v1/identities",
+                params={
+                    "key": key,
+                    "borrower-id": borrower_id,
+                    "per-page": 1,
+                    "page": 1
+                },
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            raise_for_status_improved(identities_found_req)
+            identities_found_data = identities_found_req.json()
+            if len(identities_found_data) == 0:
+                return None
+            else:
+                return await self.retrieve(identities_found_data[0]["id"])

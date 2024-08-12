@@ -28,6 +28,8 @@ from altscore.borrower_central.model.metrics import MetricsAsyncModule, MetricsS
 from altscore.borrower_central.model.policy_policies import PolicyAsyncModule, PolicySyncModule
 from altscore.borrower_central.model.kpis import KpisAsyncModule, KpisSyncModule
 from altscore.borrower_central.model.steps import StepsAsyncModule, StepsSyncModule
+from altscore.borrower_central.model.list_of_similar import ListOfSimilarAsyncModule, ListOfSimilarSyncModule
+
 
 class BorrowerCentralAsync:
 
@@ -62,6 +64,7 @@ class BorrowerCentralAsync:
         self.usecases = UsecasesAsyncModule(altscore_client)
         self.kpis = KpisAsyncModule(altscore_client)
         self.steps = StepsAsyncModule(altscore_client)
+        self.list_of_similar = ListOfSimilarAsyncModule(altscore_client)
 
 
 class BorrowerCentralSync:
@@ -97,3 +100,4 @@ class BorrowerCentralSync:
         self.usecases = UsecasesSyncModule(altscore_client)
         self.kpis = KpisSyncModule(altscore_client)
         self.steps = StepsSyncModule(altscore_client)
+        self.list_of_similar = ListOfSimilarSyncModule(altscore_client)
