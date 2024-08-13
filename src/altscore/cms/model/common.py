@@ -44,7 +44,7 @@ class InterestRate(BaseModel):
 class TermsPenalties(BaseModel):
     charge_code: str = Field(alias="chargeCode")
     compute_every: int = Field(alias="computeEvery")
-    enabled: Optional[bool] = Field(alias="enabled")
+    enabled: Optional[bool] = Field(None, alias="enabled")
     grace_period: int = Field(alias="gracePeriod")
     rate: InterestRate = Field(alias="rate")
     times_to_compute: int = Field(alias="timesToCompute")
