@@ -31,6 +31,8 @@ class DPAFlowAPIDTO(BaseModel):
     terms: Terms = Field(alias="terms")
     created_at: str = Field(alias="createdAt")
     updated_at: str = Field(alias="updatedAt")
+    cancellation_reason: Optional[str] = Field(None, alias="cancellationReason")
+    close_reason: Optional[str] = Field(None, alias="closeReason")
 
     class Config:
         populate_by_name = True
