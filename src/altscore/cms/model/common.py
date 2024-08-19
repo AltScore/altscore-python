@@ -59,6 +59,7 @@ class Terms(BaseModel):
     amortization_type: str = Field(alias="amortizationType")
     disbursement_date: Optional[str] = Field(alias="disbursementDate")
     installments: int = Field(alias="installments")
+    interest_calculate_type: str = Field(alias="interestCalculateType")
     interest_rate: InterestRate = Field(alias="interestRate")
     interest_tax: int = Field(alias="interestTax")
     principal: Optional[Money] = Field(alias="principal")
