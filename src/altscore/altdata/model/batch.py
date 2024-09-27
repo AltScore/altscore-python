@@ -4,6 +4,7 @@ from typing import List
 from typing import Optional
 from typing import Union
 import httpx
+from altscore.altdata.helpers import build_headers
 from pydantic import BaseModel, validator, Field
 from altscore.altdata.model.common_schemas import SourceConfig
 from altscore.altdata.utils.dataframes import df_to_base64
@@ -81,7 +82,7 @@ class BatchSyncModule:
         self.altscore_client.renew_token()
 
     def build_headers(self):
-        return {"API-KEY": self.altscore_client.api_key}
+        return build_headers(self)
 
     def new_batch_from_dataframe(self, df, label: str,
                                  sources_config: List[SourceConfig]):
@@ -131,7 +132,7 @@ class BatchAsyncModule:
         self.altscore_client.renew_token()
 
     def build_headers(self):
-        return {"API-KEY": self.altscore_client.api_key}
+        return build_headers(self)
 
     async def new_batch_from_dataframe(self, df, label: str, sources_config: List[SourceConfig]):
         async with httpx.AsyncClient(base_url=self.altscore_client._altdata_base_url) as client:
