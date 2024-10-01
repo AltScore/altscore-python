@@ -42,6 +42,7 @@ class StepDataInBorrower(BaseModel):
 
 class BorrowerAPIDTO(BaseModel):
     id: str = Field(alias="id")
+    external_id: Optional[str] = Field(alias="externalId", default=None)
     persona: str = Field(alias="persona")
     avatar_url: Optional[str] = Field(alias="avatarUrl")
     label: Optional[str] = Field(alias="label")
@@ -63,7 +64,7 @@ class BorrowerAPIDTO(BaseModel):
 class SimplifiedIdentity(BaseModel):
     id: str = Field(alias="id")
     key: str = Field(alias="key")
-    label: str = Field(alias="label")
+    label: Optional[str] = Field(alias="label")
     value: Optional[str] = Field(alias="value")
     priority: Optional[int] = Field(alias="priority")
 
@@ -105,6 +106,7 @@ class CurrentStep(BaseModel):
 
 class BorrowerSummaryAPIDTO(BaseModel):
     id: str = Field(alias="id")
+    external_id: Optional[str] = Field(alias="externalId", default=None)
     persona: str = Field(alias="persona")
     label: Optional[str] = Field(alias="label")
     flag: Optional[str] = Field(alias="flag")
@@ -128,6 +130,7 @@ class BorrowerSummaryAPIDTO(BaseModel):
 
 class CreateBorrowerDTO(BaseModel):
     persona: str = Field(alias="persona")
+    external_id: str = Field(alias="externalId", default=None)
     label: Optional[str] = Field(alias="label")
     risk_rating: Optional[str] = Field(alias="riskRating", default=None)
     repayment_risk_rating: Optional[int] = Field(alias="repaymentRiskRating", default=None)
