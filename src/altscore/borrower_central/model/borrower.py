@@ -1276,6 +1276,19 @@ class BorrowerAsync(BorrowerBase):
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401_async
+    async def set_external_id(self, external_id: str):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.put(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/external-id",
+                headers=self._header_builder(),
+                json={
+                    "externalId": external_id
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
     def __str__(self):
         return str(self.data)
 
@@ -1758,6 +1771,19 @@ class BorrowerSync(BorrowerBase):
                 json={
                     "message": message,
                     "pointOfContactId": point_of_contact_id
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    @retry_on_401
+    def set_external_id(self, external_id: str):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.put(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/external-id",
+                headers=self._header_builder(),
+                json={
+                    "externalId": external_id
                 }
             )
             raise_for_status_improved(response)
