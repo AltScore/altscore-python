@@ -66,6 +66,7 @@ class Terms(BaseModel):
     repayEvery: int = Field(alias="repayEvery")
     sub_total_amount: Optional[Money] = Field(alias="subTotalAmount", default=None)
     penalties: Optional[List[TermsPenalties]] = Field(alias="penalties", default=None)
+    name: Optional[str] = Field(alias="name", default=None)
 
     class Config:
         populate_by_name = True
