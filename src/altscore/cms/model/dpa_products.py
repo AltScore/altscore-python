@@ -94,7 +94,7 @@ class UpdateDPAProductAPIDTO(BaseModel):
     name: Optional[str] = Field(alias="name", default=None)
     description: Optional[str] = Field(alias="description", default=None)
     amortization_type: Optional[str] = Field(alias="amortizationType", default=None)
-    disbursement: Optional[DisbursementSettings] = Field(alias="disbursement", default=None)
+    disbursement: Optional[DisbursementSettings] = Field(alias="disbursementSettings", default=None)
     installments: Optional[int] = Field(alias="installments", default=None)
     interest_calculate_type: Optional[str] = Field(alias="interestCalculateType", default=None)
     interest_rate: Optional[InterestRate] = Field(alias="interestRate", default=None)
