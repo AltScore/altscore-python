@@ -1,9 +1,11 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict
+from typing import Optional, List
 import httpx
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule
 from altscore.cms.helpers import build_headers
+from altscore.cms.model.dpa_products import DPAProductAPIDTO, CreateDPAProductAPIDTO, UpdateDPAProductAPIDTO
+from altscore.borrower_central.utils import clean_dict, convert_to_dash_case
 
 
 class PartnerAPIDTO(BaseModel):
@@ -39,11 +41,11 @@ class CreatePartnerDTO(BaseModel):
 
 
 class DPASettingsDefaults(BaseModel):
-    amortization_type: Optional[str] = Field(alias="amortizationType", default=None)
     currency: Optional[str] = Field(alias="currency", default=None)
-    flowExpirationMinutes: Optional[int] = Field(alias="flowExpirationMinutes", default=None)
-    installments: Optional[int] = Field(alias="installments", default=None)
-    repayEvery: Optional[int] = Field(alias="repayEvery", default=None)
+    flow_expiration_minutes: Optional[int] = Field(alias="flowExpirationMinutes", default=None)
+    closing_balance_threshold: Optional[str] = Field(alias="closingBalanceThreshold", default=None)
+    product_id: Optional[str] = Field(alias="productId", default=None)
+    segmentation_id: Optional[str] = Field(alias="segmentationId", default=None)
 
     class Config:
         populate_by_name = True
@@ -51,55 +53,16 @@ class DPASettingsDefaults(BaseModel):
         populate_by_alias = True
 
 
-class Rate(BaseModel):
-    period: Optional[int] = Field(alias="period", default=None)
-    rate: Optional[str] = Field(alias="rate", default=None)
-
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
-
-
-class DPASettingssInterestRates(BaseModel):
-    period: Optional[int] = Field(alias="period", default=None)
-    rate: Optional[Rate] = Field(alias="rate", default=None)
-
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
-
-
-class DPASettingsPenalty(BaseModel):
-    charge_code: Optional[str] = Field(alias="chargeCode", default=None)
-    compute_every: Optional[int] = Field(alias="computeEvery", default=None)
-    enabled: Optional[bool] = Field(alias="enabled", default=None)
-    grace_period: Optional[int] = Field(alias="gracePeriod", default=None)
-    rate: Optional[Rate] = Field(alias="rate", default=None)
-    times_to_compute: Optional[int] = Field(alias="timesToCompute", default=None)
-
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
-
-
-class DPASettingsDisbursement(BaseModel):
-    disburse_to: Optional[str] = Field(alias="disburseTo", default="")
 
 
 class DPASettingsAPIDTO(BaseModel):
+    partner_id: Optional[str] = Field(alias="partnerId")
     defaults: Optional[DPASettingsDefaults] = Field(alias="defaults", default=None)
-    disbursement: Optional[DPASettingsDisbursement] = Field(alias="disbursement", default=None)
-    interest_rates: List[DPASettingssInterestRates] = Field(alias="interestRates", default=None)
-    invoice_over_limit: Optional[float] = Field(alias="invoiceOverLimit", default=None)
+    timezone: Optional[str] = Field(alias="timezone", default=None)
     on_approve_flow_reserve_all_assigned_amount: Optional[bool] = \
         Field(alias="onApproveFlowReserveAllAssignedAmount", default=None)
-    penalties: List[DPASettingsPenalty] = Field(alias="penalties", default=[])
+    invoice_over_limit: Optional[float] = Field(alias="invoiceOverLimit", default=None)
     reserve_on_start: Optional[bool] = Field(alias="reserveOnStart", default=None)
-    tax_rate: Optional[float] = Field(alias="taxRate", default=None)
-    timezone: Optional[str] = Field(alias="timezone", default=None)
 
     class Config:
         populate_by_name = True
@@ -112,6 +75,16 @@ class PartnerBase:
     def __init__(self, base_url):
         self.base_url = base_url
 
+    def _get_partner_dpa_products( self, partner_id:str, sort_by: Optional[str] = None,
+                per_page: Optional[int] = None, page: Optional[int] = None, sort_direction: Optional[str] = None
+        ) -> (str, dict):
+            query = {
+                "sort-by": sort_by,
+                "per-page": per_page,
+                "page": page,
+                "sort-direction": sort_direction
+            }
+            return f"{self.base_url}/v2/partners/{partner_id}/products/dpa", clean_dict(query)
 
 class PartnerAsync(PartnerBase):
     data: PartnerAPIDTO
@@ -129,6 +102,75 @@ class PartnerAsync(PartnerBase):
     def __repr__(self):
         return f"{self.__class__.__name__})"
 
+    @retry_on_401_async
+    async def get_dpa_products(self, **kwargs) -> List[DPAProductAPIDTO]:
+        url, query = self._get_partner_dpa_products(self.data.partner_id, **kwargs)
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
+                url,
+                headers=self._header_builder(),
+                params=query,
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [DPAProductAPIDTO.parse_obj(e) for e in response.json()]
+
+    @retry_on_401_async
+    async def get_dpa_product(self, product_id: str) -> DPAProductAPIDTO:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
+                f"/v2/partners/{self.data.partner_id}/products/dpa/{product_id}",
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return DPAProductAPIDTO.parse_obj(response.json())
+
+    @retry_on_401_async
+    async def create_dpa_product(self, new_entity_data:dict) -> DPAProductAPIDTO:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.post(
+                f"/v2/partners/{self.data.partner_id}/products/dpa",
+                json=CreateDPAProductAPIDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return response.json()["productId"]
+
+    @retry_on_401_async
+    async def delete_dpa_product(self, product_id: str) -> None:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.delete(
+                f"/v2/partners/{self.data.partner_id}/products/dpa/{product_id}",
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401_async
+    async def update_dpa_product(self, product_id: str, patch_data:dict) -> DPAProductAPIDTO:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.patch(
+                f"/v2/partners/{self.data.partner_id}/products/dpa/{product_id}",
+                json=UpdateDPAProductAPIDTO.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return DPAProductAPIDTO.parse_obj(response.json())
+
+    @retry_on_401_async
+    async def put_dpa_product_status(self, product_id: str, status: str) -> None:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.put(
+                f"/v2/partners/{self.data.partner_id}/products/dpa/{product_id}/status",
+                headers=self._header_builder(),
+                json={"status": status},
+                timeout=30
+            )
+            raise_for_status_improved(response)
+
 
 class PartnerSync(PartnerBase):
     data: PartnerAPIDTO
@@ -144,6 +186,75 @@ class PartnerSync(PartnerBase):
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.data.partner_id})"
+
+    @retry_on_401
+    def get_dpa_products(self, **kwargs) -> List[DPAProductAPIDTO]:
+        url, query = self._get_partner_dpa_products(self.data.partner_id, **kwargs)
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.get(
+                url,
+                headers=self._header_builder(),
+                params=query,
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [DPAProductAPIDTO.parse_obj(e) for e in response.json()]
+
+    @retry_on_401
+    def get_dpa_product(self, product_id: str) -> DPAProductAPIDTO:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.get(
+                f"/v2/partners/{self.data.partner_id}/products/dpa/{product_id}",
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return DPAProductAPIDTO.parse_obj(response.json())
+
+    @retry_on_401
+    def create_dpa_product(self, new_entity_data:dict):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.post(
+                f"/v2/partners/{self.data.partner_id}/products/dpa",
+                json=CreateDPAProductAPIDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return response.json()["productId"]
+
+    @retry_on_401
+    def delete_dpa_product(self, product_id: str) -> None:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.delete(
+                f"/v2/partners/{self.data.partner_id}/products/dpa/{product_id}",
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401
+    def update_dpa_product(self, product_id: str, patch_data:dict) -> DPAProductAPIDTO:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.patch(
+                f"/v2/partners/{self.data.partner_id}/products/dpa/{product_id}",
+                json=UpdateDPAProductAPIDTO.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return DPAProductAPIDTO.parse_obj(response.json())
+
+    @retry_on_401
+    def put_dpa_product_status(self, product_id: str, status: str) -> None:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.put(
+                f"/v2/partners/{self.data.partner_id}/products/dpa/{product_id}/status",
+                headers=self._header_builder(),
+                json={"status": status},
+                timeout=30
+            )
+            raise_for_status_improved(response)
 
 
 class PartnersAsyncModule(GenericAsyncModule):
@@ -175,6 +286,17 @@ class PartnersAsyncModule(GenericAsyncModule):
                 renew_token=self.renew_token,
                 data=PartnerAPIDTO.parse_obj(response.json())
             )
+
+    @retry_on_401_async
+    async def get_dpa_settings(self, partner_id:str) -> DPASettingsAPIDTO:
+        async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
+            response = await client.get(
+                f"/v2/partners/{partner_id}/settings/dpa",
+                headers=build_headers(self),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return DPASettingsAPIDTO.parse_obj(response.json())
 
     @retry_on_401_async
     async def update_dpa_settings(self, partner_id: str, settings: dict) -> DPASettingsAPIDTO:
@@ -219,6 +341,17 @@ class PartnersSyncModule(GenericSyncModule):
                 renew_token=self.renew_token,
                 data=PartnerAPIDTO.parse_obj(response.json())
             )
+
+    @retry_on_401
+    def get_dpa_settings(self, partner_id:str) -> DPASettingsAPIDTO:
+        with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
+            response = client.get(
+                f"/v2/partners/{partner_id}/settings/dpa",
+                headers=build_headers(self),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return DPASettingsAPIDTO.parse_obj(response.json())
 
     @retry_on_401
     def update_dpa_settings(self, partner_id: str, settings: dict) -> DPASettingsAPIDTO:
