@@ -1,6 +1,11 @@
+import asyncio
+
 from pydantic import BaseModel, Field
 from typing import Optional, List
 import httpx
+
+from altscore.cms.model.dpa_segmentation import DPASegmentationAPIDTO, CreateDPASegmentationDTO, \
+    UpdateDPASegmentationDTO
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule
 from altscore.cms.helpers import build_headers
@@ -53,8 +58,6 @@ class DPASettingsDefaults(BaseModel):
         populate_by_alias = True
 
 
-
-
 class DPASettingsAPIDTO(BaseModel):
     partner_id: Optional[str] = Field(alias="partnerId")
     defaults: Optional[DPASettingsDefaults] = Field(alias="defaults", default=None)
@@ -75,16 +78,37 @@ class PartnerBase:
     def __init__(self, base_url):
         self.base_url = base_url
 
-    def _get_partner_dpa_products( self, partner_id:str, sort_by: Optional[str] = None,
+    def _get_partner_dpa_products( self, partner_id:str, status: Optional[str]= None, sort_by: Optional[str] = None,
                 per_page: Optional[int] = None, page: Optional[int] = None, sort_direction: Optional[str] = None
         ) -> (str, dict):
             query = {
+                "status": status,
                 "sort-by": sort_by,
                 "per-page": per_page,
                 "page": page,
                 "sort-direction": sort_direction
             }
             return f"{self.base_url}/v2/partners/{partner_id}/products/dpa", clean_dict(query)
+
+    def _get_partner_dpa_segmentations(self,
+                                       partner_id:str,
+                                       product_ids: Optional[List[str]]= None,
+                                       status: Optional[str]= None,
+                                       sort_by: Optional[str] = None,
+                                        per_page: Optional[int] = None,
+                                       page: Optional[int] = None,
+                                       sort_direction: Optional[str] = None
+        ) -> (str, dict):
+        query = {
+            "product-ids": ",".join(product_ids) if product_ids else None,
+            "status": status,
+            "sort-by": sort_by,
+            "per-page": per_page,
+            "page": page,
+            "sort-direction": sort_direction
+        }
+        return f"{self.base_url}/v2/partners/{partner_id}/segmentations/dpa", clean_dict(query)
+
 
 class PartnerAsync(PartnerBase):
     data: PartnerAPIDTO
@@ -116,18 +140,21 @@ class PartnerAsync(PartnerBase):
             return [DPAProductAPIDTO.parse_obj(e) for e in response.json()]
 
     @retry_on_401_async
-    async def get_dpa_product(self, product_id: str) -> DPAProductAPIDTO:
+    async def get_dpa_product(self, product_id: str) -> Optional[DPAProductAPIDTO]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
                 f"/v2/partners/{self.data.partner_id}/products/dpa/{product_id}",
                 headers=self._header_builder(),
                 timeout=30
             )
+            if response.status_code == 404:
+                return None
+            elif response.status_code == 200:
+                return DPAProductAPIDTO.parse_obj(response.json())
             raise_for_status_improved(response)
-            return DPAProductAPIDTO.parse_obj(response.json())
 
     @retry_on_401_async
-    async def create_dpa_product(self, new_entity_data:dict) -> DPAProductAPIDTO:
+    async def create_dpa_product(self, new_entity_data:dict) -> str:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 f"/v2/partners/{self.data.partner_id}/products/dpa",
@@ -171,6 +198,79 @@ class PartnerAsync(PartnerBase):
             )
             raise_for_status_improved(response)
 
+    @retry_on_401_async
+    async def get_dpa_segmentations(self, **kwargs) -> List[DPASegmentationAPIDTO]:
+        url, query = self._get_partner_dpa_segmentations(self.data.partner_id, **kwargs)
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
+                url,
+                headers=self._header_builder(),
+                params=query,
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [DPASegmentationAPIDTO.parse_obj(e) for e in response.json()]
+
+    @retry_on_401_async
+    async def get_dpa_segmentation(self, segmentation_id: str) -> Optional[DPASegmentationAPIDTO]:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
+                f"/v2/partners/{self.data.partner_id}/segmentations/dpa/{segmentation_id}",
+                headers=self._header_builder(),
+                timeout=30
+            )
+            if response.status_code == 404:
+                return None
+            elif response.status_code == 200:
+                return DPASegmentationAPIDTO.parse_obj(response.json())
+            raise_for_status_improved(response)
+
+    @retry_on_401_async
+    async def create_dpa_segmentation(self, new_entity_data:dict) -> str:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.post(
+                f"/v2/partners/{self.data.partner_id}/segmentations/dpa",
+                json=CreateDPASegmentationDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return response.json()["segmentationId"]
+
+    @retry_on_401_async
+    async def update_dpa_segmentation(self, segmentation_id: str, patch_data:dict) -> DPASegmentationAPIDTO:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.patch(
+                f"/v2/partners/{self.data.partner_id}/segmentations/dpa/{segmentation_id}",
+                json=UpdateDPASegmentationDTO.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return DPASegmentationAPIDTO.parse_obj(response.json())
+
+    @retry_on_401_async
+    async def put_dpa_segmentation_status(self, segmentation_id: str, status: str) -> None:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.put(
+                f"/v2/partners/{self.data.partner_id}/segmentations/dpa/{segmentation_id}/status",
+                headers=self._header_builder(),
+                json={"status": status},
+                timeout=30
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401_async
+    async def delete_dpa_segmentation(self, segmentation_id: str) -> None:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.delete(
+                f"/v2/partners/{self.data.partner_id}/segmentations/dpa/{segmentation_id}",
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+
+
 
 class PartnerSync(PartnerBase):
     data: PartnerAPIDTO
@@ -201,15 +301,18 @@ class PartnerSync(PartnerBase):
             return [DPAProductAPIDTO.parse_obj(e) for e in response.json()]
 
     @retry_on_401
-    def get_dpa_product(self, product_id: str) -> DPAProductAPIDTO:
+    def get_dpa_product(self, product_id: str) -> Optional[DPAProductAPIDTO]:
         with httpx.Client(base_url=self.base_url) as client:
             response = client.get(
                 f"/v2/partners/{self.data.partner_id}/products/dpa/{product_id}",
                 headers=self._header_builder(),
                 timeout=30
             )
+            if response.status_code == 404:
+                return None
+            elif response.status_code == 200:
+                return DPAProductAPIDTO.parse_obj(response.json())
             raise_for_status_improved(response)
-            return DPAProductAPIDTO.parse_obj(response.json())
 
     @retry_on_401
     def create_dpa_product(self, new_entity_data:dict):
@@ -252,6 +355,78 @@ class PartnerSync(PartnerBase):
                 f"/v2/partners/{self.data.partner_id}/products/dpa/{product_id}/status",
                 headers=self._header_builder(),
                 json={"status": status},
+                timeout=30
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401
+    def get_dpa_segmentations(self, **kwargs) -> List[DPASegmentationAPIDTO]:
+        url, query = self._get_partner_dpa_segmentations(self.data.partner_id, **kwargs)
+        with httpx.Client(base_url=self.base_url) as client:
+            response =  client.get(
+                url,
+                headers=self._header_builder(),
+                params=query,
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [DPASegmentationAPIDTO.parse_obj(e) for e in response.json()]
+
+    @retry_on_401
+    def get_dpa_segmentation(self, segmentation_id: str) -> Optional[DPASegmentationAPIDTO]:
+         with httpx.Client(base_url=self.base_url) as client:
+            response =  client.get(
+                f"/v2/partners/{self.data.partner_id}/segmentations/dpa/{segmentation_id}",
+                headers=self._header_builder(),
+                timeout=30
+            )
+            if response.status_code == 404:
+                return None
+            elif response.status_code == 200:
+                return DPASegmentationAPIDTO.parse_obj(response.json())
+            raise_for_status_improved(response)
+
+    @retry_on_401
+    def create_dpa_segmentation(self, new_entity_data: dict) -> str:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.post(
+                f"/v2/partners/{self.data.partner_id}/segmentations/dpa",
+                json=CreateDPASegmentationDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return response.json()["segmentationId"]
+
+    @retry_on_401
+    def update_dpa_segmentation(self, segmentation_id: str, patch_data: dict) -> DPASegmentationAPIDTO:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.patch(
+                f"/v2/partners/{self.data.partner_id}/segmentations/dpa/{segmentation_id}",
+                json=UpdateDPASegmentationDTO.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return DPASegmentationAPIDTO.parse_obj(response.json())
+
+    @retry_on_401
+    def put_dpa_segmentation_status(self, segmentation_id: str, status: str) -> None:
+        with httpx.Client(base_url=self.base_url) as client:
+            response =  client.put(
+                f"/v2/partners/{self.data.partner_id}/segmentations/dpa/{segmentation_id}/status",
+                headers=self._header_builder(),
+                json={"status": status},
+                timeout=30
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401
+    def delete_dpa_segmentation(self, segmentation_id: str) -> None:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.delete(
+                f"/v2/partners/{self.data.partner_id}/segmentations/dpa/{segmentation_id}",
+                headers=self._header_builder(),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -365,3 +540,5 @@ class PartnersSyncModule(GenericSyncModule):
             )
             raise_for_status_improved(response)
             return DPASettingsAPIDTO.parse_obj(response.json())
+
+
