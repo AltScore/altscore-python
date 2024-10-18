@@ -61,6 +61,8 @@ class DPAProductAPIDTO(BaseModel):
     penalties: List[Union[Penalty,None]] = Field(alias="penalties", default=[])
     product_tier: Optional[ProductTier] = Field(alias="productTier", default=None)
     disbursement_settings: DisbursementSettings = Field(alias="disbursementSettings")
+    created_at: str = Field(alias="createdAt")
+    updated_at: Optional[str] = Field(alias="updatedAt", default=None)
     status: str
     tenant: str
 
@@ -130,7 +132,7 @@ class ProductAsync(ProductBase):
         return str(self.data)
 
     def __repr__(self):
-        return f"{self.__class__.__name__})"
+        return f"{self.__class__.__name__}({self.data.partner_id})"
 
 
 class ProductSync(ProductBase):
