@@ -3,6 +3,7 @@ from typing import Dict, List
 import httpx
 
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
+from altscore.utils import convert_to_dash_case
 from altscore.webhooks.helpers import build_headers
 
 
@@ -95,6 +96,30 @@ class GenericSyncModule:
         resources = [item for sublist in resources for item in sublist]
         return resources
 
+    @retry_on_401
+    def query(self, **kwargs):
+        query_params = {}
+        for k, v in kwargs.items():
+            if v is not None:
+                query_params[convert_to_dash_case(k)] = v
+
+        with httpx.Client(base_url=self.altscore_client._webhooks_base_url) as client:
+            response = client.get(
+                f"/{self.resource_version}/{self.resource}/{self.altscore_client.partner_id}",
+                headers=self.build_headers(),
+                params=query_params,
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [self.sync_resource(
+                base_url=self.altscore_client._webhooks_base_url,
+                header_builder=self.build_headers,
+                renew_token=self.renew_token,
+                data=self.retrieve_data_model.parse_obj(e)
+            ) for e in response.json()]
+
+
+
 
 class GenericAsyncModule:
     def __init__(self, altscore_client, async_resource, retrieve_data_model, create_data_model,
@@ -180,6 +205,28 @@ class GenericAsyncModule:
             total_count = int(response.headers.get("x-total-count", 0))
         resources = []
         for offset in range(0, total_count, 100):
-            resources.append(self.query(limit=100, offset=offset, **kwargs))
+            resources.append(await self.query(limit=100, offset=offset, **kwargs))
         resources = [item for sublist in resources for item in sublist]
         return resources
+
+    @retry_on_401_async
+    async def query(self, **kwargs):
+        query_params = {}
+        for k, v in kwargs.items():
+            if v is not None:
+                query_params[convert_to_dash_case(k)] = v
+
+        async with httpx.AsyncClient(base_url=self.altscore_client._webhooks_base_url) as client:
+            response = await client.get(
+                f"/{self.resource_version}/{self.resource}/{self.altscore_client.partner_id}",
+                headers=self.build_headers(),
+                params=query_params,
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [self.async_resource(
+                base_url=self.altscore_client._webhooks_base_url,
+                header_builder=self.build_headers,
+                renew_token=self.renew_token,
+                data=self.retrieve_data_model.parse_obj(e)
+            ) for e in response.json()]
