@@ -31,14 +31,14 @@ class CMSSettingsSync(GenericSyncResource):
     data: CMSSettingsAPIDTO
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "authorizations", header_builder, renew_token, CMSSettingsAPIDTO.parse_obj(data))
+        super().__init__(base_url, "cms-settings", header_builder, renew_token, CMSSettingsAPIDTO.parse_obj(data))
 
 
 class CMSSettingsAsync(GenericAsyncResource):
     data: CMSSettingsAPIDTO
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "authorizations", header_builder, renew_token, CMSSettingsAPIDTO.parse_obj(data))
+        super().__init__(base_url, "cms-settings", header_builder, renew_token, CMSSettingsAPIDTO.parse_obj(data))
 
 
 class CMSSettingsSyncModule(GenericSyncModule):
