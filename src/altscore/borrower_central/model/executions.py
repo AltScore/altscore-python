@@ -91,6 +91,17 @@ EXECUTION_STATUS_SCHEDULED = "scheduled"
 EXECUTION_STATUS_ON_CALLBACK = "on_callback"
 EXECUTION_STATUS_COMPLETE = "complete"
 
+BATCH_EXECUTION_STATUS_PENDING = "pending"
+BATCH_EXECUTION_STATUS_SCHEDULED = "scheduled"
+BATCH_EXECUTION_STATUS_PRE_PROCESSING = "pre_processing"
+BATCH_EXECUTION_STATUS_PRE_PROCESSING_COMPLETE = "pre_processing_complete"
+BATCH_EXECUTION_STATUS_PROCESSING = "processing"
+BATCH_EXECUTION_STATUS_PROCESSING_COMPLETE = "processing_complete"
+BATCH_EXECUTION_STATUS_POST_PROCESSING = "post_processing"
+BATCH_EXECUTION_STATUS_COMPLETE = "complete"
+BATCH_EXECUTION_STATUS_PAUSED = "paused"
+BATCH_EXECUTION_STATUS_CANCELLED = "cancelled"
+
 
 class ExecutionState(BaseModel):
     status: str = Field(alias="status")
@@ -143,10 +154,37 @@ class ExecutionState(BaseModel):
     def set_as_on_callback(self):
         self.status = EXECUTION_STATUS_ON_CALLBACK
 
+    def set_as_pre_processing_batch(self):
+        self.status = BATCH_EXECUTION_STATUS_PRE_PROCESSING
+
+    def set_as_pre_processing_batch_complete(self):
+        self.status = BATCH_EXECUTION_STATUS_PRE_PROCESSING_COMPLETE
+
+    def set_as_processing_batch(self):
+        self.status = BATCH_EXECUTION_STATUS_PROCESSING
+
+    def set_as_processing_batch_complete(self):
+        self.status = BATCH_EXECUTION_STATUS_PROCESSING_COMPLETE
+
+    def set_as_post_processing_batch(self):
+        self.status = BATCH_EXECUTION_STATUS_POST_PROCESSING
+
+    def set_as_batch_paused(self):
+        self.status = BATCH_EXECUTION_STATUS_PAUSED
+
+    def set_as_batch_cancelled(self):
+        self.status = BATCH_EXECUTION_STATUS_CANCELLED
+
     @validator("status")
     def status_must_be_valid(cls, v):
-        valid_status = [EXECUTION_STATUS_PENDING, EXECUTION_STATUS_SCHEDULED,
-                        EXECUTION_STATUS_ON_CALLBACK, EXECUTION_STATUS_COMPLETE]
+        valid_status = [
+            EXECUTION_STATUS_PENDING, EXECUTION_STATUS_SCHEDULED,
+            EXECUTION_STATUS_ON_CALLBACK, EXECUTION_STATUS_COMPLETE,
+            BATCH_EXECUTION_STATUS_PENDING, BATCH_EXECUTION_STATUS_SCHEDULED,
+            BATCH_EXECUTION_STATUS_PRE_PROCESSING, BATCH_EXECUTION_STATUS_PROCESSING,
+            BATCH_EXECUTION_STATUS_POST_PROCESSING, BATCH_EXECUTION_STATUS_COMPLETE,
+            BATCH_EXECUTION_STATUS_PAUSED, BATCH_EXECUTION_STATUS_CANCELLED
+        ]
         if v not in valid_status:
             raise ValueError(f"Invalid status, must be one of {valid_status}")
         return v
