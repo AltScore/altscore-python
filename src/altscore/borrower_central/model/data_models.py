@@ -12,6 +12,7 @@ class DataModelAPIDTO(BaseModel):
     entity_type: str = Field(alias="entityType")
     priority: Optional[int] = Field(alias="priority", default=None)
     order: Optional[int] = Field(alias="order", default=None)
+    allowed_values: Optional[List[Any]] = Field(alias="allowedValues", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
     metadata: Optional[Dict[str, Any]] = Field(alias="metadata")
@@ -28,6 +29,7 @@ class DataModelCreate(BaseModel):
     label: str = Field(alias="label")
     entity_type: str = Field(alias="entityType")
     priority: Optional[int] = Field(alias="priority", default=None)
+    allowed_values: Optional[List[Any]] = Field(alias="allowedValues", default=None)
     order: Optional[int] = Field(alias="order", default=None)
     metadata: Optional[dict] = Field(alias="metadata", default={})
 
@@ -43,6 +45,7 @@ class DataModelUpdate(BaseModel):
     label: Optional[str] = Field(alias="label")
     priority: Optional[int] = Field(alias="priority", default=None)
     order: Optional[int] = Field(alias="order", default=None)
+    allowed_values: Optional[List[Any]] = Field(alias="allowedValues", default=None)
     metadata: Optional[dict] = Field(alias="metadata", default={})
 
     class Config:

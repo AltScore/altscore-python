@@ -1,12 +1,13 @@
 click
 requests
 pandas
-python-decouple
+python-decouple==3.8
 tabulate
 httpx
 stringcase
-textual
-textual-dev
+textual==0.85.2
+textual-dev==1.6.1
 pyjwt
 loguru
 pydantic==1.10.13
+fuzzywuzzy==0.18.0
