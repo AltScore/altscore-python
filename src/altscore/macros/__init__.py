@@ -400,8 +400,12 @@ class MacrosAsync:
             self,
             field_key: str,
             replace_values: List[Tuple[str, str]],
-            allowed_values= None
+            new_allowed_values: List[str]
     ):
+        replacing_values = [val[1] for val in replace_values]
+        if not set(replacing_values).issubset(set(new_allowed_values)):
+            raise ValueError("Trying to set values not present in the new allowed values")
+
         data_model = await self.altscore_client.borrower_central.data_models.query(
             entity_type="borrower_field",
             key=field_key,
@@ -420,10 +424,9 @@ class MacrosAsync:
 
         await asyncio.gather(*async_calls)
 
-        if allowed_values is not None:
-            await self.altscore_client.borrower_central.data_models.patch(
-                data_model[0].data.id,
-                {
-                    "allowedValues": allowed_values
-                }
-            )
+        await self.altscore_client.borrower_central.data_models.patch(
+            data_model[0].data.id,
+            {
+                "allowedValues": new_allowed_values
+            }
+        )
