@@ -109,10 +109,10 @@ class BorrowerFieldsSyncModule(GenericSyncModule):
 
     def count_unique_values(self, key: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
-            unique_values_req = client.post(
-                f"/v1/borrower-fields/command/count-values",
-                json={
-                    "fieldKey": key
+            unique_values_req = client.get(
+                f"/v1/borrower-fields/query/count-distinct-values",
+                params={
+                    "key": key
                 },
                 headers=self.build_headers(),
                 timeout=120
@@ -169,10 +169,10 @@ class BorrowerFieldsAsyncModule(GenericAsyncModule):
 
     async def count_unique_values(self, key: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
-            unique_values_req = await client.post(
-                f"/v1/borrower-fields/command/count-values",
-                json={
-                    "fieldKey": key
+            unique_values_req = await client.get(
+                f"/v1/borrower-fields/query/count-distinct-values",
+                params={
+                    "key": key
                 },
                 headers=self.build_headers(),
                 timeout=120
