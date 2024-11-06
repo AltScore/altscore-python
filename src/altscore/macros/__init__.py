@@ -179,7 +179,7 @@ class MacrosSync:
         return client_id
 
     def get_unique_borrower_field_values(self, field_key: str):
-        field_values = self.altscore_client.borrower_central.borrower_fields.count_unique_values(field_key)
+        field_values = self.altscore_client.borrower_central.borrower_fields.count_distinct_values(field_key)
         return [item["value"] for item in field_values]
 
     def evaluate_value_migration(self, target_values: list, current_values: list, threshold = 85):
@@ -382,7 +382,7 @@ class MacrosAsync:
         return client_id
 
     async def get_unique_borrower_field_values(self, field_key: str):
-        field_values = await self.altscore_client.borrower_central.borrower_fields.count_unique_values(field_key)
+        field_values = await self.altscore_client.borrower_central.borrower_fields.count_distinct_values(field_key)
         return [item["value"] for item in field_values]
 
     async def evaluate_value_migration(self, target_values: list, current_values: list, threshold = 85):

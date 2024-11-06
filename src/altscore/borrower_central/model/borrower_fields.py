@@ -107,7 +107,7 @@ class BorrowerFieldsSyncModule(GenericSyncModule):
             else:
                 return self.retrieve(fields_found_data[0]["id"])
 
-    def count_unique_values(self, key: str):
+    def count_distinct_values(self, key: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             unique_values_req = client.get(
                 f"/v1/borrower-fields/query/count-distinct-values",
@@ -167,7 +167,7 @@ class BorrowerFieldsAsyncModule(GenericAsyncModule):
                 return self.retrieve(fields_found_data[0]["id"])
 
 
-    async def count_unique_values(self, key: str):
+    async def count_distinct_values(self, key: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             unique_values_req = await client.get(
                 f"/v1/borrower-fields/query/count-distinct-values",
