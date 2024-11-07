@@ -39,6 +39,9 @@ class BatchExecutionAPIDTO(BaseModel):
     status: str = Field(alias="status")
     callback_at: str = Field(alias="callbackAt")
     state: Dict = Field(alias="state")
+    workflow_id: Optional[str] = Field(alias="workflowId", default=None)
+    workflow_alias: Optional[str] = Field(alias="workflowAlias", default=None)
+    workflow_version: Optional[str] = Field(alias="workflowVersion", default=None)
     tenant: str = Field(alias="tenant")
     tags: List[str] = Field(alias="tags")
     principal_id: Optional[str] = Field(alias="principalId", default=None)
@@ -60,6 +63,9 @@ class BatchExecution(BaseModel):
     status: str
     callback_at: dt.datetime
     state: Dict
+    workflow_id: Optional[str]
+    workflow_alias: Optional[str]
+    workflow_version: Optional[str]
     tags: List[str]
     principal_id: Optional[str]
     created_at: dt.datetime
