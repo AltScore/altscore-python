@@ -21,11 +21,11 @@ BATCH_EXECUTION_STATUS_CANCELLED = "cancelled"
 
 
 class UpdateBatchExecutionDTO(BaseModel):
-    status: Optional[str] = Field(alias="status")
-    inputs: Optional[Dict] = Field(alias="inputs")
-    outputs: Optional[Dict] = Field(alias="outputs")
-    callback_at: Optional[dt.datetime] = Field(alias="callbackAt")
-    state: Optional[Dict] = Field(alias="state")
+    status: Optional[str] = Field(alias="status", default=None)
+    callback_at: Optional[dt.datetime] = Field(alias="callbackAt", default=None)
+    state: Optional[Dict] = Field(alias="state", default=None)
+    inputs: Optional[Dict] = Field(alias="inputs", default=None)
+    outputs: Optional[Dict] = Field(alias="outputs", default=None)
 
     class Config:
         populate_by_name = True
@@ -111,18 +111,13 @@ class BatchExecutionAsync(GenericAsyncResource):
         callback_at: Optional[dt.datetime] = None,
         state: Optional[Dict] = None
     ):
-        payload = {}
-
-        if inputs is not None:
-            payload["inputs"] = inputs
-        if outputs is not None:
-            payload["outputs"] = outputs
-        if status is not None:
-            payload["status"] = status
-        if callback_at is not None:
-            payload["callbackAt"] = callback_at
-        if state is not None:
-            payload["state"] = state
+        payload = {
+            "inputs": inputs,
+            "outputs": outputs,
+            "status": status,
+            "callbackAt": callback_at,
+            "state": state
+        }
 
         with httpx.AsyncClient() as client:
             response = await client.patch(
@@ -157,18 +152,13 @@ class BatchExecutionSync(GenericSyncResource):
         callback_at: Optional[dt.datetime] = None,
         state: Optional[Dict] = None
     ):
-        payload = {}
-
-        if inputs is not None:
-            payload["inputs"] = inputs
-        if outputs is not None:
-            payload["outputs"] = outputs
-        if status is not None:
-            payload["status"] = status
-        if callback_at is not None:
-            payload["callbackAt"] = callback_at
-        if state is not None:
-            payload["state"] = state
+        payload = {
+            "inputs": inputs,
+            "outputs": outputs,
+            "status": status,
+            "callbackAt": callback_at,
+            "state": state
+        }
 
         with httpx.Client() as client:
             response = client.patch(
