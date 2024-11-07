@@ -127,7 +127,7 @@ class BatchExecutionAsync(GenericAsyncResource):
 
         with httpx.AsyncClient() as client:
             response = await client.patch(
-                self._batch_execution(self.data.batch_execution_id),
+                self._batch_execution(self.data.id),
                 headers=self._header_builder(),
                 json=payload,
                 timeout=300
@@ -168,7 +168,7 @@ class BatchExecutionSync(GenericSyncResource):
 
         with httpx.Client() as client:
             response = client.patch(
-                self._batch_execution(self.data.batch_execution_id),
+                self._batch_execution(self.data.id),
                 headers=self._header_builder(),
                 json=payload,
                 timeout=300
