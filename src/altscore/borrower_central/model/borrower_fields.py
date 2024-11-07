@@ -133,7 +133,7 @@ class BorrowerFieldsSyncModule(GenericSyncModule):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return response.json()
+            return
 
 class BorrowerFieldsAsyncModule(GenericAsyncModule):
 
@@ -194,4 +194,4 @@ class BorrowerFieldsAsyncModule(GenericAsyncModule):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return response.json()
+            return
