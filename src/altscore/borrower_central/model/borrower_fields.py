@@ -123,7 +123,7 @@ class BorrowerFieldsSyncModule(GenericSyncModule):
     def bulk_update_field_values(self, key: str, current_value: str, target_value: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
-                f"/v1/borrower-fields/command/bulk-update-values",
+                f"/v1/borrower-fields/commands/bulk-update-values",
                 json={
                     "fieldKey": key,
                     "currentValue": current_value,
@@ -184,7 +184,7 @@ class BorrowerFieldsAsyncModule(GenericAsyncModule):
     async def bulk_update_field_values(self, key: str, current_value: str, target_value: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
-                f"/v1/borrower-fields/command/bulk-update-values",
+                f"/v1/borrower-fields/commands/bulk-update-values",
                 json={
                     "fieldKey": key,
                     "currentValue": current_value,
