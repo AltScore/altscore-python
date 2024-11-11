@@ -125,7 +125,7 @@ class BorrowerFieldsSyncModule(GenericSyncModule):
             response = client.post(
                 f"/v1/borrower-fields/commands/bulk-update-values",
                 json={
-                    "fieldKey": key,
+                    "key": key,
                     "currentValue": current_value,
                     "targetValue": target_value
                 },
@@ -186,7 +186,7 @@ class BorrowerFieldsAsyncModule(GenericAsyncModule):
             response = await client.post(
                 f"/v1/borrower-fields/commands/bulk-update-values",
                 json={
-                    "fieldKey": key,
+                    "key": key,
                     "currentValue": current_value,
                     "targetValue": target_value
                 },
