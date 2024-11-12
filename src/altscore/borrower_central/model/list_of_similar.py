@@ -1,3 +1,5 @@
+from enum import Enum
+
 import httpx
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from pydantic import BaseModel, Field
@@ -5,6 +7,10 @@ from typing import Optional, List, Dict
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 
+class ListStatus(str, Enum):
+    PENDING = "PENDING"
+    APPLIED = "APPLIED"
+    NO_HIT = "NO_HIT"
 
 class SimilarEntity(BaseModel):
     entity_type: str = Field(alias="entityType")
@@ -33,7 +39,7 @@ class ListOfSimilarAPIDTO(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
     execution_id: Optional[str] = Field(alias="executionId")
     list_of_similar: List[Similar] = Field(alias="listOfSimilar")
-    is_applied: Optional[bool] = Field(alias="isApplied")
+    status: Optional[ListStatus] = Field(alias="status")
     applied_by: Optional[str] = Field(alias="appliedBy")
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
@@ -74,6 +80,19 @@ class ListOfSimilarSync(GenericSyncResource):
             )
             raise_for_status_improved(response)
 
+    @retry_on_401
+    def report_no_hit(self, retry_workflow: bool = False):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.post(
+                f"/v1/list-of-similar/{self.data.id}/no-hit",
+                headers=self._header_builder(),
+                timeout=300,
+                json={
+                    "retryWorkflow": retry_workflow
+                }
+            )
+            raise_for_status_improved(response)
+
 
 class ListOfSimilarAsync(GenericAsyncResource):
 
@@ -89,6 +108,19 @@ class ListOfSimilarAsync(GenericAsyncResource):
                 timeout=300,
                 json={
                     "index": index,
+                    "retryWorkflow": retry_workflow
+                }
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401_async
+    async def report_no_hit(self, retry_workflow: bool = False):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.post(
+                f"/v1/list-of-similar/{self.data.id}/no-hit",
+                headers=self._header_builder(),
+                timeout=300,
+                json={
                     "retryWorkflow": retry_workflow
                 }
             )
