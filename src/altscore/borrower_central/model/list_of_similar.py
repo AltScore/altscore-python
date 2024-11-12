@@ -8,9 +8,9 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
     GenericSyncModule, GenericAsyncModule
 
 class ListStatus(str, Enum):
-    PENDING = "PENDING"
-    APPLIED = "APPLIED"
-    NO_HIT = "NO_HIT"
+    PENDING = "pending"
+    APPLIED = "applied"
+    NO_HIT = "no_hit"
 
 class SimilarEntity(BaseModel):
     entity_type: str = Field(alias="entityType")
