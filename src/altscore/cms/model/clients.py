@@ -48,6 +48,10 @@ class CreateClientDTO(BaseModel):
         allow_population_by_field_name = True
         populate_by_alias = True
 
+class UpdateClientDTO(BaseModel):
+    tax_id: Optional[str] = Field(alias="taxId", default=None)
+    legal_name: Optional[str] = Field(alias="legalName", default=None)
+    email_address: Optional[str] = Field(alias="emailAddress", default=None)
 
 class ClientBase:
 
@@ -420,7 +424,7 @@ class ClientsSyncModule(GenericSyncModule):
             sync_resource=ClientSync,
             retrieve_data_model=ClientAPIDTO,
             create_data_model=CreateClientDTO,
-            update_data_model=None,
+            update_data_model=UpdateClientDTO,
             resource="clients",
             resource_version="v2"
         )
