@@ -8,19 +8,19 @@ import httpx
 import datetime as dt
 
 
-BATCH_EXECUTION_STATUS_PENDING = "pending"
-BATCH_EXECUTION_STATUS_SCHEDULED = "scheduled"
-BATCH_EXECUTION_STATUS_PRE_PROCESSING = "pre_processing"
-BATCH_EXECUTION_STATUS_PRE_PROCESSING_COMPLETE = "pre_processing_complete"
-BATCH_EXECUTION_STATUS_PROCESSING = "processing"
-BATCH_EXECUTION_STATUS_PROCESSING_COMPLETE = "processing_complete"
-BATCH_EXECUTION_STATUS_POST_PROCESSING = "post_processing"
-BATCH_EXECUTION_STATUS_COMPLETE = "complete"
-BATCH_EXECUTION_STATUS_PAUSED = "paused"
-BATCH_EXECUTION_STATUS_CANCELLED = "cancelled"
+EXECUTION_BATCH_STATUS_PENDING = "pending"
+EXECUTION_BATCH_STATUS_PRE_PROCESSING = "pre_processing"
+EXECUTION_BATCH_STATUS_PRE_PROCESSING_COMPLETE = "pre_processing_complete"
+EXECUTION_BATCH_STATUS_PROCESSING = "processing"
+EXECUTION_BATCH_STATUS_PROCESSING_COMPLETE = "processing_complete"
+EXECUTION_BATCH_STATUS_POST_PROCESSING = "post_processing"
+EXECUTION_BATCH_STATUS_COMPLETE = "complete"
+EXECUTION_BATCH_STATUS_PAUSED = "paused"
+EXECUTION_BATCH_STATUS_CANCELLED = "cancelled"
+EXECUTION_BATCH_STATUS_FAILED = "failed"
 
 
-class UpdateBatchExecutionDTO(BaseModel):
+class UpdateExecutionBatchDTO(BaseModel):
     status: Optional[str] = Field(alias="status", default=None)
     callback_at: Optional[dt.datetime] = Field(alias="callbackAt", default=None)
     state: Optional[Dict] = Field(alias="state", default=None)
@@ -33,12 +33,14 @@ class UpdateBatchExecutionDTO(BaseModel):
         allow_population_by_alias = True
 
 
-class BatchExecutionAPIDTO(BaseModel):
+class ExecutionBatchAPIDTO(BaseModel):
     id: str = Field(alias="id")
     batch_id: str = Field(alias="batchId")
     status: str = Field(alias="status")
     callback_at: str = Field(alias="callbackAt")
     state: Dict = Field(alias="state")
+    label: Optional[str] = Field(alias="label", default=None)
+    description: Optional[str] = Field(alias="description", default=None)
     workflow_id: Optional[str] = Field(alias="workflowId", default=None)
     workflow_alias: Optional[str] = Field(alias="workflowAlias", default=None)
     workflow_version: Optional[str] = Field(alias="workflowVersion", default=None)
@@ -57,12 +59,14 @@ class BatchExecutionAPIDTO(BaseModel):
         allow_population_by_field_name = True
         allow_population_by_alias = True
 
-class BatchExecution(BaseModel):
+class ExecutionBatch(BaseModel):
     batch_id: str
-    batch_execution_id: str
+    execution_batch_id: str
     status: str
     callback_at: dt.datetime
     state: Dict
+    label: Optional[str]
+    description: Optional[str]
     workflow_id: Optional[str]
     workflow_alias: Optional[str]
     workflow_version: Optional[str]
@@ -83,16 +87,16 @@ class BatchExecution(BaseModel):
     @validator("status")
     def status_must_be_valid(cls, v):
         valid_status = [
-            BATCH_EXECUTION_STATUS_PENDING,
-            BATCH_EXECUTION_STATUS_SCHEDULED,
-            BATCH_EXECUTION_STATUS_PRE_PROCESSING,
-            BATCH_EXECUTION_STATUS_PRE_PROCESSING_COMPLETE,
-            BATCH_EXECUTION_STATUS_PROCESSING,
-            BATCH_EXECUTION_STATUS_PROCESSING_COMPLETE,
-            BATCH_EXECUTION_STATUS_POST_PROCESSING,
-            BATCH_EXECUTION_STATUS_COMPLETE,
-            BATCH_EXECUTION_STATUS_PAUSED,
-            BATCH_EXECUTION_STATUS_CANCELLED
+            EXECUTION_BATCH_STATUS_PENDING,
+            EXECUTION_BATCH_STATUS_PRE_PROCESSING,
+            EXECUTION_BATCH_STATUS_PRE_PROCESSING_COMPLETE,
+            EXECUTION_BATCH_STATUS_PROCESSING,
+            EXECUTION_BATCH_STATUS_PROCESSING_COMPLETE,
+            EXECUTION_BATCH_STATUS_POST_PROCESSING,
+            EXECUTION_BATCH_STATUS_COMPLETE,
+            EXECUTION_BATCH_STATUS_PAUSED,
+            EXECUTION_BATCH_STATUS_CANCELLED,
+            EXECUTION_BATCH_STATUS_FAILED
         ]
 
         if v not in valid_status:
@@ -101,11 +105,11 @@ class BatchExecution(BaseModel):
         return v
 
 
-class BatchExecutionAsync(GenericAsyncResource):
+class ExecutionBatchAsync(GenericAsyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "batch_executions", header_builder, renew_token, BatchExecutionAPIDTO.parse_obj(data))
+        super().__init__(base_url, "execution-batches", header_builder, renew_token, ExecutionBatchAPIDTO.parse_obj(data))
 
-    def _batch_execution(self, resource_id):
+    def _execution_batch(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}"
 
 
@@ -127,27 +131,27 @@ class BatchExecutionAsync(GenericAsyncResource):
 
         with httpx.AsyncClient() as client:
             response = await client.patch(
-                self._batch_execution(self.data.id),
+                self._execution_batch(self.data.id),
                 headers=self._header_builder(),
                 json=payload,
                 timeout=300
             )
 
             raise_for_status_improved(response)
-            self.data = BatchExecutionAPIDTO.parse_obj(response.json())
+            self.data = ExecutionBatchAPIDTO.parse_obj(response.json())
 
 
-class BatchExecutionAsyncModule(GenericAsyncModule):
+class ExecutionBatchAsyncModule(GenericAsyncModule):
     def __init__(self, altscore_client):
-        super().__init__(altscore_client, async_resource=BatchExecutionAsync, retrieve_data_model=BatchExecutionAPIDTO,
-                         create_data_model=None, update_data_model=UpdateBatchExecutionDTO, resource="batch_executions")
+        super().__init__(altscore_client, async_resource=ExecutionBatchAsync, retrieve_data_model=ExecutionBatchAPIDTO,
+                         create_data_model=None, update_data_model=UpdateExecutionBatchDTO, resource="execution-batches")
 
 
-class BatchExecutionSync(GenericSyncResource):
+class ExecutionBatchSync(GenericSyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "batch_executions", header_builder, renew_token, BatchExecutionAPIDTO.parse_obj(data))
+        super().__init__(base_url, "execution-batches", header_builder, renew_token, ExecutionBatchAPIDTO.parse_obj(data))
 
-    def _batch_execution(self, resource_id):
+    def _execution_batch(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}"
 
     @retry_on_401
@@ -168,17 +172,17 @@ class BatchExecutionSync(GenericSyncResource):
 
         with httpx.Client() as client:
             response = client.patch(
-                self._batch_execution(self.data.id),
+                self._execution_batch(self.data.id),
                 headers=self._header_builder(),
                 json=payload,
                 timeout=300
             )
 
             raise_for_status_improved(response)
-            self.data = BatchExecutionAPIDTO.parse_obj(response.json())
+            self.data = ExecutionBatchAPIDTO.parse_obj(response.json())
 
 
-class BatchExecutionSyncModule(GenericSyncModule):
+class ExecutionBatchSyncModule(GenericSyncModule):
     def __init__(self, altscore_client):
-        super().__init__(altscore_client, sync_resource=BatchExecutionSync, retrieve_data_model=BatchExecutionAPIDTO,
-                         create_data_model=None, update_data_model=UpdateBatchExecutionDTO, resource="batch_executions")
+        super().__init__(altscore_client, sync_resource=ExecutionBatchSync, retrieve_data_model=ExecutionBatchAPIDTO,
+                         create_data_model=None, update_data_model=UpdateExecutionBatchDTO, resource="execution-batches")
