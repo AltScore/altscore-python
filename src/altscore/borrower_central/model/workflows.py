@@ -159,7 +159,7 @@ class WorkflowsSyncModule(GenericSyncModule):
                 workflow_alias: Optional[str] = None,
                 workflow_version: Optional[str] = None,
                 execution_mode: Optional[str] = None,
-                batch_id: Optional[str] = None, # Keeping this here even though there's a execute_batch for backwards compat
+                batch_id: Optional[str] = None,
                 tags: Optional[List[str]] = None,
                 batch: Optional[bool] = False
                 ):

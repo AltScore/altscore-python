@@ -19,6 +19,21 @@ EXECUTION_BATCH_STATUS_PAUSED = "paused"
 EXECUTION_BATCH_STATUS_CANCELLED = "cancelled"
 EXECUTION_BATCH_STATUS_FAILED = "failed"
 
+class CreateExecutionBatchDTO(BaseModel):
+    execution_batch_id: str = Field(alias="executionBatchId")
+    status: str = Field(alias="status")
+    workflow_id: str = Field(alias="workflowId")
+    callback_at: dt.datetime = Field(alias="callbackAt")
+    state: Optional[Dict] = Field(alias="state", default={})
+    tags: Optional[List[str]] = Field(alias="tags", default=[])
+    label: Optional[str] = Field(alias="label", default=None)
+    description: Optional[str] = Field(alias="description", default=None)
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
 
 class UpdateExecutionBatchDTO(BaseModel):
     status: Optional[str] = Field(alias="status", default=None)
@@ -35,7 +50,6 @@ class UpdateExecutionBatchDTO(BaseModel):
 
 class ExecutionBatchAPIDTO(BaseModel):
     id: str = Field(alias="id")
-    batch_id: str = Field(alias="batchId")
     status: str = Field(alias="status")
     callback_at: str = Field(alias="callbackAt")
     state: Dict = Field(alias="state")
@@ -60,7 +74,6 @@ class ExecutionBatchAPIDTO(BaseModel):
         allow_population_by_alias = True
 
 class ExecutionBatch(BaseModel):
-    batch_id: str
     execution_batch_id: str
     status: str
     callback_at: dt.datetime
@@ -144,7 +157,7 @@ class ExecutionBatchAsync(GenericAsyncResource):
 class ExecutionBatchAsyncModule(GenericAsyncModule):
     def __init__(self, altscore_client):
         super().__init__(altscore_client, async_resource=ExecutionBatchAsync, retrieve_data_model=ExecutionBatchAPIDTO,
-                         create_data_model=None, update_data_model=UpdateExecutionBatchDTO, resource="execution-batches")
+                         create_data_model=CreateExecutionBatchDTO, update_data_model=UpdateExecutionBatchDTO, resource="execution-batches")
 
 
 class ExecutionBatchSync(GenericSyncResource):
@@ -185,4 +198,4 @@ class ExecutionBatchSync(GenericSyncResource):
 class ExecutionBatchSyncModule(GenericSyncModule):
     def __init__(self, altscore_client):
         super().__init__(altscore_client, sync_resource=ExecutionBatchSync, retrieve_data_model=ExecutionBatchAPIDTO,
-                         create_data_model=None, update_data_model=UpdateExecutionBatchDTO, resource="execution-batches")
+                         create_data_model=CreateExecutionBatchDTO, update_data_model=UpdateExecutionBatchDTO, resource="execution-batches")
