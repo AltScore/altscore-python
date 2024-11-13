@@ -154,10 +154,8 @@ class ExecutionState(BaseModel):
 
     @validator("status")
     def status_must_be_valid(cls, v):
-        valid_status = [
-            EXECUTION_STATUS_PENDING, EXECUTION_STATUS_SCHEDULED,
-            EXECUTION_STATUS_ON_CALLBACK, EXECUTION_STATUS_COMPLETE
-        ]
+        valid_status = [EXECUTION_STATUS_PENDING, EXECUTION_STATUS_SCHEDULED,
+                        EXECUTION_STATUS_ON_CALLBACK, EXECUTION_STATUS_COMPLETE]
         if v not in valid_status:
             raise ValueError(f"Invalid status, must be one of {valid_status}")
         return v

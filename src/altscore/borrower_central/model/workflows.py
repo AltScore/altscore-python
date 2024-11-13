@@ -174,11 +174,9 @@ class WorkflowsSyncModule(GenericSyncModule):
             headers["x-tags"] = tags
 
         if workflow_id is not None:
-            url = f"/v1/workflows/{workflow_id}/execute" if not batch else f"/v1/workflows/{workflow_id}/batch/execute"
-
             with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
                 response = client.post(
-                    url,
+                    f"/v1/workflows/{workflow_id}/execute",
                     json=workflow_input,
                     headers=headers,
                     timeout=900
@@ -187,11 +185,9 @@ class WorkflowsSyncModule(GenericSyncModule):
                 return WorkflowExecutionResponseAPIDTO.parse_obj(response.json())
 
         elif workflow_alias is not None and workflow_version is not None:
-            url = f"/v1/workflows/{workflow_alias}/{workflow_version}/execute" if not batch else f"/v1/workflows/{workflow_alias}/{workflow_version}/batch/execute"
-
             with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
                 response = client.post(
-                    url,
+                    f"/v1/workflows/{workflow_alias}/{workflow_version}/execute",
                     json=workflow_input,
                     headers=headers,
                     timeout=900
