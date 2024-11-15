@@ -9,5 +9,6 @@ textual
 textual-dev
 pyjwt
 loguru
-pydantic
-fuzzywuzzy
+pydantic<=1.10.13
+fuzzywuzzy~=0.18.0
+python-levenshtein<=0.26.1
