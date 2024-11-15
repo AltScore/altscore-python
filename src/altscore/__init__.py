@@ -101,7 +101,6 @@ class AltScoreBase:
             return "https://bc.altscore.ai"
         elif self.environment == "staging":
             return "https://borrower-central-staging-zosvdgvuuq-uc.a.run.app"
-            # return "http://0.0.0.0:8888" # TODO undo this
         elif self.environment == "sandbox":
             return "https://bc.sandbox.altscore.ai"
         elif self.environment == "local":

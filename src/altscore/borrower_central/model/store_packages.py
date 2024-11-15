@@ -107,7 +107,6 @@ class PackagesSyncModule(GenericSyncModule):
                     return package
         return None
 
-
     def retrieve_workflow_package(
             self, workflow_id: str, alias: str, data_age: Optional[dt.timedelta] = None
     ) -> Optional[PackageSync]:
