@@ -6,10 +6,13 @@ from altscore.borrower_central import BorrowerCentralAsync, BorrowerCentralSync
 from altscore.altdata import AltDataSync, AltDataAsync
 from altscore.cms import CMSSync, CMSAsync
 from altscore.macros import MacrosSync, MacrosAsync
+from altscore.webhooks import WebhookSync, WebhookAsync
 from typing import Optional, Union
 import warnings
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from loguru import logger
+
+
 
 warnings.filterwarnings("ignore")
 
@@ -121,6 +124,19 @@ class AltScoreBase:
         else:
             raise ValueError(f"Unknown environment: {self.environment}")
 
+    @property
+    def _webhooks_base_url(self):
+        if self.environment == "production":
+            return "https://api.altscore.ai"
+        elif self.environment == "staging":
+            return "https://api.stg.altscore.ai"
+        elif self.environment == "sandbox":
+            return "https://api.sandbox.altscore.ai"
+        elif self.environment == "local":
+            return config("ALTSCORE_LOCAL_CMS_URL", None)
+        else:
+            raise ValueError(f"Unknown environment: {self.environment}")
+
     def get_tenant_from_token(self) -> str:
         return jwt.decode(
             self.user_token,
@@ -151,6 +167,7 @@ class AltScore(AltScoreBase):
         self.altdata = AltDataSync(self)
         self.cms = CMSSync(self)
         self.macros = MacrosSync(self)
+        self.webhook = WebhookSync(self)
 
     @property
     def partner_id(self) -> Optional[str]:
@@ -186,6 +203,7 @@ class AltScoreAsync(AltScoreBase):
         self.altdata = AltDataAsync(self)
         self.cms = CMSAsync(self)
         self.macros = MacrosAsync(self)
+        self.webhook = WebhookAsync(self)
 
     @property
     def partner_id(self) -> Optional[str]:
