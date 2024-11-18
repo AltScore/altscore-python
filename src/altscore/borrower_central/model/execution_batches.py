@@ -20,7 +20,6 @@ EXECUTION_BATCH_STATUS_CANCELLED = "cancelled"
 EXECUTION_BATCH_STATUS_FAILED = "failed"
 
 class CreateExecutionBatchDTO(BaseModel):
-    execution_batch_id: str = Field(alias="executionBatchId")
     status: str = Field(alias="status")
     workflow_id: str = Field(alias="workflowId")
     callback_at: dt.datetime = Field(alias="callbackAt")
@@ -28,6 +27,8 @@ class CreateExecutionBatchDTO(BaseModel):
     tags: Optional[List[str]] = Field(alias="tags", default=[])
     label: Optional[str] = Field(alias="label", default=None)
     description: Optional[str] = Field(alias="description", default=None)
+    inputs: Optional[Dict] = Field(alias="inputs", default=None)
+    debug: Optional[bool] = Field(alias="debug", default=False)
 
     class Config:
         populate_by_name = True
@@ -67,6 +68,7 @@ class ExecutionBatchAPIDTO(BaseModel):
     is_success: Optional[bool] = Field(alias="isSuccess", default=None)
     inputs: Optional[Dict] = Field(alias="inputs", default=None)
     outputs: Optional[Dict] = Field(alias="outputs", default=None)
+    debug: Optional[bool] = Field(alias="debug", default=False)
 
     class Config:
         populate_by_name = True
@@ -91,6 +93,7 @@ class ExecutionBatch(BaseModel):
     is_success: Optional[bool]
     inputs: Optional[Dict]
     outputs: Optional[Dict]
+    debug: Optional[bool]
 
     class Config:
         populate_by_name = True
