@@ -21,7 +21,9 @@ EXECUTION_BATCH_STATUS_FAILED = "failed"
 
 class CreateExecutionBatchDTO(BaseModel):
     status: str = Field(alias="status")
-    workflow_id: str = Field(alias="workflowId")
+    workflow_id: Optional[str] = Field(alias="workflowId", default=None)
+    workflow_alias: Optional[str] = Field(alias="workflowAlias", default=None)
+    workflow_version: Optional[str] = Field(alias="workflowVersion", default=None)
     callback_at: dt.datetime = Field(alias="callbackAt")
     state: Optional[Dict] = Field(alias="state", default={})
     tags: Optional[List[str]] = Field(alias="tags", default=[])
