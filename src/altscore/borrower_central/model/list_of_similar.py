@@ -1,5 +1,3 @@
-from enum import Enum
-
 import httpx
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from pydantic import BaseModel, Field
@@ -7,7 +5,7 @@ from typing import Optional, List, Dict
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 
-class ListStatus(str, Enum):
+class ListStatus:
     PENDING = "pending"
     APPLIED = "applied"
     NO_HIT = "no_hit"
@@ -39,7 +37,7 @@ class ListOfSimilarAPIDTO(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
     execution_id: Optional[str] = Field(alias="executionId")
     list_of_similar: List[Similar] = Field(alias="listOfSimilar")
-    status: Optional[ListStatus] = Field(alias="status")
+    status: Optional[str] = Field(alias="status")
     applied_by: Optional[str] = Field(alias="appliedBy")
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
