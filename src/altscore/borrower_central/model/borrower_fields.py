@@ -107,6 +107,33 @@ class BorrowerFieldsSyncModule(GenericSyncModule):
             else:
                 return self.retrieve(fields_found_data[0]["id"])
 
+    def count_distinct_values(self, key: str):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            unique_values_req = client.get(
+                f"/v1/borrower-fields/queries/count-distinct-values",
+                params={
+                    "key": key
+                },
+                headers=self.build_headers(),
+                timeout=120
+            )
+            raise_for_status_improved(unique_values_req)
+            return unique_values_req.json()
+
+    def bulk_update_field_values(self, key: str, current_value: str, target_value: str):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.post(
+                f"/v1/borrower-fields/commands/bulk-update-values",
+                json={
+                    "key": key,
+                    "currentValue": current_value,
+                    "targetValue": target_value
+                },
+                headers=self.build_headers(),
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return
 
 class BorrowerFieldsAsyncModule(GenericAsyncModule):
 
@@ -138,3 +165,33 @@ class BorrowerFieldsAsyncModule(GenericAsyncModule):
                 return None
             else:
                 return self.retrieve(fields_found_data[0]["id"])
+
+
+    async def count_distinct_values(self, key: str):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            unique_values_req = await client.get(
+                f"/v1/borrower-fields/queries/count-distinct-values",
+                params={
+                    "key": key
+                },
+                headers=self.build_headers(),
+                timeout=120
+            )
+            raise_for_status_improved(unique_values_req)
+            return unique_values_req.json()
+
+
+    async def bulk_update_field_values(self, key: str, current_value: str, target_value: str):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.post(
+                f"/v1/borrower-fields/commands/bulk-update-values",
+                json={
+                    "key": key,
+                    "currentValue": current_value,
+                    "targetValue": target_value
+                },
+                headers=self.build_headers(),
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return
