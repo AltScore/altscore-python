@@ -1,12 +1,13 @@
+from fuzzywuzzy import process
+
 from altscore.borrower_central.model.borrower import BorrowerSync, BorrowerAsync
 from altscore.macros.validate_inputs import validate_borrower_data
-from typing import Optional
+from typing import Optional, Tuple, List
 import asyncio
 from loguru import logger
 
 
 class MacrosSync:
-
     def __init__(self, altscore_client):
         self.altscore_client = altscore_client
 
@@ -177,9 +178,47 @@ class MacrosSync:
         borrower.associate_cms_client_id(client_id)
         return client_id
 
+    def get_unique_borrower_field_values(self, field_key: str):
+        field_values = self.altscore_client.borrower_central.borrower_fields.count_distinct_values(field_key)
+        return [item["value"] for item in field_values]
+
+    def evaluate_value_migration(self, target_values: list, current_values: list, threshold = 85):
+        approved_changes, doubt = [], []
+        for current in current_values:
+            new_val = process.extractOne(current, target_values, score_cutoff=threshold)
+            if new_val is not None and current != new_val[0]: # don't add if is the same value
+                approved_changes.append((current, new_val[0]))
+            elif new_val is None:
+                doubt.append(current)
+
+        return approved_changes, doubt
+
+    def migrate_borrower_field_allowed_values(
+            self,
+            field_key: str,
+            replace_values: List[Tuple[str, str]],
+            allowed_values= None
+    ):
+        data_model = self.altscore_client.borrower_central.data_models.query(
+            entity_type="borrower_field",
+            key=field_key,
+        )
+
+        if data_model is None or data_model == []:
+            raise Exception("No data model found with key {}".format(field_key))
+
+        for value, target in replace_values:
+            self.altscore_client.borrower_central.borrower_fields.bulk_update_field_values(field_key, value, target)
+
+        if allowed_values is not None:
+            self.altscore_client.borrower_central.data_models.patch(
+                data_model[0].data.id,
+                {
+                    "allowedValues": allowed_values
+                }
+            )
 
 class MacrosAsync:
-
     def __init__(self, altscore_client):
         self.altscore_client = altscore_client
 
@@ -341,3 +380,53 @@ class MacrosAsync:
         client_id = await self.altscore_client.cms.clients.create(new_entity_data=client_data)
         await borrower.associate_cms_client_id(client_id)
         return client_id
+
+    async def get_unique_borrower_field_values(self, field_key: str):
+        field_values = await self.altscore_client.borrower_central.borrower_fields.count_distinct_values(field_key)
+        return [item["value"] for item in field_values]
+
+    async def evaluate_value_migration(self, target_values: list, current_values: list, threshold = 85):
+        approved_changes, doubt = [], []
+        for current in current_values:
+            new_val = process.extractOne(current, target_values, score_cutoff=threshold)
+            if new_val is not None and current != new_val[0]: # don't add if is the same value
+                approved_changes.append((current, new_val[0]))
+            elif new_val is None:
+                doubt.append(current)
+
+        return approved_changes, doubt
+
+    async def migrate_borrower_field_allowed_values(
+            self,
+            field_key: str,
+            replace_values: List[Tuple[str, str]],
+            new_allowed_values: List[str]
+    ):
+        replacing_values = [val[1] for val in replace_values]
+        if not set(replacing_values).issubset(set(new_allowed_values)):
+            raise ValueError("Trying to set values not present in the new allowed values")
+
+        data_model = await self.altscore_client.borrower_central.data_models.query(
+            entity_type="borrower_field",
+            key=field_key,
+        )
+
+        if data_model is None or data_model == []:
+            raise Exception("No data model found with key {}".format(field_key))
+
+        async_calls = []
+
+        for value, target in replace_values:
+            call = asyncio.create_task(self.altscore_client.borrower_central.borrower_fields.bulk_update_field_values(
+                field_key, value, target
+            ))
+            async_calls.append(call)
+
+        await asyncio.gather(*async_calls)
+
+        await self.altscore_client.borrower_central.data_models.patch(
+            data_model[0].data.id,
+            {
+                "allowedValues": new_allowed_values
+            }
+        )
