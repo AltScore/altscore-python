@@ -120,6 +120,22 @@ class PackagesSyncModule(GenericSyncModule):
                     return package
         return None
 
+    def append_package_attachment(self, package_id: str, file_name: str, file_content: bytes, content_type: str,):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            client.post(
+                f"/v1/stores/packages/{package_id}/attachments/upload",
+                files={'file': (file_name, file_content, content_type)},
+                headers=self.build_headers()
+            )
+
+    def get_package_attachments(self, package_id: str):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                f"/v1/stores/packages/{package_id}/attachments",
+                headers=self.build_headers()
+            )
+        return response.json()
+
     def force_stale(self, package_id: Optional[str] = None, borrower_id: Optional[str] = None,
                     workflow_id: Optional[str] = None, alias: Optional[str] = None):
         if package_id is None and borrower_id is None and workflow_id is None and alias is None:
