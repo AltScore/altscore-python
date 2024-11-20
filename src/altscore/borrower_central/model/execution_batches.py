@@ -19,12 +19,14 @@ EXECUTION_BATCH_STATUS_PAUSED = "paused"
 EXECUTION_BATCH_STATUS_CANCELLED = "cancelled"
 EXECUTION_BATCH_STATUS_FAILED = "failed"
 
+
 class CreateExecutionBatchDTO(BaseModel):
     status: str = Field(alias="status")
     workflow_id: Optional[str] = Field(alias="workflowId", default=None)
     workflow_alias: Optional[str] = Field(alias="workflowAlias", default=None)
     workflow_version: Optional[str] = Field(alias="workflowVersion", default=None)
     callback_at: dt.datetime = Field(alias="callbackAt")
+    principal_id: Optional[str] = Field(alias="principalId", default=None)
     state: Optional[Dict] = Field(alias="state", default={})
     tags: Optional[List[str]] = Field(alias="tags", default=[])
     label: Optional[str] = Field(alias="label", default=None)
@@ -77,6 +79,7 @@ class ExecutionBatchAPIDTO(BaseModel):
         allow_population_by_field_name = True
         allow_population_by_alias = True
 
+
 class ExecutionBatch(BaseModel):
     execution_batch_id: str
     status: str
@@ -101,26 +104,6 @@ class ExecutionBatch(BaseModel):
         populate_by_name = True
         allow_population_by_field_name = True
         allow_population_by_alias = True
-
-    @validator("status")
-    def status_must_be_valid(cls, v):
-        valid_status = [
-            EXECUTION_BATCH_STATUS_PENDING,
-            EXECUTION_BATCH_STATUS_PRE_PROCESSING,
-            EXECUTION_BATCH_STATUS_PRE_PROCESSING_COMPLETE,
-            EXECUTION_BATCH_STATUS_PROCESSING,
-            EXECUTION_BATCH_STATUS_PROCESSING_COMPLETE,
-            EXECUTION_BATCH_STATUS_POST_PROCESSING,
-            EXECUTION_BATCH_STATUS_COMPLETE,
-            EXECUTION_BATCH_STATUS_PAUSED,
-            EXECUTION_BATCH_STATUS_CANCELLED,
-            EXECUTION_BATCH_STATUS_FAILED
-        ]
-
-        if v not in valid_status:
-            raise ValueError(f"Invalid status, must be one of {valid_status}")
-
-        return v
 
 
 class ExecutionBatchAsync(GenericAsyncResource):
