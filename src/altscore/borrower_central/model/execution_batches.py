@@ -27,6 +27,7 @@ class CreateExecutionBatchDTO(BaseModel):
     workflow_version: Optional[str] = Field(alias="workflowVersion", default=None)
     callback_at: dt.datetime = Field(alias="callbackAt")
     principal_id: Optional[str] = Field(alias="principalId", default=None)
+    is_billable: Optional[bool] = Field(alias="isBillable", default=None)
     state: Optional[Dict] = Field(alias="state", default={})
     tags: Optional[List[str]] = Field(alias="tags", default=[])
     label: Optional[str] = Field(alias="label", default=None)
@@ -63,6 +64,7 @@ class ExecutionBatchAPIDTO(BaseModel):
     workflow_id: Optional[str] = Field(alias="workflowId", default=None)
     workflow_alias: Optional[str] = Field(alias="workflowAlias", default=None)
     workflow_version: Optional[str] = Field(alias="workflowVersion", default=None)
+    is_billable: Optional[bool] = Field(alias="isBillable", default=None)
     tenant: str = Field(alias="tenant")
     tags: List[str] = Field(alias="tags")
     principal_id: Optional[str] = Field(alias="principalId", default=None)
@@ -90,6 +92,7 @@ class ExecutionBatch(BaseModel):
     workflow_id: Optional[str]
     workflow_alias: Optional[str]
     workflow_version: Optional[str]
+    is_billable: Optional[bool]
     tags: List[str]
     principal_id: Optional[str]
     created_at: dt.datetime
