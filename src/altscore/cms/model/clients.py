@@ -8,7 +8,7 @@ from altscore.common.http_errors import raise_for_status_improved, retry_on_401,
 from altscore.cms.model.credit_accounts import CreditAccountSync, CreditAccountAsync, CreditAccountAPIDTO
 from altscore.cms.model.payment_accounts import PaymentAccountAPIDTO, CreatePaymentAccountDTO, \
     CreatePaymentReferenceDTO, Reference
-from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule
+from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule, convert_to_dash_case
 import datetime as dt
 
 
@@ -48,6 +48,10 @@ class CreateClientDTO(BaseModel):
         allow_population_by_field_name = True
         populate_by_alias = True
 
+class UpdateClientDTO(BaseModel):
+    tax_id: Optional[str] = Field(alias="taxId", default=None)
+    legal_name: Optional[str] = Field(alias="legalName", default=None)
+    email_address: Optional[str] = Field(alias="emailAddress", default=None)
 
 class ClientBase:
 
@@ -83,8 +87,12 @@ class ClientBase:
         return f"/v1/disbursements/accounts/{country}/client"
 
     @staticmethod
-    def _get_disbursement_account(country: str, client_id: str):
+    def _get_disbursement_accounts(country: str, client_id: str):
         return f"/v1/disbursements/accounts/{country}/client/{client_id}"
+
+    @staticmethod
+    def _get_disbursement_account(country: str, client_id: str, account_id: str):
+        return f"/v1/disbursements/accounts/{country}/client/{client_id}/{account_id}"
 
 
 class ClientAsync(ClientBase):
@@ -202,17 +210,37 @@ class ClientAsync(ClientBase):
             return DisbursementClientAccountAPIDTO.parse_obj(response.json())
 
     @retry_on_401_async
-    async def get_disbursement_account(self, country: str) -> Optional[DisbursementClientAccountAPIDTO]:
+    async def get_disbursement_account(self, country: str, account_id: str) -> Optional[DisbursementClientAccountAPIDTO]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
-                self._get_disbursement_account(country, self.data.id),
-                headers=self._header_builder(partner_id=self.data.partner_id),
+                self._get_disbursement_account(country, self.data.id, account_id),
+                headers=self._header_builder(x_partner_id=self.data.partner_id),
                 timeout=30
             )
             if response.status_code == 404:
                 return None
             raise_for_status_improved(response)
             return DisbursementClientAccountAPIDTO.parse_obj(response.json())
+
+    @retry_on_401_async
+    async def get_disbursement_accounts(self, country: str, **kwargs) -> List[DisbursementClientAccountAPIDTO]:
+        query_params = {}
+        for k, v in kwargs.items():
+            if v is not None:
+                query_params[convert_to_dash_case(k)] = v
+        query_params["limit"] = 10
+        query_params["offset"] = 0
+        headers = self._header_builder()
+        headers["x-partner-id"] = self.data.partner_id
+
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
+                self._get_disbursement_accounts(country, self.data.id),
+                headers=headers,
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [DisbursementClientAccountAPIDTO.parse_obj(e) for e in response.json()]
 
     def __str__(self):
         return str(self.data)
@@ -335,11 +363,34 @@ class ClientSync(ClientBase):
             return DisbursementClientAccountAPIDTO.parse_obj(response.json())
 
     @retry_on_401
-    def get_disbursement_account(self, country: str) -> Optional[DisbursementClientAccountAPIDTO]:
+    def get_disbursement_accounts(self, country: str, **kwargs) -> List[DisbursementClientAccountAPIDTO]:
+        query_params = {}
+        for k, v in kwargs.items():
+            if v is not None:
+                query_params[convert_to_dash_case(k)] = v
+        query_params["limit"] = 10
+        query_params["offset"] = 0
+        headers = self._header_builder()
+        headers["x-partner-id"] = self.data.partner_id
+
         with httpx.Client(base_url=self.base_url) as client:
             response = client.get(
-                self._get_disbursement_account(country, self.data.id),
-                headers=self._header_builder(partner_id=self.data.partner_id),
+                self._get_disbursement_accounts(country, self.data.id),
+                headers=headers,
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [DisbursementClientAccountAPIDTO.parse_obj(e) for e in response.json()]
+
+    @retry_on_401
+    def get_disbursement_account(self, country: str, account_id: str) -> Optional[DisbursementClientAccountAPIDTO]:
+        headers = self._header_builder()
+        headers["x-partner-id"] = self.data.partner_id
+
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.get(
+                self._get_disbursement_account(country, self.data.id, account_id),
+                headers=headers,
                 timeout=30
             )
             if response.status_code == 404:
@@ -420,7 +471,7 @@ class ClientsSyncModule(GenericSyncModule):
             sync_resource=ClientSync,
             retrieve_data_model=ClientAPIDTO,
             create_data_model=CreateClientDTO,
-            update_data_model=None,
+            update_data_model=UpdateClientDTO,
             resource="clients",
             resource_version="v2"
         )

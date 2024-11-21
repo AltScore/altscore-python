@@ -8,9 +8,9 @@ class BankAccount(BaseModel):
     bank_name: str = Field(alias="bankName")
     bank_code: str = Field(alias="bankCode")
     account_type: int = Field(alias="accountType")
-    status: Optional[str] = Field(alias="status", default=None)
 
-class DisbursementClientAccountAPIDTO(BaseModel):
+class DisbursementAccountBaseModel(BaseModel):
+    id: str = Field(alias="accountId")
     name: str = Field(alias="name")
     phone: Optional[str] = Field(alias="phone", default=None)
     email: Optional[str] = Field(alias="email", default=None)
@@ -19,26 +19,18 @@ class DisbursementClientAccountAPIDTO(BaseModel):
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt", default=None)
     type: str = Field(alias="type")
-    client_id: str = Field(alias="clientId")
     bank_account: BankAccount = Field(alias="bankAccount")
+    status: str = Field(alias="status")
 
+class DisbursementClientAccountAPIDTO(DisbursementAccountBaseModel):
+    client_id: str = Field(alias="clientId")
     class Config:
         populate_by_name = True
         allow_population_by_field_name = True
         populate_by_alias = True
 
-class DisbursementPartnerAccountAPIDTO(BaseModel):
-    account_id: str = Field(alias="accountId")
-    name: str = Field(alias="name")
-    phone: Optional[str] = Field(alias="phone", default=None)
-    email: Optional[str] = Field(alias="email", default=None)
-    tax_id: str = Field(alias="taxId")
-    partner_id: str = Field(alias="partnerId")
-    created_at: str = Field(alias="createdAt")
-    updated_at: str = Field(alias="updatedAt")
-    type: str = Field(alias="type")
-    bank_account: BankAccount = Field(alias="bankAccount")
-
+class DisbursementPartnerAccountAPIDTO(DisbursementAccountBaseModel):
+    payment_concept_template: Optional[str] = Field(alias="paymentConceptTemplate", default=None)
     class Config:
         populate_by_name = True
         allow_population_by_field_name = True
