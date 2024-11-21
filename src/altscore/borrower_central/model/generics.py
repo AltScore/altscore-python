@@ -140,13 +140,13 @@ class GenericAsyncResource(GenericBase):
             raise_for_status_improved(response)
 
     @retry_on_401
-    async def upload_attachment(self, attachment: Dict):
+    async def upload_attachment(self, file_name: str, file_content: bytes, content_type: str):
         with httpx.AsyncClient() as client:
             response = await client.post(
                 os.path.join(self._get_attachments(self.data.id), "upload"),
+                files={'file': (file_name, file_content, content_type)},
                 headers=self._header_builder(),
                 timeout=300,
-                json=AttachmentInput.parse_obj(attachment).dict(by_alias=True, exclude_none=True)
             )
             raise_for_status_improved(response)
 
