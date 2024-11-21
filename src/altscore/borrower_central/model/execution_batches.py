@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from typing import Optional, Dict, List
 
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \

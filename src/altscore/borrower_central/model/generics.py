@@ -1,3 +1,5 @@
+import os.path
+
 import httpx
 import json
 from altscore.borrower_central.helpers import build_headers
@@ -69,6 +71,17 @@ class GenericSyncResource(GenericBase):
             raise_for_status_improved(response)
 
     @retry_on_401
+    def upload_attachment(self, file_name: str, file_content: bytes, content_type: str):
+        with httpx.Client() as client:
+            response = client.post(
+                os.path.join(self._get_attachments(self.data.id), "upload"),
+                files={'file': (file_name, file_content, content_type)},
+                headers=self._header_builder(),
+                timeout=300,
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401
     def get_content(self):
         if self.resource in ["stores/packages"]:
             with httpx.Client() as client:
@@ -120,6 +133,17 @@ class GenericAsyncResource(GenericBase):
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 self._get_attachments(self.data.id),
+                headers=self._header_builder(),
+                timeout=300,
+                json=AttachmentInput.parse_obj(attachment).dict(by_alias=True, exclude_none=True)
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401
+    async def upload_attachment(self, attachment: Dict):
+        with httpx.AsyncClient() as client:
+            response = await client.post(
+                os.path.join(self._get_attachments(self.data.id), "upload"),
                 headers=self._header_builder(),
                 timeout=300,
                 json=AttachmentInput.parse_obj(attachment).dict(by_alias=True, exclude_none=True)
