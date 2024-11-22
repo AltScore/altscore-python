@@ -21,11 +21,11 @@ EXECUTION_BATCH_STATUS_FAILED = "failed"
 
 
 class CreateExecutionBatchDTO(BaseModel):
-    status: str = Field(alias="status")
+    status: Optional[str] = Field(alias="status", default=None)
     workflow_id: Optional[str] = Field(alias="workflowId", default=None)
     workflow_alias: Optional[str] = Field(alias="workflowAlias", default=None)
     workflow_version: Optional[str] = Field(alias="workflowVersion", default=None)
-    callback_at: dt.datetime = Field(alias="callbackAt")
+    callback_at: Optional[str] = Field(alias="callbackAt", default=None)
     principal_id: Optional[str] = Field(alias="principalId", default=None)
     is_billable: Optional[bool] = Field(alias="isBillable", default=None)
     state: Optional[Dict] = Field(alias="state", default={})
@@ -43,7 +43,7 @@ class CreateExecutionBatchDTO(BaseModel):
 
 class UpdateExecutionBatchDTO(BaseModel):
     status: Optional[str] = Field(alias="status", default=None)
-    callback_at: Optional[dt.datetime] = Field(alias="callbackAt", default=None)
+    callback_at: Optional[str] = Field(alias="callbackAt", default=None)
     state: Optional[Dict] = Field(alias="state", default=None)
     inputs: Optional[Dict] = Field(alias="inputs", default=None)
     outputs: Optional[Dict] = Field(alias="outputs", default=None)
@@ -56,8 +56,8 @@ class UpdateExecutionBatchDTO(BaseModel):
 
 class ExecutionBatchAPIDTO(BaseModel):
     id: str = Field(alias="id")
-    status: str = Field(alias="status")
-    callback_at: str = Field(alias="callbackAt")
+    status: Optional[str] = Field(alias="status", default=None)
+    callback_at: Optional[str] = Field(alias="callbackAt", default=None)
     state: Dict = Field(alias="state")
     label: Optional[str] = Field(alias="label", default=None)
     description: Optional[str] = Field(alias="description", default=None)
@@ -122,7 +122,7 @@ class ExecutionBatchAsync(GenericAsyncResource):
         inputs: Optional[Dict] = None,
         outputs: Optional[Dict] = None,
         status: Optional[str] = None,
-        callback_at: Optional[dt.datetime] = None,
+        callback_at: Optional[str] = None,
         state: Optional[Dict] = None
     ):
         payload = {
@@ -163,7 +163,7 @@ class ExecutionBatchSync(GenericSyncResource):
         inputs: Optional[Dict] = None,
         outputs: Optional[Dict] = None,
         status: Optional[str] = None,
-        callback_at: Optional[dt.datetime] = None,
+        callback_at: Optional[str] = None,
         state: Optional[Dict] = None
     ):
         payload = {
