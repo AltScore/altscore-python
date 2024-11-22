@@ -30,6 +30,7 @@ class WorkflowDataAPIDTO(BaseModel):
     ui_schema: Optional[str] = Field(alias="uiSchema", default=None)
     initial_data: Optional[str] = Field(alias="initialData", default=None)
     flow_definition: Optional[dict] = Field(alias="flowDefinition")
+    batch_flow_definition: Optional[dict] = Field(alias="batchFlowDefinition")
     schedule: Optional[WorkflowSchedule] = Field(alias="schedule", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
@@ -54,6 +55,7 @@ class CreateWorkflowDTO(BaseModel):
     description: Optional[str] = Field(alias="description")
     context: Optional[str] = Field(alias="context", default=None)
     flow_definition: Optional[dict] = Field(alias="flowDefinition", default=None)
+    batch_flow_definition: Optional[dict] = Field(alias="batchFlowDefinition", default=None)
     input_schema: Optional[str] = Field(alias="inputSchema", default=None)
     json_schema: Optional[str] = Field(alias="jsonSchema", default=None)
     ui_schema: Optional[str] = Field(alias="uiSchema", default=None)
@@ -73,6 +75,7 @@ class UpdateWorkflowDTO(BaseModel):
     type: Optional[str] = Field(alias="type", default=None)
     route: Optional[Lambda] = Field(alias="route", default=None)
     flow_definition: Optional[dict] = Field(alias="flowDefinition", default=None)
+    batch_flow_definition: Optional[dict] = Field(alias="batchFlowDefinition", default=None)
     json_schema: Optional[str] = Field(alias="jsonSchema", default=None)
     ui_schema: Optional[str] = Field(alias="uiSchema", default=None)
     initial_data: Optional[str] = Field(alias="initialData", default=None)
@@ -157,7 +160,8 @@ class WorkflowsSyncModule(GenericSyncModule):
                 workflow_version: Optional[str] = None,
                 execution_mode: Optional[str] = None,
                 batch_id: Optional[str] = None,
-                tags: Optional[List[str]] = None
+                tags: Optional[List[str]] = None,
+                batch: Optional[bool] = False
                 ):
         headers = self.build_headers()
         if execution_mode is not None:

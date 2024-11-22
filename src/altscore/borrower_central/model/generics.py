@@ -1,3 +1,5 @@
+import os.path
+
 import httpx
 import json
 from altscore.borrower_central.helpers import build_headers
@@ -5,6 +7,9 @@ from altscore.borrower_central.model.attachments import AttachmentAPIDTO, Attach
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from typing import Dict
 from altscore.borrower_central.utils import convert_to_dash_case
+import mimetypes
+import aiofiles
+import urllib.parse
 
 
 class GenericBase:
@@ -69,6 +74,27 @@ class GenericSyncResource(GenericBase):
             raise_for_status_improved(response)
 
     @retry_on_401
+    def upload_attachment(self, file_path: str, label: str = None, metadata: Dict = None):
+        file_name = os.path.basename(file_path)
+        content_type = mimetypes.guess_type(file_path)[0] or 'application/octet-stream'
+        upload_url = urllib.parse.urljoin(self._get_attachments(self.data.id), "attachments/upload")
+        data = {}
+        if label:
+            data["label"] = label
+        if metadata:
+            data["metadata"] = metadata
+        with open(file_path, 'rb') as file:
+            with httpx.Client() as client:
+                response = client.post(
+                    url=upload_url,
+                    data=data if isinstance(data,dict) else None,
+                    files={'file': (file_name, file, content_type)},
+                    headers=self._header_builder(),
+                    timeout=300,
+                )
+                raise_for_status_improved(response)
+
+    @retry_on_401
     def get_content(self):
         if self.resource in ["stores/packages"]:
             with httpx.Client() as client:
@@ -125,6 +151,29 @@ class GenericAsyncResource(GenericBase):
                 json=AttachmentInput.parse_obj(attachment).dict(by_alias=True, exclude_none=True)
             )
             raise_for_status_improved(response)
+
+    @retry_on_401
+    async def upload_attachment(self, file_path: str, label: str = None, metadata: Dict = None):
+        file_name = os.path.basename(file_path)
+        content_type = mimetypes.guess_type(file_path)[0] or 'application/octet-stream'
+        upload_url = urllib.parse.urljoin(self._get_attachments(self.data.id), "attachments/upload")
+        data = {}
+        if label:
+            data["label"] = label
+        if metadata:
+            data["metadata"] = metadata
+
+        async with aiofiles.open(file_path, 'rb') as file:
+            file_content = await file.read()
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    url=upload_url,
+                    data=data,
+                    files={'file': (file_name, file_content, content_type)},
+                    headers=self._header_builder(),
+                    timeout=300,
+                )
+                raise_for_status_improved(response)
 
     @retry_on_401_async
     async def get_content(self):

@@ -25,6 +25,14 @@ class CreateExecutionDTO(BaseModel):
         allow_population_by_field_name = True
         allow_population_by_alias = True
 
+class ExecutionBatchMeta(BaseModel):
+    id: str = Field(alias="id")
+    item_index: int = Field(alias="itemIndex")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
 
 class ExecutionAPIDTO(BaseModel):
     id: Optional[str] = Field(alias="id")
@@ -34,6 +42,7 @@ class ExecutionAPIDTO(BaseModel):
     workflow_version: str = Field(alias="workflowVersion")
     workflow_type: Optional[str] = Field(alias="workflowType")
     batch_id: Optional[str] = Field(alias="batchId")
+    execution_batch: Optional[ExecutionBatchMeta] = Field(alias="executionBatch", default=None)
     billable_id: Optional[str] = Field(alias="billableId")
     borrower_id: Optional[str] = Field(alias="borrowerId")
     status: Optional[str] = Field(alias="status", default=None)

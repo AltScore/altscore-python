@@ -31,7 +31,8 @@ setup(
         "python-dateutil==2.8.2",
         "pyjwt",
         "fuzzywuzzy~=0.18.0",
-        "python-Levenshtein<=0.26.1"
+        "python-Levenshtein<=0.26.1",
+        "aiofiles==24.1.0"
     ],
     extras_require={
         "dev": ["pytest>=7.0", "twine>=4.0.2", "pandas", "tabulate"],
