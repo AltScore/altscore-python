@@ -5,9 +5,9 @@ from pydantic import BaseModel, Field
 
 class BankAccount(BaseModel):
     account_number: str = Field(alias="accountNumber")
-    bank_name: str = Field(alias="bankName")
-    bank_code: str = Field(alias="bankCode")
     account_type: int = Field(alias="accountType")
+    bank_name: Optional[str] = Field(alias="bankName", default=None)
+    bank_code: Optional[str] = Field(alias="bankCode", default=None)
 
 class DisbursementAccountBaseModel(BaseModel):
     id: str = Field(alias="accountId")
