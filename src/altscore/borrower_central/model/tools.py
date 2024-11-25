@@ -62,7 +62,7 @@ class MailSenderSyncModule:
     def send_mail(self, mail_request: dict):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
-                "/v1/tools/send-mail",
+                "/v1/tools/send-email",
                 headers=self.build_headers(),
                 json=mail_request,
                 timeout=120
