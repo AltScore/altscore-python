@@ -1,5 +1,5 @@
-from pydantic import Field
 from typing import List, Optional
+from mimetypes import guess_type
 
 from pydantic import BaseModel, EmailStr
 
@@ -7,7 +7,7 @@ class Email(BaseModel):
     email: EmailStr
 
 class Attachment(BaseModel):
-    type_: str = Field(alias='type')
+    type: str
     filename: str
     content: str
 
@@ -24,9 +24,13 @@ class MailBody(BaseModel):
     content: str
     attachments: List[Attachment] = []
 
-    def add_attachment(self, type_: str, filename: str, content: str):
+    def add_attachment(self, filename: str, content: str, file_type = None):
+        attachment_type = file_type if file_type is not None else guess_type(filename)[0]
+        if attachment_type is None:
+            raise Exception("No attachment type specified nor could be guessed")
+
         self.attachments.append(
-            Attachment(type_=type_, filename=filename, content=content)
+            Attachment(type=attachment_type, filename=filename, content=content)
         )
 
     def to_dict(self):
