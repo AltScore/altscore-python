@@ -84,7 +84,7 @@ class CommunicationsAsyncModule:
     async def send_mail(self, mail_request: MailBody):
         with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
-                "/v1/tools/send-mail",
+                "/v1/tools/send-email",
                 headers=self.build_headers(),
                 json=mail_request.to_dict(),
                 timeout=120
