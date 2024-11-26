@@ -1,5 +1,6 @@
 import httpx
 
+from altscore.borrower_central.schemas.communications import MailBody
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.borrower_central.helpers import build_headers
 
@@ -59,12 +60,12 @@ class CommunicationsSyncModule:
         return build_headers(self)
 
     @retry_on_401
-    def send_mail(self, mail_request: dict):
+    def send_mail(self, mail_request: MailBody):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
                 "/v1/tools/send-email",
                 headers=self.build_headers(),
-                json=mail_request,
+                json=mail_request.to_dict(),
                 timeout=120
             )
             raise_for_status_improved(response)
@@ -80,12 +81,12 @@ class CommunicationsAsyncModule:
         return build_headers(self)
 
     @retry_on_401
-    async def send_mail(self, mail_request: dict):
+    async def send_mail(self, mail_request: MailBody):
         with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
                 "/v1/tools/send-mail",
                 headers=self.build_headers(),
-                json=mail_request,
+                json=mail_request.to_dict(),
                 timeout=120
             )
             raise_for_status_improved(response)
