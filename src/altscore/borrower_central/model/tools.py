@@ -48,7 +48,7 @@ class ReportGeneratorAsyncModule:
             raise_for_status_improved(response)
             return response.json()["url"]
 
-class MailSenderSyncModule:
+class CommunicationsSyncModule:
     def __init__(self, altscore_client):
         self.altscore_client = altscore_client
 
@@ -69,7 +69,7 @@ class MailSenderSyncModule:
             )
             raise_for_status_improved(response)
 
-class MailSenderAsyncModule:
+class CommunicationsAsyncModule:
     def __init__(self, altscore_client):
         self.altscore_client = altscore_client
 

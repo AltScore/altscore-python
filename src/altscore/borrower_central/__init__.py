@@ -2,7 +2,7 @@ from altscore.borrower_central.model.borrower import BorrowersAsyncModule, Borro
 from altscore.borrower_central.model.data_models import DataModelAsyncModule, DataModelSyncModule
 from altscore.borrower_central.model.executions import ExecutionAsyncModule, ExecutionSyncModule
 from altscore.borrower_central.model.tools import ReportGeneratorAsyncModule, ReportGeneratorSyncModule, \
-    MailSenderAsyncModule, MailSenderSyncModule
+    CommunicationsAsyncModule, CommunicationsSyncModule
 from altscore.borrower_central.model.form_templates import FormTemplatesAsyncModule, FormTemplatesSyncModule
 from altscore.borrower_central.model.otp_templates import OTPTemplatesAsyncModule, OTPTemplatesSyncModule
 from altscore.borrower_central.model.addresses import AddressesAsyncModule, AddressesSyncModule
@@ -69,7 +69,7 @@ class BorrowerCentralAsync:
         self.list_of_similar = ListOfSimilarAsyncModule(altscore_client)
         self.execution_batches = ExecutionBatchAsyncModule(altscore_client)
         self.cms_settings = CMSSettingsAsyncModule(altscore_client)
-        self.mail_sender = MailSenderAsyncModule(altscore_client)
+        self.communications = CommunicationsAsyncModule(altscore_client)
 
 
 class BorrowerCentralSync:
@@ -107,4 +107,4 @@ class BorrowerCentralSync:
         self.list_of_similar = ListOfSimilarSyncModule(altscore_client)
         self.execution_batches = ExecutionBatchSyncModule(altscore_client)
         self.cms_settings = CMSSettingsSyncModule(altscore_client)
-        self.mail_sender = MailSenderSyncModule(altscore_client)
+        self.communications = CommunicationsSyncModule(altscore_client)
