@@ -82,7 +82,7 @@ class CommunicationsAsyncModule:
 
     @retry_on_401
     async def send_mail(self, mail_request: MailBody):
-        with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
                 "/v1/tools/send-email",
                 headers=self.build_headers(),
