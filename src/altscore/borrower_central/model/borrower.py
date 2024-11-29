@@ -1020,6 +1020,26 @@ class BorrowerAsync(BorrowerBase):
             )
 
     @retry_on_401_async
+    async def get_document_by_key(self, key: str) -> Optional[DocumentAsync]:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            url, query = self._documents(self.data.id, key=key)
+            response = await client.get(
+                url,
+                headers=self._header_builder(),
+                params=query
+            )
+            data = response.json()
+            if len(data) == 0:
+                return None
+            return DocumentAsync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                renew_token=self.renew_token,
+                data=data[0]
+            )
+
+
+    @retry_on_401_async
     async def get_identities(self, **kwargs) -> List[IdentityAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._identities(self.data.id, **kwargs)
@@ -1519,6 +1539,26 @@ class BorrowerSync(BorrowerBase):
                 renew_token=self.renew_token,
                 data=data[0]
             )
+
+    @retry_on_401
+    def get_document_by_key(self, key) -> Optional[DocumentSync]:
+        with httpx.Client(base_url=self.base_url) as client:
+            url, query = self._documents(self.data.id, key=key)
+            response = client.get(
+                url,
+                headers=self._header_builder(),
+                params=query
+            )
+            data = response.json()
+            if len(data) == 0:
+                return None
+            return DocumentSync(
+                base_url=self.base_url,
+                header_builder=self._header_builder,
+                renew_token=self.renew_token,
+                data=data[0]
+            )
+
 
     @retry_on_401
     def get_identities(self, **kwargs) -> List[IdentitySync]:
