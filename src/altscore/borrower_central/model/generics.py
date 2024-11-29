@@ -21,6 +21,9 @@ class GenericBase:
     def _get_attachments(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}/attachments"
 
+    def _delete_attachment(self, resource_id, attachment_id):
+        return f"{self.base_url}/v1/{self.resource}/{resource_id}/attachments/{attachment_id}"
+
     def _get_signatures(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}/signatures"
 
@@ -93,6 +96,16 @@ class GenericSyncResource(GenericBase):
                     timeout=300,
                 )
                 raise_for_status_improved(response)
+
+    @retry_on_401
+    def delete_attachment(self, attachment_id):
+        with httpx.Client() as client:
+            response = client.delete(
+                self._delete_attachment(self.data.id, attachment_id),
+                headers=self._header_builder(),
+                timeout=300
+            )
+            raise_for_status_improved(response)
 
     @retry_on_401
     def get_content(self):
@@ -174,6 +187,16 @@ class GenericAsyncResource(GenericBase):
                     timeout=300,
                 )
                 raise_for_status_improved(response)
+
+    @retry_on_401_async
+    async def delete_attachment(self, attachment_id):
+        async with httpx.AsyncClient() as client:
+            response = await client.delete(
+                self._delete_attachment(self.data.id, attachment_id),
+                headers=self._header_builder(),
+                timeout=300
+            )
+            raise_for_status_improved(response)
 
     @retry_on_401_async
     async def get_content(self):
