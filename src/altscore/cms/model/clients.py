@@ -205,8 +205,6 @@ class ClientAsync(ClientBase):
                 json=CreateDisbursementClientAccountDTO.parse_obj({
                     "id": self.data.id,
                     "partnerId":self.data.partner_id,
-                    "email": self.data.email_address,
-                    "phone": self.data.phone_number,
                     "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True,exclude_none=True),
                     "validationType": validation_type
                 }).dict(by_alias=True, exclude_none=True),
@@ -371,8 +369,6 @@ class ClientSync(ClientBase):
                 json=CreateDisbursementClientAccountDTO.parse_obj({
                     "id": self.data.id,
                     "partnerId": self.data.partner_id,
-                    "email": self.data.email_address,
-                    "phone": self.data.phone_number,
                     "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True, exclude_none=True),
                     "validationType": validation_type
                 }).dict(by_alias=True, exclude_none=True),
