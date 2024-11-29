@@ -98,6 +98,10 @@ class ClientBase:
     def _revalidate_disbursement_account(country: str, client_id: str, account_id: str):
         return f"/v1/disbursements/accounts/{country}/client/{client_id}/{account_id}/revalidate"
 
+    @staticmethod
+    def _patch_disbursement_account(country: str, client_id: str, account_id: str):
+        return f"/v1/disbursements/accounts/{country}/client/{client_id}/{account_id}"
+
 
 class ClientAsync(ClientBase):
     data: ClientAPIDTO
@@ -214,10 +218,10 @@ class ClientAsync(ClientBase):
             return DisbursementClientAccountAPIDTO.parse_obj(response.json())
 
     @retry_on_401_async
-    async def update_disbursement_account(self,bank_account:dict, country: str) -> DisbursementClientAccountAPIDTO:
+    async def update_disbursement_account(self,bank_account:dict, country: str, account_id:str) -> DisbursementClientAccountAPIDTO:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.patch(
-                self._get_disbursement_accounts(country=country, client_id=self.data.id),
+                self._patch_disbursement_account(country=country, client_id=self.data.id, account_id=account_id),
                 headers=self._header_builder(partner_id=self.data.partner_id),
                 json={
                     "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True,exclude_none=True),
@@ -392,10 +396,10 @@ class ClientSync(ClientBase):
             return DisbursementClientAccountAPIDTO.parse_obj(response.json())
 
     @retry_on_401
-    def update_disbursement_account(self, bank_account: dict, country: str) -> DisbursementClientAccountAPIDTO:
+    def update_disbursement_account(self, bank_account: dict, country: str, account_id:str) -> DisbursementClientAccountAPIDTO:
         with httpx.Client(base_url=self.base_url) as client:
             response = client.patch(
-                self._get_disbursement_accounts(country=country, client_id=self.data.id),
+                self._patch_disbursement_account(country=country, client_id=self.data.id, account_id=account_id),
                 headers=self._header_builder(partner_id=self.data.partner_id),
                 json={
                     "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True, exclude_none=True),
