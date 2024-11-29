@@ -12,8 +12,6 @@ class BankAccount(BaseModel):
 class DisbursementAccountBaseModel(BaseModel):
     id: str = Field(alias="accountId")
     name: str = Field(alias="name")
-    phone: Optional[str] = Field(alias="phone", default=None)
-    email: Optional[str] = Field(alias="email", default=None)
     tax_id: str = Field(alias="taxId")
     partner_id: str = Field(alias="partnerId")
     created_at: str = Field(alias="createdAt")
@@ -39,8 +37,6 @@ class DisbursementPartnerAccountAPIDTO(DisbursementAccountBaseModel):
 class CreateDisbursementClientAccountDTO(BaseModel):
     client_id: str = Field(alias="id")
     partner_id: str = Field(alias="partnerId")
-    email_address: Optional[str] = Field(alias="email", default=None)
-    phone_number: Optional[str] = Field(alias="phone", default=None)
     bank_account: BankAccount = Field(alias="bankAccount")
     validation_type: Optional[str] = Field(alias="validationType", default=None)
 
