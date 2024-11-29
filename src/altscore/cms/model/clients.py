@@ -214,6 +214,20 @@ class ClientAsync(ClientBase):
             return DisbursementClientAccountAPIDTO.parse_obj(response.json())
 
     @retry_on_401_async
+    async def update_disbursement_account(self,bank_account:dict, country: str) -> DisbursementClientAccountAPIDTO:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.patch(
+                self._get_disbursement_accounts(country=country, client_id=self.data.id),
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                json={
+                    "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True,exclude_none=True),
+                },
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return DisbursementClientAccountAPIDTO.parse_obj(response.json())
+
+    @retry_on_401_async
     async def revalidate_disbursement_account(self, country: str, account_id:str) -> DisbursementClientAccountAPIDTO:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
@@ -372,6 +386,20 @@ class ClientSync(ClientBase):
                     "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True, exclude_none=True),
                     "validationType": validation_type
                 }).dict(by_alias=True, exclude_none=True),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return DisbursementClientAccountAPIDTO.parse_obj(response.json())
+
+    @retry_on_401
+    def update_disbursement_account(self, bank_account: dict, country: str) -> DisbursementClientAccountAPIDTO:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.patch(
+                self._get_disbursement_accounts(country=country, client_id=self.data.id),
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                json={
+                    "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True, exclude_none=True),
+                },
                 timeout=30
             )
             raise_for_status_improved(response)
