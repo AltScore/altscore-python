@@ -42,6 +42,7 @@ class CreateDisbursementClientAccountDTO(BaseModel):
     email_address: Optional[str] = Field(alias="email", default=None)
     phone_number: Optional[str] = Field(alias="phone", default=None)
     bank_account: BankAccount = Field(alias="bankAccount")
+    validation_type: Optional[str] = Field(alias="validationType", default=None)
 
     class Config:
         populate_by_name = True
