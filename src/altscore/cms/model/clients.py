@@ -232,7 +232,7 @@ class ClientAsync(ClientBase):
             return DisbursementClientAccountAPIDTO.parse_obj(response.json())
 
     @retry_on_401_async
-    async def revalidate_disbursement_account(self, country: str, account_id:str) -> DisbursementClientAccountAPIDTO:
+    async def revalidate_disbursement_account(self, country: str, account_id:str):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
                 self._revalidate_disbursement_account(country=country, client_id=self.data.id, account_id=account_id),
@@ -240,7 +240,6 @@ class ClientAsync(ClientBase):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return DisbursementClientAccountAPIDTO.parse_obj(response.json())
 
     @retry_on_401_async
     async def get_disbursement_account(self, country: str, account_id: str) -> Optional[DisbursementClientAccountAPIDTO]:

@@ -17,7 +17,7 @@ b_data = borrower.map_identities_and_fields_onto_dict(
     }
 )
 # %%
-borrowers_summary = altscore.borrower_central.borrowers.query_summary(
+borrowers = altscore.borrower_central.borrowers.query_summary(
     per_page=1
 )
 # %%

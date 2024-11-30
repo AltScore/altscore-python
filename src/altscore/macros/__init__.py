@@ -228,6 +228,11 @@ class MacrosAsync:
             {
                 "label": borrower_data.get("label"),
                 "persona": borrower_data["persona"],
+                "tags": borrower_data.get("tags", []),
+                "flag": borrower_data.get("flag"),
+                "riskRating": borrower_data.get("risk_rating") or borrower_data.get("riskRating"),
+                "repaymentRiskRating": borrower_data.get("repayment_risk_rating") or \
+                                       borrower_data.get("repaymentRiskRating"),
             }
         )
         try:
