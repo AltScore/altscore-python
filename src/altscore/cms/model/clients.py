@@ -470,7 +470,7 @@ class ClientsAsyncModule(GenericAsyncModule):
             async_resource=ClientAsync,
             retrieve_data_model=ClientAPIDTO,
             create_data_model=CreateClientDTO,
-            update_data_model=None,
+            update_data_model=UpdateClientDTO,
             resource="clients",
             resource_version="v2"
         )
