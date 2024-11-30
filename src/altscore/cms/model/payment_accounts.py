@@ -29,7 +29,7 @@ class Reference(BaseModel):
 class PaymentAccountAPIDTO(BaseModel):
     account_id: str = Field(alias="accountId")
     account_holder: AccountHolder = Field(alias="accountHolder")
-    references: List[Reference]
+    references: Optional[List[Reference]] = Field(alias="references", default=[])
     created_at: str = Field(alias="createdAt")
 
     class Config:
