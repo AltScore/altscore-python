@@ -103,8 +103,7 @@ class AltScoreBase:
         if self.environment == "production":
             return "https://bc.altscore.ai"
         elif self.environment == "staging":
-            # return "https://borrower-central-staging-zosvdgvuuq-uc.a.run.app"
-            return "http://localhost:8888"
+            return "https://borrower-central-staging-zosvdgvuuq-uc.a.run.app"
         elif self.environment == "sandbox":
             return "https://bc.sandbox.altscore.ai"
         elif self.environment == "local":
