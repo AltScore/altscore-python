@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from fuzzywuzzy import process
 
 from altscore.borrower_central.model.borrower import BorrowerSync, BorrowerAsync
@@ -133,6 +135,7 @@ class MacrosSync:
         if external_id_identity_key is not None:
             external_id = find_identity_value_or_error(borrower, external_id_identity_key)
         else:
+            # carefull as the system validates unique external_id per partner per tenant
             external_id = borrower_id
 
         if legal_name_identity_key is not None:
@@ -151,7 +154,8 @@ class MacrosSync:
         if tax_id_identity_key is not None:
             tax_id = find_identity_value_or_error(borrower, tax_id_identity_key)
         else:
-            tax_id = "N/A"
+            # carefull as the system validates unique tax_id per partner per tenant
+            tax_id = f"NA-{str(uuid4())[:8]}"
 
         address = borrower.get_main_address()
         if address is None:
@@ -161,7 +165,7 @@ class MacrosSync:
 
         email = borrower.get_main_point_of_contact(contact_method="email")
         if email is None:
-            email = "N/A"
+            email = "na@na.com"
         else:
             email = email.data.value
 
@@ -174,9 +178,25 @@ class MacrosSync:
         client_data = {"externalId": external_id, "legalName": legal_name, "taxId": tax_id, "dba": dba,
                        "address": address, "emailAddress": email, "phoneNumber": phone, "partnerId": partner_id}
 
-        client_id = self.altscore_client.cms.clients.create(new_entity_data=client_data)
-        borrower.associate_cms_client_id(client_id)
-        return client_id
+        # see if there is already a cms client with the given external id
+        cms_client = self.altscore_client.cms.clients.retrieve_by_external_id(external_id=external_id)
+        if cms_client is not None:
+            # associate the borrower with the client
+            borrower.associate_cms_client_id(cms_client.data.id)
+            # update the client with the new legal name and tax id
+            self.altscore_client.cms.clients.patch(
+                resource_id=cms_client.data.id,
+                patch_data={
+                    "legalName": legal_name,
+                    "taxId": tax_id,
+                    "emailAddress": email
+                }
+            )
+            return cms_client.data.id
+        else:
+            client_id = self.altscore_client.cms.clients.create(new_entity_data=client_data)
+            borrower.associate_cms_client_id(client_id)
+            return client_id
 
     def get_unique_borrower_field_values(self, field_key: str):
         field_values = self.altscore_client.borrower_central.borrower_fields.count_distinct_values(field_key)
@@ -341,6 +361,7 @@ class MacrosAsync:
         if external_id_identity_key is not None:
             external_id = await find_identity_value_or_error(borrower, external_id_identity_key)
         else:
+            # carefull as the system validates unique external_id per partner per tenant
             external_id = borrower_id
 
         if legal_name_identity_key is not None:
@@ -359,7 +380,8 @@ class MacrosAsync:
         if tax_id_identity_key is not None:
             tax_id = await find_identity_value_or_error(borrower, tax_id_identity_key)
         else:
-            tax_id = "N/A"
+            # carefull as the system validates unique tax_id per partner per tenant
+            tax_id = f"NA-{str(uuid4())[:8]}"
 
         address = await borrower.get_main_address()
         if address is None:
@@ -369,7 +391,7 @@ class MacrosAsync:
 
         email = await borrower.get_main_point_of_contact(contact_method="email")
         if email is None:
-            email = "N/A"
+            email = "na@na.com"
         else:
             email = email.data.value
 
@@ -381,10 +403,25 @@ class MacrosAsync:
 
         client_data = {"externalId": external_id, "legalName": legal_name, "taxId": tax_id, "dba": dba,
                        "address": address, "emailAddress": email, "phoneNumber": phone, "partnerId": partner_id}
-
-        client_id = await self.altscore_client.cms.clients.create(new_entity_data=client_data)
-        await borrower.associate_cms_client_id(client_id)
-        return client_id
+        # see if there is already a cms client with the given external id
+        cms_client = await self.altscore_client.cms.clients.retrieve_by_external_id(external_id=external_id)
+        if cms_client is not None:
+            # associate the borrower with the client
+            await borrower.associate_cms_client_id(cms_client.data.id)
+            # update the client with the new legal name and tax id
+            await self.altscore_client.cms.clients.patch(
+                resource_id=cms_client.data.id,
+                patch_data={
+                    "legalName": legal_name,
+                    "taxId": tax_id,
+                    "emailAddress": email
+                }
+            )
+            return cms_client.data.id
+        else:
+            client_id = await self.altscore_client.cms.clients.create(new_entity_data=client_data)
+            await borrower.associate_cms_client_id(client_id)
+            return client_id
 
     async def get_unique_borrower_field_values(self, field_key: str):
         field_values = await self.altscore_client.borrower_central.borrower_fields.count_distinct_values(field_key)
