@@ -71,43 +71,13 @@ class ExecutionBatchAPIDTO(BaseModel):
     workflow_alias: Optional[str] = Field(alias="workflowAlias", default=None)
     workflow_version: Optional[str] = Field(alias="workflowVersion", default=None)
     is_billable: Optional[bool] = Field(alias="isBillable", default=None)
-    tenant: str = Field(alias="tenant")
     tags: List[str] = Field(alias="tags")
     principal_id: Optional[str] = Field(alias="principalId", default=None)
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt", default=None)
     finished_at: Optional[str] = Field(alias="finishedAt", default=None)
-    is_success: Optional[bool] = Field(alias="isSuccess", default=None)
     inputs: Optional[Dict] = Field(alias="inputs", default=None)
     outputs: Optional[Dict] = Field(alias="outputs", default=None)
     debug: Optional[bool] = Field(alias="debug", default=False)
-
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
-
-
-class ExecutionBatch(BaseModel):
-    execution_batch_id: str
-    status: str
-    callback_at: dt.datetime
-    state: Dict
-    label: Optional[str]
-    description: Optional[str]
-    workflow_id: Optional[str]
-    workflow_alias: Optional[str]
-    workflow_version: Optional[str]
-    is_billable: Optional[bool]
-    tags: List[str]
-    principal_id: Optional[str]
-    created_at: dt.datetime
-    updated_at: Optional[dt.datetime]
-    finished_at: Optional[dt.datetime]
-    is_success: Optional[bool]
-    inputs: Optional[Dict]
-    outputs: Optional[Dict]
-    debug: Optional[bool]
 
     class Config:
         populate_by_name = True
