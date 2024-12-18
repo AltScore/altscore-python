@@ -47,6 +47,7 @@ class ExecutionAPIDTO(BaseModel):
     borrower_id: Optional[str] = Field(alias="borrowerId")
     status: Optional[str] = Field(alias="status", default=None)
     tags: Optional[List[str]] = Field(alias="tags", default=[])
+    unsuccessful_sources: Optional[bool] = Field(alias="unsuccessfulSources", default=None)
     is_success: Optional[bool] = Field(alias="isSuccess", default=None)
     is_billable: Optional[bool] = Field(alias="isBillable", default=None)
     is_re_scoring: Optional[bool] = Field(alias="isReScoring", default=None)
