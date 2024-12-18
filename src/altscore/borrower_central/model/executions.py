@@ -99,7 +99,6 @@ class CreateExecutionOutput(BaseModel):
     error_message: Optional[str] = Field(alias="errorMessage", default=None)
     billable_id: Optional[str] = Field(alias="billableId", default=None)
     borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
-    unsuccessful_sources: Optional[bool] = Field(alias="unsuccessfulSources", default=None)
 
     class Config:
         populate_by_name = True
