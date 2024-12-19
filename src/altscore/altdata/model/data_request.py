@@ -287,7 +287,7 @@ class RequestAsyncModule:
             )
             raise_for_status_improved(r)
             sync_data_response = r.json()
-            return AsyncRequestSync(
+            return AsyncRequestAsync(
                 base_url=self.altscore_client._altdata_base_url,
                 header_builder=self.build_headers,
                 renew_token=self.renew_token,

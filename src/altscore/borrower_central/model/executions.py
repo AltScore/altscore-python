@@ -25,6 +25,16 @@ class CreateExecutionDTO(BaseModel):
         allow_population_by_field_name = True
         allow_population_by_alias = True
 
+
+class UpdateExecutionDTO(BaseModel):
+    unsuccessful_sources: Optional[bool] = Field(alias="unsuccessfulSources", default=None)
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
 class ExecutionBatchMeta(BaseModel):
     id: str = Field(alias="id")
     item_index: int = Field(alias="itemIndex")
@@ -350,7 +360,7 @@ class ExecutionSyncModule(GenericSyncModule):
 
     def __init__(self, altscore_client):
         super().__init__(altscore_client, sync_resource=ExecutionSync, retrieve_data_model=ExecutionAPIDTO,
-                         create_data_model=CreateExecutionDTO, update_data_model=None, resource="executions")
+                         create_data_model=CreateExecutionDTO, update_data_model=UpdateExecutionDTO, resource="executions")
 
     @retry_on_401
     def query_outputs(self, **kwargs):
@@ -374,7 +384,7 @@ class ExecutionAsyncModule(GenericAsyncModule):
 
     def __init__(self, altscore_client):
         super().__init__(altscore_client, async_resource=ExecutionAsync, retrieve_data_model=ExecutionAPIDTO,
-                         create_data_model=CreateExecutionDTO, update_data_model=None, resource="executions")
+                         create_data_model=CreateExecutionDTO, update_data_model=UpdateExecutionDTO, resource="executions")
 
     @retry_on_401_async
     async def query_outputs(self, **kwargs):
