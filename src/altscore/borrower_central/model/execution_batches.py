@@ -60,6 +60,18 @@ class UpdateExecutionBatchDTO(BaseModel):
         allow_population_by_alias = True
 
 
+class ExecutionBatchItemOutputAPIDTO(BaseModel):
+    item_index: int = Field(alias="itemIndex")
+    input: dict = Field(alias="input")
+    output: dict = Field(alias="output")
+    is_success: bool = Field(alias="isSuccess")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
 class ExecutionBatchAPIDTO(BaseModel):
     id: str = Field(alias="id")
     status: Optional[str] = Field(alias="status", default=None)
@@ -121,6 +133,26 @@ class ExecutionBatchAsync(GenericAsyncResource):
             self.data = ExecutionBatchAPIDTO.parse_obj(response.json())
 
 
+    @retry_on_401_async
+    async def get_outputs(self, page: int, per_page: int):
+        with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self._execution_batch(self.data.id)}/outputs",
+                params={
+                    "page": page,
+                    "per-page": per_page
+                },
+                headers=self._header_builder(),
+                timeout=300
+            )
+
+            raise_for_status_improved(response)
+
+        results = response.json()
+        results = [ExecutionBatchItemOutputAPIDTO.parse_obj(result) for result in results]
+        return results
+
+
 class ExecutionBatchAsyncModule(GenericAsyncModule):
     def __init__(self, altscore_client):
         super().__init__(altscore_client, async_resource=ExecutionBatchAsync, retrieve_data_model=ExecutionBatchAPIDTO,
@@ -160,6 +192,26 @@ class ExecutionBatchSync(GenericSyncResource):
 
             raise_for_status_improved(response)
             self.data = ExecutionBatchAPIDTO.parse_obj(response.json())
+
+
+    @retry_on_401
+    def get_outputs(self, page: int, per_page: int):
+        with httpx.Client() as client:
+            response = client.get(
+                f"{self._execution_batch(self.data.id)}/outputs",
+                params={
+                    "page": page,
+                    "per-page": per_page
+                },
+                headers=self._header_builder(),
+                timeout=300
+            )
+
+            raise_for_status_improved(response)
+
+        results = response.json()
+        results = [ExecutionBatchItemOutputAPIDTO.parse_obj(result) for result in results]
+        return results
 
 
 class ExecutionBatchSyncModule(GenericSyncModule):
