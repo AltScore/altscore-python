@@ -1,11 +1,12 @@
+import json
+
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, cast
 
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 import httpx
-import datetime as dt
 
 
 EXECUTION_BATCH_STATUS_PENDING = "pending"
@@ -133,30 +134,27 @@ class ExecutionBatchAsync(GenericAsyncResource):
             self.data = ExecutionBatchAPIDTO.parse_obj(response.json())
 
 
-    @retry_on_401_async
-    async def get_outputs(self, page: int, per_page: int):
-        with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{self._execution_batch(self.data.id)}/outputs",
-                params={
-                    "page": page,
-                    "per-page": per_page
-                },
-                headers=self._header_builder(),
-                timeout=300
-            )
-
-            raise_for_status_improved(response)
-
-        results = response.json()
-        results = [ExecutionBatchItemOutputAPIDTO.parse_obj(result) for result in results]
-        return results
-
-
 class ExecutionBatchAsyncModule(GenericAsyncModule):
     def __init__(self, altscore_client):
         super().__init__(altscore_client, async_resource=ExecutionBatchAsync, retrieve_data_model=ExecutionBatchAPIDTO,
                          create_data_model=CreateExecutionBatchDTO, update_data_model=UpdateExecutionBatchDTO, resource="execution-batches")
+
+
+    async def get_batch_items_outputs(self, execution_batch_id):
+        execution_batch = cast(ExecutionBatchAsync, await self.retrieve(execution_batch_id))
+
+        batch_items_outputs_package_id = execution_batch.data.state.get("batch_items_outputs_package_id")
+
+        if batch_items_outputs_package_id is None:
+            return None
+
+        package = await self.altscore_client.borrower_central.store_packages.retrieve(batch_items_outputs_package_id)
+        await package.get_content()
+
+        outputs = json.loads(package.content)
+        outputs = [ExecutionBatchItemOutputAPIDTO.parse_obj(result) for result in outputs]
+
+        return outputs
 
 
 class ExecutionBatchSync(GenericSyncResource):
@@ -194,27 +192,24 @@ class ExecutionBatchSync(GenericSyncResource):
             self.data = ExecutionBatchAPIDTO.parse_obj(response.json())
 
 
-    @retry_on_401
-    def get_outputs(self, page: int, per_page: int):
-        with httpx.Client() as client:
-            response = client.get(
-                f"{self._execution_batch(self.data.id)}/outputs",
-                params={
-                    "page": page,
-                    "per-page": per_page
-                },
-                headers=self._header_builder(),
-                timeout=300
-            )
-
-            raise_for_status_improved(response)
-
-        results = response.json()
-        results = [ExecutionBatchItemOutputAPIDTO.parse_obj(result) for result in results]
-        return results
-
-
 class ExecutionBatchSyncModule(GenericSyncModule):
     def __init__(self, altscore_client):
         super().__init__(altscore_client, sync_resource=ExecutionBatchSync, retrieve_data_model=ExecutionBatchAPIDTO,
                          create_data_model=CreateExecutionBatchDTO, update_data_model=UpdateExecutionBatchDTO, resource="execution-batches")
+
+
+    def get_batch_items_outputs(self, execution_batch_id):
+        execution_batch = cast(ExecutionBatchSync, self.retrieve(execution_batch_id))
+
+        batch_items_outputs_package_id = execution_batch.data.state.get("batch_items_outputs_package_id")
+
+        if batch_items_outputs_package_id is None:
+            return None
+
+        package = self.altscore_client.borrower_central.store_packages.retrieve(batch_items_outputs_package_id)
+        package.get_content()
+
+        outputs = json.loads(package.content)
+        outputs = [ExecutionBatchItemOutputAPIDTO.parse_obj(result) for result in outputs]
+
+        return outputs
