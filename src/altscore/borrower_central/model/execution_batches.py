@@ -1,11 +1,12 @@
+import json
+
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, cast
 
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 import httpx
-import datetime as dt
 
 
 EXECUTION_BATCH_STATUS_PENDING = "pending"
@@ -53,6 +54,18 @@ class UpdateExecutionBatchDTO(BaseModel):
     state: Optional[Dict] = Field(alias="state", default=None)
     inputs: Optional[Dict] = Field(alias="inputs", default=None)
     outputs: Optional[Dict] = Field(alias="outputs", default=None)
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class ExecutionBatchItemOutputAPIDTO(BaseModel):
+    item_index: int = Field(alias="itemIndex")
+    input: dict = Field(alias="input")
+    output: dict = Field(alias="output")
+    is_success: bool = Field(alias="isSuccess")
 
     class Config:
         populate_by_name = True
@@ -127,6 +140,23 @@ class ExecutionBatchAsyncModule(GenericAsyncModule):
                          create_data_model=CreateExecutionBatchDTO, update_data_model=UpdateExecutionBatchDTO, resource="execution-batches")
 
 
+    async def get_batch_items_outputs(self, execution_batch_id):
+        execution_batch = cast(ExecutionBatchAsync, await self.retrieve(execution_batch_id))
+
+        batch_items_outputs_package_id = execution_batch.data.state.get("batch_items_outputs_package_id")
+
+        if batch_items_outputs_package_id is None:
+            return None
+
+        package = await self.altscore_client.borrower_central.store_packages.retrieve(batch_items_outputs_package_id)
+        await package.get_content()
+
+        outputs = json.loads(package.content)
+        outputs = [ExecutionBatchItemOutputAPIDTO.parse_obj(result) for result in outputs]
+
+        return outputs
+
+
 class ExecutionBatchSync(GenericSyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "execution-batches", header_builder, renew_token, ExecutionBatchAPIDTO.parse_obj(data))
@@ -166,3 +196,20 @@ class ExecutionBatchSyncModule(GenericSyncModule):
     def __init__(self, altscore_client):
         super().__init__(altscore_client, sync_resource=ExecutionBatchSync, retrieve_data_model=ExecutionBatchAPIDTO,
                          create_data_model=CreateExecutionBatchDTO, update_data_model=UpdateExecutionBatchDTO, resource="execution-batches")
+
+
+    def get_batch_items_outputs(self, execution_batch_id):
+        execution_batch = cast(ExecutionBatchSync, self.retrieve(execution_batch_id))
+
+        batch_items_outputs_package_id = execution_batch.data.state.get("batch_items_outputs_package_id")
+
+        if batch_items_outputs_package_id is None:
+            return None
+
+        package = self.altscore_client.borrower_central.store_packages.retrieve(batch_items_outputs_package_id)
+        package.get_content()
+
+        outputs = json.loads(package.content)
+        outputs = [ExecutionBatchItemOutputAPIDTO.parse_obj(result) for result in outputs]
+
+        return outputs
