@@ -63,6 +63,7 @@ class ExecutionAPIDTO(BaseModel):
     is_re_scoring: Optional[bool] = Field(alias="isReScoring", default=None)
     created_at: str = Field(alias="createdAt")
     execution_time: Optional[int] = Field(alias="executionTime", default=None)
+    response_time: Optional[int] = Field(alias="responseTime", default=None)
 
     class Config:
         populate_by_name = True
