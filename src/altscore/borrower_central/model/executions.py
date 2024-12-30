@@ -62,6 +62,8 @@ class ExecutionAPIDTO(BaseModel):
     is_billable: Optional[bool] = Field(alias="isBillable", default=None)
     is_re_scoring: Optional[bool] = Field(alias="isReScoring", default=None)
     created_at: str = Field(alias="createdAt")
+    execution_time: Optional[int] = Field(alias="executionTime", default=None)
+    response_time: Optional[int] = Field(alias="responseTime", default=None)
 
     class Config:
         populate_by_name = True
@@ -99,6 +101,7 @@ class CreateExecutionOutput(BaseModel):
     error_message: Optional[str] = Field(alias="errorMessage", default=None)
     billable_id: Optional[str] = Field(alias="billableId", default=None)
     borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
+    execution_time: Optional[int] = Field(alias="executionTime", default=None)
 
     class Config:
         populate_by_name = True
