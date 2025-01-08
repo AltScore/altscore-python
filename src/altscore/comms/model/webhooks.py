@@ -3,7 +3,7 @@ from typing import Optional, List
 import httpx
 
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
-from altscore.webhooks.model.generics import GenericSyncModule, GenericAsyncModule
+from altscore.comms.model.generics import GenericSyncModule, GenericAsyncModule
 
 
 class WebhookEventAPIDTO(BaseModel):

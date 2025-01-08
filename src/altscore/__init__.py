@@ -6,7 +6,7 @@ from altscore.borrower_central import BorrowerCentralAsync, BorrowerCentralSync
 from altscore.altdata import AltDataSync, AltDataAsync
 from altscore.cms import CMSSync, CMSAsync
 from altscore.macros import MacrosSync, MacrosAsync
-from altscore.webhooks import WebhookSync, WebhookAsync
+from altscore.comms import CommsSync, CommsAsync
 from typing import Optional, Union
 import warnings
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
@@ -167,7 +167,7 @@ class AltScore(AltScoreBase):
         self.altdata = AltDataSync(self)
         self.cms = CMSSync(self)
         self.macros = MacrosSync(self)
-        self.webhook = WebhookSync(self)
+        self.comms = CommsSync(self)
 
     @property
     def partner_id(self) -> Optional[str]:
@@ -203,7 +203,7 @@ class AltScoreAsync(AltScoreBase):
         self.altdata = AltDataAsync(self)
         self.cms = CMSAsync(self)
         self.macros = MacrosAsync(self)
-        self.webhook = WebhookAsync(self)
+        self.comss = CommsAsync(self)
 
     @property
     def partner_id(self) -> Optional[str]:

@@ -1,10 +1,10 @@
-from typing import Dict, List
+from typing import Dict
 
 import httpx
 
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.utils import convert_to_dash_case
-from altscore.webhooks.helpers import build_headers
+from altscore.comms.helpers import build_headers
 
 
 
