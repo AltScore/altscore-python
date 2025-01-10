@@ -9,6 +9,7 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
 class WorkflowSchedule(BaseModel):
     cron: str = Field(alias="cron")
     utc_delta_hours: int = Field(alias="utcDeltaHours", default=0, ge=-12, le=14)
+    execution_settings: Optional[dict] = Field(alias="executionSettings", default=None)
 
     class Config:
         populate_by_name = True
@@ -32,6 +33,7 @@ class WorkflowDataAPIDTO(BaseModel):
     flow_definition: Optional[dict] = Field(alias="flowDefinition")
     batch_flow_definition: Optional[dict] = Field(alias="batchFlowDefinition")
     schedule: Optional[WorkflowSchedule] = Field(alias="schedule", default=None)
+    schedule_batch: Optional[WorkflowSchedule] = Field(alias="scheduleBatch", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
 
@@ -62,6 +64,7 @@ class CreateWorkflowDTO(BaseModel):
     initial_data: Optional[str] = Field(alias="initialData", default=None)
     route: Optional[Lambda] = Field(alias="route", default=None)
     schedule: Optional[WorkflowSchedule] = Field(alias="schedule", default=None)
+    schedule_batch: Optional[WorkflowSchedule] = Field(alias="scheduleBatch", default=None)
 
     class Config:
         populate_by_name = True
@@ -81,6 +84,7 @@ class UpdateWorkflowDTO(BaseModel):
     initial_data: Optional[str] = Field(alias="initialData", default=None)
     input_schema: Optional[str] = Field(alias="inputSchema", default=None)
     schedule: Optional[WorkflowSchedule] = Field(alias="schedule", default=None)
+    schedule_batch: Optional[WorkflowSchedule] = Field(alias="scheduleBatch", default=None)
 
     class Config:
         populate_by_name = True
