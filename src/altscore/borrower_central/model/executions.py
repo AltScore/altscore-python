@@ -71,6 +71,20 @@ class ExecutionAPIDTO(BaseModel):
         allow_population_by_alias = True
 
 
+class ExecutionInputDataAPIDTO(BaseModel):
+    id: Optional[str] = Field(alias="id")
+    workflow_id: str = Field(alias="workflowId")
+    workflow_alias: str = Field(alias="workflowAlias")
+    workflow_version: str = Field(alias="workflowVersion")
+    input: Dict = Field(alias="input")
+    created_at: str = Field(alias="createdAt")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
 class ExecutionOutputDataAPIDTO(BaseModel):
     id: Optional[str] = Field(alias="id")
     billable_id: Optional[str] = Field(alias="billableId")
@@ -176,6 +190,7 @@ class ExecutionState(BaseModel):
 
 
 class ExecutionSync(GenericSyncResource):
+    input: ExecutionInputDataAPIDTO
     output: ExecutionOutputDataAPIDTO
     state: ExecutionState
 
@@ -185,11 +200,27 @@ class ExecutionSync(GenericSyncResource):
     def _state(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}/state"
 
+    def _input(self, resource_id):
+        return f"{self.base_url}/v1/{self.resource}/{resource_id}/input"
+
     def _output(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}/output"
 
     def _output_attachments(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}/output/attachments"
+
+    @retry_on_401
+    def get_input(self):
+        with httpx.Client() as client:
+            response = client.get(
+                self._input(self.data.id),
+                headers=self._header_builder(),
+                timeout=300
+            )
+            raise_for_status_improved(response)
+            self.input = ExecutionInputDataAPIDTO.parse_obj(response.json())
+        return self.input
+
 
     @retry_on_401
     def get_output(self):
@@ -268,6 +299,7 @@ class ExecutionSync(GenericSyncResource):
 
 
 class ExecutionAsync(GenericAsyncResource):
+    input: ExecutionInputDataAPIDTO
     output: ExecutionOutputDataAPIDTO
     state: ExecutionState
 
@@ -277,11 +309,28 @@ class ExecutionAsync(GenericAsyncResource):
     def _state(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}/state"
 
+    def _input(self, resource_id):
+        return f"{self.base_url}/v1/{self.resource}/{resource_id}/input"
+
     def _output(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}/output"
 
     def _output_attachments(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}/output/attachments"
+
+
+    @retry_on_401_async
+    async def get_input(self):
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                self._input(self.data.id),
+                headers=self._header_builder(),
+                timeout=300
+            )
+            raise_for_status_improved(response)
+            self.input = ExecutionInputDataAPIDTO.parse_obj(response.json())
+        return self.input
+
 
     @retry_on_401_async
     async def get_output(self):
