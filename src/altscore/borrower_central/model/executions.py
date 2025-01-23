@@ -9,6 +9,18 @@ import httpx
 import datetime as dt
 from dateutil.parser import parse
 
+EXECUTION_NOTICE_SEVERITY_INFO = "info"
+EXECUTION_NOTICE_SEVERITY_ERROR = "error"
+EXECUTION_NOTICE_SEVERITY_DEBUG = "debug"
+
+class ExecutionNotice(BaseModel):
+    message: str = Field(alias="message")
+    severity: str = Field(alias="severity")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
 
 class CreateExecutionDTO(BaseModel):
     workflow_id: Optional[str] = Field(alias="workflowId", default=None)
@@ -116,6 +128,7 @@ class CreateExecutionOutput(BaseModel):
     billable_id: Optional[str] = Field(alias="billableId", default=None)
     borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
     execution_time: Optional[int] = Field(alias="executionTime", default=None)
+    notices: Optional[List[ExecutionNotice]] = Field(alias="notices", default=[])
 
     class Config:
         populate_by_name = True
