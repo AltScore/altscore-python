@@ -115,10 +115,47 @@ class WorkflowSync(GenericSyncResource):
         super().__init__(base_url, "workflows", header_builder, renew_token, WorkflowDataAPIDTO.parse_obj(data))
 
 
+    @retry_on_401
+    def delete_schedules(self, schedule: bool = False, schedule_batch: bool = False):
+        url = f"{self.base_url}/v1/{self.resource}/commands/delete-schedules"
+
+        with httpx.Client() as client:
+            response = client.post(
+                url,
+                headers=self._header_builder(),
+                timeout=300,
+                json={
+                    "workflowId": self.data.id,
+                    "schedule": schedule,
+                    "scheduleBatch": schedule_batch
+                }
+            )
+
+            raise_for_status_improved(response)
+
+
 class WorkflowAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "workflows", header_builder, renew_token, WorkflowDataAPIDTO.parse_obj(data))
+
+
+    @retry_on_401_async
+    async def delete_schedules(self, schedule: bool = False, schedule_batch: bool = False):
+        url = f"{self.base_url}/v1/{self.resource}/commands/delete-schedules"
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url,
+                headers=self._header_builder(),
+                timeout=300,
+                json={
+                    "workflowId": self.data.id,
+                    "schedule": schedule,
+                    "scheduleBatch": schedule_batch
+                }
+            )
+            raise_for_status_improved(response)
 
 
 class WorkflowsSyncModule(GenericSyncModule):

@@ -76,7 +76,7 @@ class SriIntegrationAsyncModule:
 
         async with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
-                "/v1/integrations/sri/credentials/check",
+                "/v1/integrations/sri/credentials",
                 json=payload,
                 headers=self.build_headers()
             )
@@ -141,7 +141,7 @@ class SriIntegrationSyncModule:
             payload["additionalIdentification"] = additional_identification
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
-                "/v1/integrations/sri/credentials/check",
+                "/v1/integrations/sri/credentials",
                 json=payload,
                 headers=self.build_headers()
             )

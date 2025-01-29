@@ -21,7 +21,7 @@ from altscore.borrower_central.model.forms import FormsAsyncModule, FormsSyncMod
 from altscore.borrower_central.model.policy_alerts import AlertsAsyncModule, AlertsSyncModule
 from altscore.borrower_central.model.policy_rules import RulesAsyncModule, RulesSyncModule
 from altscore.borrower_central.model.integrations.sat import SatIntegrationAsyncModule, SatIntegrationSyncModule
-from altscore.borrower_central.model.integrations.sri import SriIntegrationAsyncModule, SritIntegrationSyncModule
+from altscore.borrower_central.model.integrations.sri import SriIntegrationAsyncModule, SriIntegrationSyncModule
 from altscore.borrower_central.model.automations import AutomationsAsyncModule, AutomationsSyncModule
 from altscore.borrower_central.model.stages import StagesAsyncModule, StagesSyncModule
 from altscore.borrower_central.model.risk_ratings import RiskRatingsAsyncModule, RiskRatingsSyncModule
@@ -103,7 +103,7 @@ class BorrowerCentralSync:
         self.rules = RulesSyncModule(altscore_client)
         self.policies = PolicySyncModule(altscore_client)
         self.sat_integration = SatIntegrationSyncModule(altscore_client)
-        self.sri_integration = SritIntegrationSyncModule(altscore_client)
+        self.sri_integration = SriIntegrationSyncModule(altscore_client)
         self.usecases = UsecasesSyncModule(altscore_client)
         self.kpis = KpisSyncModule(altscore_client)
         self.steps = StepsSyncModule(altscore_client)
