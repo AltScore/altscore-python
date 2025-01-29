@@ -116,8 +116,8 @@ class WorkflowSync(GenericSyncResource):
 
 
     @retry_on_401
-    def delete_schedules(self, delete_schedule: bool = False, delete_schedule_batch: bool = False):
-        url = f"{self.base_url}/v1/{self.resource}/{self.data.id}/delete-schedules"
+    def delete_schedules(self, schedule: bool = False, schedule_batch: bool = False):
+        url = f"{self.base_url}/v1/{self.resource}/commands/delete-schedules"
 
         with httpx.Client() as client:
             response = client.post(
@@ -125,8 +125,9 @@ class WorkflowSync(GenericSyncResource):
                 headers=self._header_builder(),
                 timeout=300,
                 json={
-                    "deleteSchedule": delete_schedule,
-                    "deleteScheduleBatch": delete_schedule_batch
+                    "workflowId": self.data.id,
+                    "schedule": schedule,
+                    "scheduleBatch": schedule_batch
                 }
             )
 
@@ -140,8 +141,8 @@ class WorkflowAsync(GenericAsyncResource):
 
 
     @retry_on_401_async
-    async def delete_schedules(self, delete_schedule: bool = False, delete_schedule_batch: bool = False):
-        url = f"{self.base_url}/v1/{self.resource}/{self.data.id}/delete-schedules"
+    async def delete_schedules(self, schedule: bool = False, schedule_batch: bool = False):
+        url = f"{self.base_url}/v1/{self.resource}/commands/delete-schedules"
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -149,8 +150,9 @@ class WorkflowAsync(GenericAsyncResource):
                 headers=self._header_builder(),
                 timeout=300,
                 json={
-                    "deleteSchedule": delete_schedule,
-                    "deleteScheduleBatch": delete_schedule_batch
+                    "workflowId": self.data.id,
+                    "schedule": schedule,
+                    "scheduleBatch": schedule_batch
                 }
             )
             raise_for_status_improved(response)
