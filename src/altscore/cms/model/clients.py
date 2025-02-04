@@ -48,10 +48,13 @@ class CreateClientDTO(BaseModel):
         allow_population_by_field_name = True
         populate_by_alias = True
 
+
 class UpdateClientDTO(BaseModel):
     tax_id: Optional[str] = Field(alias="taxId", default=None)
     legal_name: Optional[str] = Field(alias="legalName", default=None)
     email_address: Optional[str] = Field(alias="emailAddress", default=None)
+    phone_number: Optional[str] = Field(alias="phoneNumber", default=None)
+
 
 class ClientBase:
 
@@ -77,7 +80,7 @@ class ClientBase:
     def _create_payment_reference(client_id: str):
         return f"/v1/payments/accounts/{client_id}/references"
 
-# TODO for future use for cancel reference
+    # TODO for future use for cancel reference
     @staticmethod
     def _cancel_payment_reference(client_id: str, reference_id: str):
         return f"/v1/payments/accounts/{client_id}/references{reference_id}/cancellation"
@@ -200,7 +203,7 @@ class ClientAsync(ClientBase):
             return [Reference.parse_obj(e) for e in response.json()]
 
     @retry_on_401_async
-    async def create_disbursement_account(self,bank_account :dict,country: str,
+    async def create_disbursement_account(self, bank_account: dict, country: str,
                                           validation_type: str = None) -> DisbursementClientAccountAPIDTO:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
@@ -208,8 +211,8 @@ class ClientAsync(ClientBase):
                 headers=self._header_builder(partner_id=self.data.partner_id),
                 json=CreateDisbursementClientAccountDTO.parse_obj({
                     "id": self.data.id,
-                    "partnerId":self.data.partner_id,
-                    "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True,exclude_none=True),
+                    "partnerId": self.data.partner_id,
+                    "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True, exclude_none=True),
                     "validationType": validation_type
                 }).dict(by_alias=True, exclude_none=True),
                 timeout=30
@@ -218,13 +221,14 @@ class ClientAsync(ClientBase):
             return DisbursementClientAccountAPIDTO.parse_obj(response.json())
 
     @retry_on_401_async
-    async def update_disbursement_account(self,bank_account:dict, country: str, account_id:str) -> DisbursementClientAccountAPIDTO:
+    async def update_disbursement_account(self, bank_account: dict, country: str,
+                                          account_id: str) -> DisbursementClientAccountAPIDTO:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.patch(
                 self._patch_disbursement_account(country=country, client_id=self.data.id, account_id=account_id),
                 headers=self._header_builder(partner_id=self.data.partner_id),
                 json={
-                    "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True,exclude_none=True),
+                    "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True, exclude_none=True),
                 },
                 timeout=30
             )
@@ -232,7 +236,7 @@ class ClientAsync(ClientBase):
             return DisbursementClientAccountAPIDTO.parse_obj(response.json())
 
     @retry_on_401_async
-    async def revalidate_disbursement_account(self, country: str, account_id:str):
+    async def revalidate_disbursement_account(self, country: str, account_id: str):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
                 self._revalidate_disbursement_account(country=country, client_id=self.data.id, account_id=account_id),
@@ -242,7 +246,8 @@ class ClientAsync(ClientBase):
             raise_for_status_improved(response)
 
     @retry_on_401_async
-    async def get_disbursement_account(self, country: str, account_id: str) -> Optional[DisbursementClientAccountAPIDTO]:
+    async def get_disbursement_account(self, country: str, account_id: str) -> Optional[
+        DisbursementClientAccountAPIDTO]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
                 self._get_disbursement_account(country, self.data.id, account_id),
@@ -377,7 +382,7 @@ class ClientSync(ClientBase):
             return [Reference.parse_obj(e) for e in response.json()]
 
     @retry_on_401
-    def create_disbursement_account(self,  country: str, bank_account: dict,
+    def create_disbursement_account(self, country: str, bank_account: dict,
                                     validation_type: str = None) -> DisbursementClientAccountAPIDTO:
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
@@ -395,7 +400,8 @@ class ClientSync(ClientBase):
             return DisbursementClientAccountAPIDTO.parse_obj(response.json())
 
     @retry_on_401
-    def update_disbursement_account(self, bank_account: dict, country: str, account_id:str) -> DisbursementClientAccountAPIDTO:
+    def update_disbursement_account(self, bank_account: dict, country: str,
+                                    account_id: str) -> DisbursementClientAccountAPIDTO:
         with httpx.Client(base_url=self.base_url) as client:
             response = client.patch(
                 self._patch_disbursement_account(country=country, client_id=self.data.id, account_id=account_id),
@@ -409,7 +415,7 @@ class ClientSync(ClientBase):
             return DisbursementClientAccountAPIDTO.parse_obj(response.json())
 
     @retry_on_401
-    def revalidate_disbursement_account(self, country: str, account_id:str):
+    def revalidate_disbursement_account(self, country: str, account_id: str):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.put(
                 self._revalidate_disbursement_account(country=country, client_id=self.data.id, account_id=account_id),
