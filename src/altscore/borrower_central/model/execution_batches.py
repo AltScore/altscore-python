@@ -27,6 +27,83 @@ EXECUTION_BATCH_PHASE_RESULT_FATAL_ERROR = "fatal_error"
 EXECUTION_BATCH_PHASE_RESULT_UNHANDLED_ERROR = "unhandled_error"
 
 
+class BatchItemsExecutionSummary(BaseModel):
+    expected: Optional[int] = Field(alias="expected", default=0)
+    pending: Optional[int] = Field(alias="pending", default=0)
+    failed: Optional[int] = Field(alias="failed", default=0)
+    success: Optional[int] = Field(alias="success", default=0)
+    unsuccessful_sources: Optional[int] = Field(alias="unsuccessfulSources", default=0)
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class ExecutionBatchInputs(BaseModel):
+    items: List[Dict] = Field(alias="items", default=[])
+    raw_package_ids: List[str] = Field(alias="rawPackageIds", default=[])
+    custom_input: Dict = Field(alias="customInput", default={})
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class ExecutionBatchPreProcessingOutput(BaseModel):
+    processed_input_package_id: str = Field(alias="processedInputPackageId")
+    item_count: int = Field(alias="itemCount")
+    result: str = Field(alias="result")
+    notices: List[str] = Field(alias="notices")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class ExecutionBatchPostProcessingOutput(BaseModel):
+    processed_output_package_id: str = Field(alias="processedOutputPackageId")
+    item_count: int = Field(alias="itemCount")
+    result: str = Field(alias="result")
+    notices: List[str] = Field(alias="notices")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class ExecutionBatchOutputs(BaseModel):
+    w_batch_pre_processing_output: Optional[ExecutionBatchPreProcessingOutput] = Field(alias="wBatchPreProcessingOutput", default=None)
+    w_batch_post_processing_output: Optional[ExecutionBatchPostProcessingOutput] = Field(alias="wBatchPostProcessingOutput", default=None)
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class ExecutionBatchState(BaseModel):
+    batch_items_executions_summary: Optional[BatchItemsExecutionSummary] = Field(alias="batchItemsExecutionsSummary", default=None)
+    pre_processing_retries: Optional[int] = Field(alias="preProcessingRetries", default=0)
+    post_processing_retries: Optional[int] = Field(alias="postProcessingRetries", default=0)
+    batch_items_outputs_generating: Optional[bool] = Field(alias="batchItemsOutputsGenerating", default=False)
+    batch_items_outputs_package_id: Optional[str] = Field(alias="batchItemsOutputsPackageId", default=None)
+    pre_processing_started_at: Optional[str] = Field(alias="preProcessingStartedAt", default=None)
+    post_processing_started_at: Optional[str] = Field(alias="postProcessingStartedAt", default=None)
+    processing_started_at: Optional[str] = Field(alias="processingStartedAt", default=None)
+    batch_items_outputs_generation_started_at: Optional[str] = Field(alias="batchItemsOutputsGenerationStartedAt", default=None)
+    preparing_batch_items_retry: Optional[bool] = Field(alias="preparingBatchItemsRetry", default=False)
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+
 class CreateExecutionBatchDTO(BaseModel):
     status: Optional[str] = Field(alias="status", default=None)
     workflow_id: Optional[str] = Field(alias="workflowId", default=None)
@@ -35,11 +112,11 @@ class CreateExecutionBatchDTO(BaseModel):
     callback_at: Optional[str] = Field(alias="callbackAt", default=None)
     principal_id: Optional[str] = Field(alias="principalId", default=None)
     is_billable: Optional[bool] = Field(alias="isBillable", default=None)
-    state: Optional[Dict] = Field(alias="state", default={})
+    state: Optional[ExecutionBatchState] = Field(alias="state", default=ExecutionBatchState())
     tags: Optional[List[str]] = Field(alias="tags", default=[])
     label: Optional[str] = Field(alias="label", default=None)
     description: Optional[str] = Field(alias="description", default=None)
-    inputs: Optional[Dict] = Field(alias="inputs", default=None)
+    inputs: Optional[ExecutionBatchInputs] = Field(alias="inputs", default=None)
     debug: Optional[bool] = Field(alias="debug", default=False)
 
     class Config:
@@ -51,9 +128,9 @@ class CreateExecutionBatchDTO(BaseModel):
 class UpdateExecutionBatchDTO(BaseModel):
     status: Optional[str] = Field(alias="status", default=None)
     callback_at: Optional[str] = Field(alias="callbackAt", default=None)
-    state: Optional[Dict] = Field(alias="state", default=None)
-    inputs: Optional[Dict] = Field(alias="inputs", default=None)
-    outputs: Optional[Dict] = Field(alias="outputs", default=None)
+    state: Optional[ExecutionBatchState] = Field(alias="state", default=None)
+    inputs: Optional[ExecutionBatchInputs] = Field(alias="inputs", default=None)
+    outputs: Optional[ExecutionBatchOutputs] = Field(alias="outputs", default=None)
 
     class Config:
         populate_by_name = True
@@ -77,7 +154,7 @@ class ExecutionBatchAPIDTO(BaseModel):
     id: str = Field(alias="id")
     status: Optional[str] = Field(alias="status", default=None)
     callback_at: Optional[str] = Field(alias="callbackAt", default=None)
-    state: Dict = Field(alias="state")
+    state: ExecutionBatchState = Field(alias="state")
     label: Optional[str] = Field(alias="label", default=None)
     description: Optional[str] = Field(alias="description", default=None)
     workflow_id: Optional[str] = Field(alias="workflowId", default=None)
@@ -88,8 +165,8 @@ class ExecutionBatchAPIDTO(BaseModel):
     principal_id: Optional[str] = Field(alias="principalId", default=None)
     created_at: str = Field(alias="createdAt")
     finished_at: Optional[str] = Field(alias="finishedAt", default=None)
-    inputs: Optional[Dict] = Field(alias="inputs", default=None)
-    outputs: Optional[Dict] = Field(alias="outputs", default=None)
+    inputs: Optional[ExecutionBatchInputs] = Field(alias="inputs", default=None)
+    outputs: Optional[ExecutionBatchOutputs] = Field(alias="outputs", default=None)
     debug: Optional[bool] = Field(alias="debug", default=False)
 
     class Config:
@@ -143,7 +220,7 @@ class ExecutionBatchAsyncModule(GenericAsyncModule):
     async def get_batch_items_outputs(self, execution_batch_id):
         execution_batch = cast(ExecutionBatchAsync, await self.retrieve(execution_batch_id))
 
-        batch_items_outputs_package_id = execution_batch.data.state.get("batch_items_outputs_package_id")
+        batch_items_outputs_package_id = execution_batch.data.state.batch_items_outputs_package_id
 
         if batch_items_outputs_package_id is None:
             return None
@@ -201,7 +278,7 @@ class ExecutionBatchSyncModule(GenericSyncModule):
     def get_batch_items_outputs(self, execution_batch_id):
         execution_batch = cast(ExecutionBatchSync, self.retrieve(execution_batch_id))
 
-        batch_items_outputs_package_id = execution_batch.data.state.get("batch_items_outputs_package_id")
+        batch_items_outputs_package_id = execution_batch.data.state.batch_items_outputs_package_id
 
         if batch_items_outputs_package_id is None:
             return None
