@@ -36,6 +36,7 @@ class WorkflowDataAPIDTO(BaseModel):
     schedule_batch: Optional[WorkflowSchedule] = Field(alias="scheduleBatch", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
+    use_high_memory: Optional[bool] = Field(alias="useHighMemory", default=None)
 
     class Config:
         populate_by_name = True
@@ -65,6 +66,7 @@ class CreateWorkflowDTO(BaseModel):
     route: Optional[Lambda] = Field(alias="route", default=None)
     schedule: Optional[WorkflowSchedule] = Field(alias="schedule", default=None)
     schedule_batch: Optional[WorkflowSchedule] = Field(alias="scheduleBatch", default=None)
+    use_high_memory: Optional[bool] = Field(alias="useHighMemory", default=False)
 
     class Config:
         populate_by_name = True
@@ -85,6 +87,7 @@ class UpdateWorkflowDTO(BaseModel):
     input_schema: Optional[str] = Field(alias="inputSchema", default=None)
     schedule: Optional[WorkflowSchedule] = Field(alias="schedule", default=None)
     schedule_batch: Optional[WorkflowSchedule] = Field(alias="scheduleBatch", default=None)
+    use_high_memory: Optional[bool] = Field(alias="useHighMemory", default=None)
 
     class Config:
         populate_by_name = True
