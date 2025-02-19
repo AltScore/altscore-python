@@ -132,7 +132,8 @@ class PackageSync(GenericSyncResource):
 
         file_size = os.path.getsize(file_path)
 
-        if file_size < max_cloud_run_allowed_size:
+        if False:
+            # if file_size < max_cloud_run_allowed_size:
             self.upload_attachment(
                 file_path=file_path,
                 label=label,
