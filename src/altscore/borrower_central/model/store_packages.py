@@ -98,6 +98,7 @@ class PackageSync(GenericSyncResource):
                 f"/v1/stores/packages/commands/attachments/generate-upload-signed-url",
                 json=GenerateAttachmentUploadSignedURL(file_name=file_name).dict(),
                 headers=headers,
+                timeout=900
             )
             raise_for_status_improved(response)
             signed_url = UploadSignedURLAPIDTO.parse_obj(response.json())
@@ -111,7 +112,8 @@ class PackageSync(GenericSyncResource):
                     headers={
                         "Content-Type": signed_url.content_type
                     },
-                    content=content
+                    content=content,
+                    timeout=900
                 )
 
                 raise_for_status_improved(response)
@@ -124,6 +126,7 @@ class PackageSync(GenericSyncResource):
                     package_id=self.data.id, attachment_file_name=signed_url.file_name, metadata=metadata, label=label
                 ).dict(),
                 headers=headers,
+                timeout=900
             )
             raise_for_status_improved(response)
 
@@ -162,7 +165,8 @@ class PackageAsync(GenericAsyncResource):
             response = await client.post(
                 f"/v1/stores/packages/commands/attachments/generate-upload-signed-url",
                 json=GenerateAttachmentUploadSignedURL(file_name=file_name).dict(),
-                headers=headers
+                headers=headers,
+                timeout=900
             )
             raise_for_status_improved(response)
 
@@ -177,7 +181,8 @@ class PackageAsync(GenericAsyncResource):
                 headers={
                     "Content-Type": signed_url.content_type
                 },
-                content=content
+                content=content,
+                timeout=900
             )
 
             raise_for_status_improved(response)
@@ -189,7 +194,8 @@ class PackageAsync(GenericAsyncResource):
                 json=CommitAttachmentSignedURUpload(
                     package_id=self.data.id, attachment_file_name=signed_url.file_name, metadata=metadata, label=label
                 ).dict(),
-                headers=headers
+                headers=headers,
+                timeout=900
             )
             raise_for_status_improved(response)
 
