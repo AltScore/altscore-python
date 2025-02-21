@@ -1,3 +1,4 @@
+import os
 from typing import Optional, List, Dict, Any
 import httpx
 from altscore.altdata.model.data_request import RequestResult
@@ -6,6 +7,7 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
 from pydantic import BaseModel, Field
 import datetime as dt
 from dateutil.parser import parse as parse_date
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 
 
 class PackageAPIDTO(BaseModel):
@@ -46,16 +48,173 @@ class CreatePackageDTO(BaseModel):
         allow_population_by_alias = True
 
 
+class GenerateAttachmentUploadSignedURL(BaseModel):
+    file_name: str = Field(alias="fileName")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class CommitAttachmentSignedURUpload(BaseModel):
+    package_id: str = Field(alias="packageId")
+    attachment_file_name: str = Field(alias="attachmentFileName")
+    metadata: Optional[dict] = Field(alias="metadata", default=None)
+    label: Optional[str] = Field(alias="label", default=None)
+
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class UploadSignedURLAPIDTO(BaseModel):
+    signed_url: str = Field(alias="signedUrl")
+    file_name: str = Field(alias="fileName")
+    content_type: str = Field(alias="contentType")
+    attachment_id: str = Field(alias="attachmentId")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
 class PackageSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "/stores/packages", header_builder, renew_token, PackageAPIDTO.parse_obj(data))
 
 
+    @retry_on_401
+    def upload_attachment_with_signed_url(self, file_path: str,  label: str = None, metadata: Dict = None):
+        file_name = file_path.split("/")[-1]
+
+        with httpx.Client(base_url=self.base_url) as client:
+            headers = self._header_builder()
+            response = client.post(
+                f"/v1/stores/packages/commands/attachments/generate-upload-signed-url",
+                json=GenerateAttachmentUploadSignedURL(file_name=file_name).dict(),
+                headers=headers,
+                timeout=900
+            )
+            raise_for_status_improved(response)
+            signed_url = UploadSignedURLAPIDTO.parse_obj(response.json())
+
+        with open(file_path, "rb") as f:
+            content = f.read()
+
+            with httpx.Client() as client:
+                response = client.put(
+                    url=signed_url.signed_url,
+                    headers={
+                        "Content-Type": signed_url.content_type
+                    },
+                    content=content,
+                    timeout=900
+                )
+
+                raise_for_status_improved(response)
+
+        with httpx.Client(base_url=self.base_url) as client:
+            headers = self._header_builder()
+            response = client.post(
+                f"/v1/stores/packages/commands/attachments/commit-signed-url-upload",
+                json=CommitAttachmentSignedURUpload(
+                    package_id=self.data.id, attachment_file_name=signed_url.file_name, metadata=metadata, label=label
+                ).dict(),
+                headers=headers,
+                timeout=900
+            )
+            raise_for_status_improved(response)
+
+    def upload_package_attachment(self, file_path: str, label: str = None, metadata: Dict = None):
+        max_cloud_run_allowed_size = 32 * 1024 * 1024
+
+        file_size = os.path.getsize(file_path)
+
+        if file_size < max_cloud_run_allowed_size:
+            self.upload_attachment(
+                file_path=file_path,
+                label=label,
+                metadata=metadata
+            )
+        else:
+            self.upload_attachment_with_signed_url(
+                file_path = file_path,
+                label = label,
+                metadata = metadata
+            )
+
+
 class PackageAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "/stores/packages", header_builder, renew_token, PackageAPIDTO.parse_obj(data))
+
+
+    @retry_on_401_async
+    async def upload_attachment_with_signed_url(self, file_path: str, label: str = None, metadata: Dict = None):
+        file_name = file_path.split("/")[-1]
+
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            headers = self._header_builder()
+            response = await client.post(
+                f"/v1/stores/packages/commands/attachments/generate-upload-signed-url",
+                json=GenerateAttachmentUploadSignedURL(file_name=file_name).dict(),
+                headers=headers,
+                timeout=900
+            )
+            raise_for_status_improved(response)
+
+            signed_url = UploadSignedURLAPIDTO.parse_obj(response.json())
+
+        with open(file_path, "rb") as f:
+            content = f.read()
+
+        with httpx.Client() as client:
+            response = client.put(
+                url=signed_url.signed_url,
+                headers={
+                    "Content-Type": signed_url.content_type
+                },
+                content=content,
+                timeout=900
+            )
+
+            raise_for_status_improved(response)
+
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            headers = self._header_builder()
+            response = await client.post(
+                f"/v1/stores/packages/commands/attachments/commit-signed-url-upload",
+                json=CommitAttachmentSignedURUpload(
+                    package_id=self.data.id, attachment_file_name=signed_url.file_name, metadata=metadata, label=label
+                ).dict(),
+                headers=headers,
+                timeout=900
+            )
+            raise_for_status_improved(response)
+
+    async def upload_package_attachment(self, file_path: str, label: str = None, metadata: Dict = None):
+        max_cloud_run_allowed_size = 32 * 1024 * 1024
+
+        file_size = os.path.getsize(file_path)
+
+        if file_size < max_cloud_run_allowed_size:
+            await self.upload_attachment(
+                file_path=file_path,
+                label=label,
+                metadata=metadata
+            )
+        else:
+            await self.upload_attachment_with_signed_url(
+                file_path = file_path,
+                label = label,
+                metadata = metadata
+            )
 
 
 class PackagesSyncModule(GenericSyncModule):
