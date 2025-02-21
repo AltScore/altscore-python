@@ -58,6 +58,7 @@ class InputKeys(BaseModel):
     country_code: Optional[str] = Field(alias="countryCode", default=None)
     date_to_analyze: Optional[str] = Field(alias="dateToAnalyze", default=None)
     authorization_reference: Optional[str] = Field(alias="authorizationReference", default=None)
+    passport_number: Optional[str] = Field(alias="passportNumber", default=None)
 
     class Config:
         populate_by_name = True
