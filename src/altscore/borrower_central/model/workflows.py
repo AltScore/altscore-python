@@ -93,6 +93,17 @@ class UpdateWorkflowDTO(BaseModel):
         allow_population_by_alias = True
 
 
+class ConfigureSchedulesDTO(BaseModel):
+    workflow_id: str = Field(alias="workflowId")
+    schedule: Optional[WorkflowSchedule] = Field(alias="schedule", default=None)
+    schedule_batch: Optional[WorkflowSchedule] = Field(alias="scheduleBatch", default=None)
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
 class WorkflowExecutionResponseAPIDTO(BaseModel):
     execution_id: str = Field(alias="executionId")
     workflow_id: str = Field(alias="workflowId")
@@ -125,11 +136,11 @@ class WorkflowSync(GenericSyncResource):
                 url,
                 headers=self._header_builder(),
                 timeout=300,
-                json={
+                json=ConfigureSchedulesDTO.parse_obj({
                     "workflowId": self.data.id,
                     "schedule": schedule,
                     "scheduleBatch": schedule_batch
-                }
+                }).dict(by_alias=True)
             )
 
             raise_for_status_improved(response)
@@ -169,11 +180,11 @@ class WorkflowAsync(GenericAsyncResource):
                 url,
                 headers=self._header_builder(),
                 timeout=300,
-                json={
+                json=ConfigureSchedulesDTO.parse_obj({
                     "workflowId": self.data.id,
                     "schedule": schedule,
                     "scheduleBatch": schedule_batch
-                }
+                }).dict(by_alias=True)
             )
             raise_for_status_improved(response)
 
