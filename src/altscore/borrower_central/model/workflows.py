@@ -85,9 +85,18 @@ class UpdateWorkflowDTO(BaseModel):
     ui_schema: Optional[str] = Field(alias="uiSchema", default=None)
     initial_data: Optional[str] = Field(alias="initialData", default=None)
     input_schema: Optional[str] = Field(alias="inputSchema", default=None)
+    use_high_memory: Optional[bool] = Field(alias="useHighMemory", default=None)
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class ConfigureSchedulesDTO(BaseModel):
+    workflow_id: str = Field(alias="workflowId")
     schedule: Optional[WorkflowSchedule] = Field(alias="schedule", default=None)
     schedule_batch: Optional[WorkflowSchedule] = Field(alias="scheduleBatch", default=None)
-    use_high_memory: Optional[bool] = Field(alias="useHighMemory", default=None)
 
     class Config:
         populate_by_name = True
@@ -119,6 +128,25 @@ class WorkflowSync(GenericSyncResource):
 
 
     @retry_on_401
+    def configure_schedules(self, schedule: dict = None, schedule_batch: dict = None):
+        url = f"{self.base_url}/v1/{self.resource}/commands/configure-schedules"
+
+        with httpx.Client() as client:
+            response = client.post(
+                url,
+                headers=self._header_builder(),
+                timeout=300,
+                json=ConfigureSchedulesDTO.parse_obj({
+                    "workflowId": self.data.id,
+                    "schedule": schedule,
+                    "scheduleBatch": schedule_batch
+                }).dict(by_alias=True)
+            )
+
+            raise_for_status_improved(response)
+
+
+    @retry_on_401
     def delete_schedules(self, schedule: bool = False, schedule_batch: bool = False):
         url = f"{self.base_url}/v1/{self.resource}/commands/delete-schedules"
 
@@ -141,6 +169,24 @@ class WorkflowAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "workflows", header_builder, renew_token, WorkflowDataAPIDTO.parse_obj(data))
+
+
+    @retry_on_401_async
+    async def configure_schedules(self, schedule: dict = None, schedule_batch: dict = None):
+        url = f"{self.base_url}/v1/{self.resource}/commands/configure-schedules"
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url,
+                headers=self._header_builder(),
+                timeout=300,
+                json=ConfigureSchedulesDTO.parse_obj({
+                    "workflowId": self.data.id,
+                    "schedule": schedule,
+                    "scheduleBatch": schedule_batch
+                }).dict(by_alias=True)
+            )
+            raise_for_status_improved(response)
 
 
     @retry_on_401_async
