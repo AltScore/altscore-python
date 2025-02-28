@@ -43,6 +43,7 @@ class CreateBorrowerFieldDTO(BaseModel):
     value: Any = Field(alias="value")
     data_type: Optional[str] = Field(alias="dataType", default=None)
     tags: List[str] = Field(alias="tags", default=[])
+    updated_at: Optional[str] = Field(alias="updatedAt", default=None)
 
     class Config:
         populate_by_name = True
@@ -57,6 +58,7 @@ class UpdateBorrowerFieldDTO(BaseModel):
     value: Optional[str] = Field(alias="value")
     data_type: Optional[str] = Field(alias="dataType", default=None)
     tags: List[str] = Field(alias="tags", default=[])
+    updated_at: Optional[str] = Field(alias="updatedAt", default=None)
 
     class Config:
         populate_by_name = True
