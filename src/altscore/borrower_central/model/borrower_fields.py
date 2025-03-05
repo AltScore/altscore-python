@@ -1,3 +1,5 @@
+import datetime
+
 import httpx
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from pydantic import BaseModel, Field
@@ -43,13 +45,19 @@ class CreateBorrowerFieldDTO(BaseModel):
     value: Any = Field(alias="value")
     data_type: Optional[str] = Field(alias="dataType", default=None)
     tags: List[str] = Field(alias="tags", default=[])
-    updated_at: Optional[str] = Field(alias="updatedAt", default=None)
+    updated_at: Optional[str | datetime.datetime] = Field(alias="updatedAt", default=None)
 
     class Config:
         populate_by_name = True
         allow_population_by_field_name = True
         allow_population_by_alias = True
 
+    def dict(self, *args, **kwargs):
+        base_dict = super().dict(*args, **kwargs)
+        date_key = 'updatedAt' if kwargs.get("by_alias") else 'updated_at'
+        if isinstance(self.updated_at, datetime.datetime):
+            base_dict[date_key] = self.updated_at.isoformat()
+        return base_dict
 
 class UpdateBorrowerFieldDTO(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
@@ -58,12 +66,19 @@ class UpdateBorrowerFieldDTO(BaseModel):
     value: Optional[str] = Field(alias="value")
     data_type: Optional[str] = Field(alias="dataType", default=None)
     tags: List[str] = Field(alias="tags", default=[])
-    updated_at: Optional[str] = Field(alias="updatedAt", default=None)
+    updated_at: Optional[str | datetime.datetime] = Field(alias="updatedAt", default=None)
 
     class Config:
         populate_by_name = True
         allow_population_by_field_name = True
         allow_population_by_alias = True
+
+    def dict(self, *args, **kwargs):
+        base_dict = super().dict(*args, **kwargs)
+        date_key = 'updatedAt' if kwargs.get("by_alias") else 'updated_at'
+        if isinstance(self.updated_at, datetime.datetime):
+            base_dict[date_key] = self.updated_at.isoformat()
+        return base_dict
 
 
 class BorrowerFieldSync(GenericSyncResource):

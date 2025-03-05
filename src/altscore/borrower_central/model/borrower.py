@@ -1,3 +1,5 @@
+import datetime
+
 from pydantic import BaseModel, Field
 from typing import Optional, List, Literal, Dict
 import httpx
@@ -1426,7 +1428,10 @@ class BorrowerSync(BorrowerBase):
             )
 
     @retry_on_401
-    def set_risk_rating(self, risk_rating: str, reference_id: Optional[str] = None, updated_at: str = None):
+    def set_risk_rating(self, risk_rating: str, reference_id: Optional[str] = None, updated_at: str | datetime.datetime = None):
+        if isinstance(updated_at, datetime.datetime):
+            updated_at = updated_at.isoformat()
+
         with httpx.Client(base_url=self.base_url) as client:
             response = client.put(
                 f"{self.base_url}/v1/borrowers/{self.data.id}/risk-rating",
