@@ -44,7 +44,7 @@ class CreateBorrowerFieldDTO(BaseModel):
     value: Any = Field(alias="value")
     data_type: Optional[str] = Field(alias="dataType", default=None)
     tags: List[str] = Field(alias="tags", default=[])
-    updated_at: Optional[str | datetime] = Field(alias="updatedAt", default=None)
+    updated_at: Optional[datetime] = Field(alias="updatedAt", default=None)
 
     class Config:
         populate_by_name = True
@@ -54,8 +54,7 @@ class CreateBorrowerFieldDTO(BaseModel):
     def dict(self, *args, **kwargs):
         base_dict = super().dict(*args, **kwargs)
         date_key = 'updatedAt' if kwargs.get("by_alias") else 'updated_at'
-        if isinstance(self.updated_at, datetime):
-            base_dict[date_key] = self.updated_at.isoformat()
+        base_dict[date_key] = self.updated_at.isoformat() if self.updated_at else None
         return base_dict
 
 

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Literal, Dict
-from datetime import datetime
+import datetime as dt
 import httpx
 import asyncio
 
@@ -171,6 +171,21 @@ class BorrowerExportAPIDTO(BaseModel):
         allow_population_by_field_name = True
         allow_population_by_alias = True
 
+class SetRiskRatingAPIDTO(BaseModel):
+    value: str = Field(alias="value")
+    reference_id: Optional[str] = Field(alias="referenceId", default=None)
+    updated_at: Optional[dt.datetime] = Field(alias="updatedAt", default=None)
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+    def dict(self, *args, **kwargs):
+        base_dict = super().dict(*args, **kwargs)
+        date_key = 'updatedAt' if kwargs.get("by_alias") else 'updated_at'
+        base_dict[date_key] = self.updated_at.isoformat() if self.updated_at else None
+        return base_dict
 
 class BorrowerBase:
     resource = "borrowers"
@@ -905,19 +920,12 @@ class BorrowerAsync(BorrowerBase):
             )
 
     @retry_on_401_async
-    async def set_risk_rating(self, risk_rating: str, reference_id: Optional[str] = None, updated_at: str | datetime = None):
-        if isinstance(updated_at, datetime):
-            updated_at = updated_at.isoformat()
-
+    async def set_risk_rating(self, risk_data: Dict):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
                 f"{self.base_url}/v1/borrowers/{self.data.id}/risk-rating",
                 headers=self._header_builder(),
-                json={
-                    "value": risk_rating,
-                    "referenceId": reference_id,
-                    "updatedAt": updated_at
-                }
+                json=SetRiskRatingAPIDTO.parse_obj(risk_data).dict(by_alias=True)
             )
             raise_for_status_improved(response)
             return None
@@ -1430,19 +1438,12 @@ class BorrowerSync(BorrowerBase):
             )
 
     @retry_on_401
-    def set_risk_rating(self, risk_rating: str, reference_id: Optional[str] = None, updated_at: str | datetime = None):
-        if isinstance(updated_at, datetime):
-            updated_at = updated_at.isoformat()
-
+    def set_risk_rating(self, risk_data: Dict):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.put(
                 f"{self.base_url}/v1/borrowers/{self.data.id}/risk-rating",
                 headers=self._header_builder(),
-                json={
-                    "value": risk_rating,
-                    "referenceId": reference_id,
-                    "updatedAt": updated_at
-                }
+                json=SetRiskRatingAPIDTO.parse_obj(risk_data).dict(by_alias=True)
             )
             raise_for_status_improved(response)
             return None
