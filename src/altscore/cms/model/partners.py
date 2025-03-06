@@ -1,16 +1,15 @@
-import asyncio
-
 from pydantic import BaseModel, Field
 from typing import Optional, List
 import httpx
 
+from altscore.cms.model.calendars import CreateCalendarAPIDTO, DPACalendarAPIDTO
 from altscore.cms.model.dpa_segmentation import DPASegmentationAPIDTO, CreateDPASegmentationDTO, \
     UpdateDPASegmentationDTO
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule
 from altscore.cms.helpers import build_headers
 from altscore.cms.model.dpa_products import DPAProductAPIDTO, CreateDPAProductAPIDTO, UpdateDPAProductAPIDTO
-from altscore.borrower_central.utils import clean_dict, convert_to_dash_case
+from altscore.borrower_central.utils import clean_dict
 
 
 class PartnerAPIDTO(BaseModel):
@@ -51,6 +50,7 @@ class DPASettingsDefaults(BaseModel):
     closing_balance_threshold: Optional[str] = Field(alias="closingBalanceThreshold", default=None)
     product_id: Optional[str] = Field(alias="productId", default=None)
     segmentation_id: Optional[str] = Field(alias="segmentationId", default=None)
+    calendar_type: Optional[str] = Field(alias="calendarType", default=None)
 
     class Config:
         populate_by_name = True
@@ -108,6 +108,9 @@ class PartnerBase:
             "sort-direction": sort_direction
         }
         return f"{self.base_url}/v2/partners/{partner_id}/segmentations/dpa", clean_dict(query)
+
+    def _get_partner_dpa_calendar (self, partner_id:str) -> (str, dict):
+        return f"{self.base_url}/v2/partners/{partner_id}/calendar/dpa", {}
 
 
 class PartnerAsync(PartnerBase):
@@ -270,6 +273,55 @@ class PartnerAsync(PartnerBase):
             )
             raise_for_status_improved(response)
 
+    @retry_on_401_async
+    async def get_dpa_calendars(self) -> List[DPACalendarAPIDTO]:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
+                f"{self.base_url}/v2/partners/{self.data.partner_id}/calendars/dpa",
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [DPACalendarAPIDTO.parse_obj(e) for e in response.json()]
+
+    @retry_on_401_async
+    async def get_dpa_calendar(self, calendar_id: str) -> Optional[DPACalendarAPIDTO]:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
+                f"/v2/partners/{self.data.partner_id}/calendars/dpa/{calendar_id}",
+                headers=self._header_builder(),
+                timeout=30
+            )
+            if response.status_code == 404:
+                return None
+            elif response.status_code == 200:
+                return DPACalendarAPIDTO.parse_obj(response.json())
+            raise_for_status_improved(response)
+
+    @retry_on_401_async
+    async def create_dpa_calendar(self, new_entity_data:dict) -> str:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.post(
+                f"/v2/partners/{self.data.partner_id}/calendars/dpa",
+                json=CreateCalendarAPIDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return response.json()["calendarId"]
+
+
+    @retry_on_401_async
+    async def delete_dpa_calendar(self, calendar_id:str) -> None:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.delete(
+                f"/v2/partners/{self.data.partner_id}/calendars/dpa/{calendar_id}",
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+
+
 
 
 class PartnerSync(PartnerBase):
@@ -426,6 +478,53 @@ class PartnerSync(PartnerBase):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.delete(
                 f"/v2/partners/{self.data.partner_id}/segmentations/dpa/{segmentation_id}",
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401
+    def get_dpa_calendars(self) -> List[DPACalendarAPIDTO]:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.get(
+                f"{self.base_url}/v2/partners/{self.data.partner_id}/calendars/dpa",
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [DPACalendarAPIDTO.parse_obj(e) for e in response.json()]
+
+    @retry_on_401
+    def get_dpa_calendar(self, calendar_id: str) -> Optional[DPACalendarAPIDTO]:
+        with httpx.Client(base_url=self.base_url) as client:
+            response =  client.get(
+                f"/v2/partners/{self.data.partner_id}/calendars/dpa/{calendar_id}",
+                headers=self._header_builder(),
+                timeout=30
+            )
+            if response.status_code == 404:
+                return None
+            elif response.status_code == 200:
+                return DPACalendarAPIDTO.parse_obj(response.json())
+            raise_for_status_improved(response)
+
+    @retry_on_401
+    def create_dpa_calendar(self, new_entity_data: dict) -> str:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.post(
+                f"/v2/partners/{self.data.partner_id}/calendars/dpa",
+                json=CreateCalendarAPIDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return response.json()["calendarId"]
+
+    @retry_on_401
+    def delete_dpa_calendar(self, calendar_id: str) -> None:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.delete(
+                f"/v2/partners/{self.data.partner_id}/calendars/dpa/{calendar_id}",
                 headers=self._header_builder(),
                 timeout=30
             )

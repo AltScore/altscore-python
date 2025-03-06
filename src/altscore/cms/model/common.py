@@ -1,6 +1,13 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
+class DisbursementSettings(BaseModel):
+    disburse_to: str = Field(alias="disburseTo")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        populate_by_alias = True
 
 class Money(BaseModel):
     amount: str
@@ -67,6 +74,9 @@ class Terms(BaseModel):
     sub_total_amount: Optional[Money] = Field(alias="subTotalAmount", default=None)
     penalties: Optional[List[TermsPenalties]] = Field(alias="penalties", default=None)
     name: Optional[str] = Field(alias="name", default=None)
+    calendar_type: Optional[str] = Field(alias="calendarType", default=None)
+    loan_term_duration: Optional[int] = Field(alias="loanTermDuration", default=None)
+    disbursement_settings: Optional[DisbursementSettings] = Field(alias="disbursementSettings", default=None)
 
     class Config:
         populate_by_name = True
