@@ -73,3 +73,6 @@ docs/_build
 # Mypy Cache
 .mypy_cache/
 .env.local
+
+# IA Agents
+CLAUDE.md
