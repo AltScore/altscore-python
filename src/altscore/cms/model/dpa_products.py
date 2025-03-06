@@ -1,6 +1,7 @@
 from typing import List, Optional, Union
 from pydantic import BaseModel, Field
-from altscore.cms.model.common import Money
+from altscore.cms.model.common import Money, DisbursementSettings
+
 
 class InterestRate(BaseModel):
     type: str
@@ -40,13 +41,7 @@ class ProductTier(BaseModel):
         allow_population_by_field_name = True
         populate_by_alias = True
 
-class DisbursementSettings(BaseModel):
-    disburse_to: str = Field(alias="disburseTo")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
 
 class DPAProductAPIDTO(BaseModel):
     id: str = Field(alias="productId")
