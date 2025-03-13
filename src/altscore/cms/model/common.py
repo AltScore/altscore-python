@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
+
 class DisbursementSettings(BaseModel):
     disburse_to: str = Field(alias="disburseTo")
 
@@ -8,6 +9,7 @@ class DisbursementSettings(BaseModel):
         populate_by_name = True
         allow_population_by_field_name = True
         populate_by_alias = True
+
 
 class Money(BaseModel):
     amount: str
@@ -62,10 +64,25 @@ class TermsPenalties(BaseModel):
         populate_by_alias = True
 
 
+class TermsFees(BaseModel):
+    amount: Optional[Money] = Field(alias="amount")
+    amount_rate: Optional[str] = Field(alias="amountRate")
+    calculation_type: Optional[str] = Field(alias="calculationType")
+    description: Optional[str] = Field(alias="description")
+    name: Optional[str] = Field(alias="name")
+    tax: Optional[int] = Field(alias="tax")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        populate_by_alias = True
+
+
 class Terms(BaseModel):
     amortization_type: str = Field(alias="amortizationType")
     disbursement_date: Optional[str] = Field(alias="disbursementDate")
     installments: int = Field(alias="installments")
+    fees: Optional[List[Optional[TermsFees]]] = Field(alias="fees", default=None)
     interest_calculate_type: str = Field(alias="interestCalculateType")
     interest_rate: InterestRate = Field(alias="interestRate")
     interest_tax: int = Field(alias="interestTax")
@@ -77,6 +94,7 @@ class Terms(BaseModel):
     calendar_type: Optional[str] = Field(alias="calendarType", default=None)
     loan_term_duration: Optional[int] = Field(alias="loanTermDuration", default=None)
     disbursement_settings: Optional[DisbursementSettings] = Field(alias="disbursementSettings", default=None)
+
     class Config:
         populate_by_name = True
         allow_population_by_field_name = True
