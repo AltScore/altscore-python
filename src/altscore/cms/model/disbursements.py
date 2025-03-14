@@ -58,7 +58,7 @@ class DisbursementAPIDTO(BaseModel):
     debt_id: str = Field(alias="debtId")
     disbursement_date: str = Field(alias="disbursementDate")
     gateway: str = Field(alias="gateway")
-    notes: Optional[str] = Field(alias="notes")
+    notes: Optional[str] = Field(alias="notes", default=None)
     partner: PartnerInfo = Field(alias="partner")
     payer: Optional[PayerInfo] = Field(alias="payer", default=None)
     payment_date: Optional[str] = Field(alias="paymentDate", default=None)
@@ -67,7 +67,6 @@ class DisbursementAPIDTO(BaseModel):
     status: str = Field(alias="status")
     tracking_key: str = Field(alias="trackingKey")
     updated_at: str = Field(alias="updatedAt")
-    version: int = Field(alias="version")
 
     class Config:
         populate_by_name = True

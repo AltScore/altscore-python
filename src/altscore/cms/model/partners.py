@@ -21,6 +21,7 @@ class PartnerAPIDTO(BaseModel):
     short_name: str = Field(alias="shortName")
     partner_id: str = Field(alias="partnerId")
     status: str = Field(alias="status")
+    tax_id: str = Field(alias="taxId")
     is_aggregator: bool = Field(alias="isAggregator")
     email: str = Field(alias="email")
     created_at: str = Field(alias="createdAt")
@@ -327,7 +328,7 @@ class PartnerAsync(PartnerBase):
             raise_for_status_improved(response)
 
     @retry_on_401_async
-    async def create_disbursement_account(self, country: str, taxId: str, name: str, bank_account: dict) -> DisbursementAccountBaseModel:
+    async def create_disbursement_account(self, country: str, bank_account: dict) -> DisbursementAccountBaseModel:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 self._create_disbursement_account(country),
@@ -336,8 +337,8 @@ class PartnerAsync(PartnerBase):
                     "id": self.data.partner_id,
                     "partnerId": self.data.partner_id,
                     "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True, exclude_none=True),
-                    "taxId": taxId,
-                    "name": name
+                    "taxId": self.data.tax_id,
+                    "name": self.data.name,
                 }).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
@@ -552,7 +553,7 @@ class PartnerSync(PartnerBase):
             raise_for_status_improved(response)
     
     @retry_on_401
-    def create_disbursement_account(self, country: str, taxId: str, name: str, bank_account: dict) -> DisbursementAccountBaseModel:
+    def create_disbursement_account(self, country: str, bank_account: dict) -> DisbursementAccountBaseModel:
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 self._create_disbursement_account(country),
@@ -561,8 +562,8 @@ class PartnerSync(PartnerBase):
                     "id": self.data.partner_id,
                     "partnerId": self.data.partner_id,
                     "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True, exclude_none=True),
-                    "taxId": taxId,
-                    "name": name
+                    "taxId": self.data.tax_id,
+                    "name": self.data.name,
                 }).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
