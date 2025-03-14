@@ -46,6 +46,7 @@ class CreateDisbursementClientAccountDTO(BaseModel):
         populate_by_alias = True
 
 class CreateDisbursementPartnerAccountDTO(BaseModel):
+    id: str = Field(alias="id")
     name: str = Field(alias="name")
     tax_id: str = Field(alias="taxId")
     partner_id: str = Field(alias="partnerId")
