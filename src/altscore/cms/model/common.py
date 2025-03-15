@@ -85,7 +85,7 @@ class Terms(BaseModel):
     fees: Optional[List[Optional[TermsFees]]] = Field(alias="fees", default=None)
     interest_calculate_type: str = Field(alias="interestCalculateType")
     interest_rate: InterestRate = Field(alias="interestRate")
-    interest_tax: int = Field(alias="interestTax")
+    interest_tax: float = Field(alias="interestTax")
     principal: Optional[Money] = Field(alias="principal")
     repayEvery: int = Field(alias="repayEvery")
     sub_total_amount: Optional[Money] = Field(alias="subTotalAmount", default=None)
