@@ -144,6 +144,7 @@ EXECUTION_STATUS_COMPLETE = "complete"
 
 class ExecutionState(BaseModel):
     status: str = Field(alias="status")
+    execution_batch_id: Optional[str] = Field(alias="executionBatchId", default=None)
     callback_at: dt.datetime = Field(alias="callbackAt")
     state: Dict = Field(alias="state")
     updated_at: Optional[dt.datetime] = Field(alias="updatedAt", default=None)
@@ -157,6 +158,7 @@ class ExecutionState(BaseModel):
     def from_api_dto(cls, data: Dict):
         return cls(
             status=data["status"],
+            execution_batch_id=data["executionBatchId"],
             callback_at=parse(data["callbackAt"]),
             state=data["state"],
             updated_at=parse(data["updatedAt"]) if data["updatedAt"] else None
@@ -165,6 +167,7 @@ class ExecutionState(BaseModel):
     def to_api_dto(self):
         return {
             "status": self.status,
+            "executionBatchId": self.execution_batch_id,
             "callbackAt": self.callback_at.isoformat(),
             "state": self.state
         }
