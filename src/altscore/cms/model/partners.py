@@ -11,6 +11,7 @@ from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule
 from altscore.cms.helpers import build_headers
 from altscore.cms.model.dpa_products import DPAProductAPIDTO, CreateDPAProductAPIDTO, UpdateDPAProductAPIDTO
 from altscore.borrower_central.utils import clean_dict, convert_to_dash_case
+from altscore.cms.model.disbursement_accounts import  BankAccount, DisbursementAccountBaseModel, CreateDisbursementPartnerAccountDTO
 
 
 class PartnerAPIDTO(BaseModel):
@@ -20,6 +21,7 @@ class PartnerAPIDTO(BaseModel):
     short_name: str = Field(alias="shortName")
     partner_id: str = Field(alias="partnerId")
     status: str = Field(alias="status")
+    tax_id: str = Field(alias="taxId")
     is_aggregator: bool = Field(alias="isAggregator")
     email: str = Field(alias="email")
     created_at: str = Field(alias="createdAt")
@@ -112,6 +114,10 @@ class PartnerBase:
 
     def _get_partner_dpa_calendar (self, partner_id:str) -> (str, dict):
         return f"{self.base_url}/v2/partners/{partner_id}/calendar/dpa", {}
+    
+    @staticmethod
+    def _create_disbursement_account(country: str):
+        return f"/v1/disbursements/accounts/{country}/disbursement"
 
 class PartnerAsync(PartnerBase):
     data: PartnerAPIDTO
@@ -321,6 +327,24 @@ class PartnerAsync(PartnerBase):
             )
             raise_for_status_improved(response)
 
+    @retry_on_401_async
+    async def create_disbursement_account(self, country: str, bank_account: dict) -> DisbursementAccountBaseModel:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.post(
+                self._create_disbursement_account(country),
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                json=CreateDisbursementPartnerAccountDTO.parse_obj({
+                    "id": self.data.partner_id,
+                    "partnerId": self.data.partner_id,
+                    "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True, exclude_none=True),
+                    "taxId": self.data.tax_id,
+                    "name": self.data.name,
+                }).dict(by_alias=True, exclude_none=True),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return DisbursementAccountBaseModel.parse_obj(response.json())
+
 
 class PartnerSync(PartnerBase):
     data: PartnerAPIDTO
@@ -527,6 +551,24 @@ class PartnerSync(PartnerBase):
                 timeout=30
             )
             raise_for_status_improved(response)
+    
+    @retry_on_401
+    def create_disbursement_account(self, country: str, bank_account: dict) -> DisbursementAccountBaseModel:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.post(
+                self._create_disbursement_account(country),
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                json=CreateDisbursementPartnerAccountDTO.parse_obj({
+                    "id": self.data.partner_id,
+                    "partnerId": self.data.partner_id,
+                    "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True, exclude_none=True),
+                    "taxId": self.data.tax_id,
+                    "name": self.data.name,
+                }).dict(by_alias=True, exclude_none=True),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return DisbursementAccountBaseModel.parse_obj(response.json())
 
 
 class PartnersAsyncModule(GenericAsyncModule):
