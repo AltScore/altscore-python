@@ -1,6 +1,8 @@
 from typing import Optional
 from pydantic import BaseModel, Field
+import httpx
 
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.cms.model.generics import GenericAsyncModule, GenericSyncModule
 
 class AmountInfo(BaseModel):
@@ -74,7 +76,9 @@ class DisbursementAPIDTO(BaseModel):
         populate_by_alias = True
 
 class DisbursementBase:
-    pass
+    @staticmethod
+    def _conciliate_disbursement(payOrderId: str):
+        return f"/v1/disbursements/{payOrderId}/reconcile"
 
 class DisbursementAsync(DisbursementBase):
     data: DisbursementAPIDTO
@@ -91,6 +95,16 @@ class DisbursementAsync(DisbursementBase):
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.data.id})"
+    
+    @retry_on_401_async
+    async def conciliate_disbursement(self):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.put(
+                self._conciliate_disbursement(self.data.id),
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
 
 class DisbursementSync(DisbursementBase):
     data: DisbursementAPIDTO
@@ -107,6 +121,16 @@ class DisbursementSync(DisbursementBase):
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.data.id})"
+    
+    @retry_on_401
+    def conciliate_disbursement(self):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.put(
+                self._conciliate_disbursement(self.data.id),
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
 
 class DisbursementAsyncModule(GenericAsyncModule):
     def __init__(self, altscore_client):
