@@ -58,7 +58,7 @@ class GenericSyncModule:
             response = client.patch(
                 f"/{self.resource_version}/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
-                json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True),
+                json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -177,7 +177,7 @@ class GenericAsyncModule:
             response = await client.patch(
                 f"/{self.resource_version}/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
-                json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True),
+                json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
