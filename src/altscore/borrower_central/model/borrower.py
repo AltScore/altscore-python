@@ -920,12 +920,16 @@ class BorrowerAsync(BorrowerBase):
             )
 
     @retry_on_401_async
-    async def set_risk_rating(self, risk_data: Dict):
+    async def set_risk_rating(self, risk_rating: str, reference_id: Optional[str] = None, updated_at: Optional[dt.datetime] = None):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
                 f"{self.base_url}/v1/borrowers/{self.data.id}/risk-rating",
                 headers=self._header_builder(),
-                json=SetRiskRatingAPIDTO.parse_obj(risk_data).dict(by_alias=True)
+                json=SetRiskRatingAPIDTO.parse_obj({
+                    "value": risk_rating,
+                    "reference_id": reference_id,
+                    "updated_at": updated_at
+                }).dict(by_alias=True)
             )
             raise_for_status_improved(response)
             return None
@@ -1438,12 +1442,16 @@ class BorrowerSync(BorrowerBase):
             )
 
     @retry_on_401
-    def set_risk_rating(self, risk_data: Dict):
+    def set_risk_rating(self, risk_rating: str, reference_id: Optional[str] = None, updated_at: Optional[dt.datetime] = None):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.put(
                 f"{self.base_url}/v1/borrowers/{self.data.id}/risk-rating",
                 headers=self._header_builder(),
-                json=SetRiskRatingAPIDTO.parse_obj(risk_data).dict(by_alias=True)
+                json=SetRiskRatingAPIDTO.parse_obj({
+                    "value": risk_rating,
+                    "reference_id": reference_id,
+                    "updated_at": updated_at
+                }).dict(by_alias=True)
             )
             raise_for_status_improved(response)
             return None
