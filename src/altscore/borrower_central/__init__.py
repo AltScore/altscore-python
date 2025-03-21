@@ -33,7 +33,9 @@ from altscore.borrower_central.model.steps import StepsAsyncModule, StepsSyncMod
 from altscore.borrower_central.model.list_of_similar import ListOfSimilarAsyncModule, ListOfSimilarSyncModule
 from altscore.borrower_central.model.execution_batches import ExecutionBatchAsyncModule, ExecutionBatchSyncModule
 from altscore.borrower_central.model.cms_settings import CMSSettingsAsyncModule, CMSSettingsSyncModule
-
+from altscore.borrower_central.model.conversational_channel_connectors import  ChannelConnectorAsyncModule, ChannelConnectorSyncModule
+from altscore.borrower_central.model.conversational_conversations import ConversationAsyncModule, ConversationSyncModule
+from altscore.borrower_central.model.conversational_messages import MessageAsyncModule, MessageSyncModule
 
 class BorrowerCentralAsync:
     def __init__(self, altscore_client):
@@ -72,6 +74,9 @@ class BorrowerCentralAsync:
         self.execution_batches = ExecutionBatchAsyncModule(altscore_client)
         self.cms_settings = CMSSettingsAsyncModule(altscore_client)
         self.communications = CommunicationsAsyncModule(altscore_client)
+        self.conversational_channel_connectors = ChannelConnectorAsyncModule(altscore_client)
+        self.conversational_conversations = ConversationAsyncModule(altscore_client)
+        self.conversational_messages = MessageAsyncModule(altscore_client)
 
 
 class BorrowerCentralSync:
@@ -111,3 +116,6 @@ class BorrowerCentralSync:
         self.execution_batches = ExecutionBatchSyncModule(altscore_client)
         self.cms_settings = CMSSettingsSyncModule(altscore_client)
         self.communications = CommunicationsSyncModule(altscore_client)
+        self.conversational_channel_connectors = ChannelConnectorSyncModule(altscore_client)
+        self.conversational_conversations = ConversationSyncModule(altscore_client)
+        self.conversational_messages = MessageSyncModule(altscore_client)
