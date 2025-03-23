@@ -10,38 +10,40 @@ class FlagAPIDTO(BaseModel):
     value: str = Field(alias="value")
     history: List[Dict] = Field(alias="history")
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateFlag(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
     value: str = Field(alias="value")
-    principal_id: Optional[str] = Field(alias="principalId", hidden=True, default=None)
+    principal_id: Optional[str] = Field(alias="principalId", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class FlagSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "flags", header_builder, renew_token,
-                         FlagAPIDTO.parse_obj(data))
+                         FlagAPIDTO.model_validate(data))
 
 
 class FlagAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "flags", header_builder, renew_token,
-                         FlagAPIDTO.parse_obj(data))
+                         FlagAPIDTO.model_validate(data))
 
 
 class RiskRatingsSyncModule(GenericSyncModule):

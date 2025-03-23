@@ -34,18 +34,19 @@ class StepDataInBorrower(BaseModel):
     key: str = Field(alias="key")
     created_at: str = Field(alias="createdAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class BorrowerAPIDTO(BaseModel):
     id: str = Field(alias="id")
     external_id: Optional[str] = Field(alias="externalId", default=None)
     persona: str = Field(alias="persona")
-    avatar_url: Optional[str] = Field(alias="avatarUrl")
-    label: Optional[str] = Field(alias="label")
+    avatar_url: Optional[str] = Field(None, alias="avatarUrl")
+    label: Optional[str] = Field(None, alias="label")
     tags: List[str] = Field(alias="tags", default=[])
     flag: Optional[str] = Field(alias="flag", default=None)
     risk_rating: Optional[str] = Field(alias="riskRating", default=None)
@@ -53,49 +54,53 @@ class BorrowerAPIDTO(BaseModel):
     current_step: Optional[StepDataInBorrower] = Field(alias="currentStep", default=None)
     cms_client_ids: Optional[List[str]] = Field(alias="cmsClientIds", default=[])
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class SimplifiedIdentity(BaseModel):
     id: str = Field(alias="id")
     key: str = Field(alias="key")
-    label: Optional[str] = Field(alias="label")
-    value: Optional[str] = Field(alias="value")
-    priority: Optional[int] = Field(alias="priority")
+    label: Optional[str] = Field(None, alias="label")
+    value: Optional[str] = Field(None, alias="value")
+    priority: Optional[int] = Field(None, alias="priority")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class SimplifiedField(BaseModel):
     id: str = Field(alias="id")
     key: str = Field(alias="key")
-    label: Optional[str] = Field(alias="label")
-    value: Optional[str] = Field(alias="value")
+    label: Optional[str] = Field(None, alias="label")
+    value: Optional[str] = Field(None, alias="value")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class SimplifiedPointOfContact(BaseModel):
     id: str = Field(alias="id")
-    signatures: Optional[List[str]] = Field(alias="signatures")
+    signatures: Optional[List[str]] = Field(None, alias="signatures")
     priority: int = Field(alias="priority"),
     value: str = Field(alias="value")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CurrentStep(BaseModel):
@@ -108,8 +113,8 @@ class BorrowerSummaryAPIDTO(BaseModel):
     id: str = Field(alias="id")
     external_id: Optional[str] = Field(alias="externalId", default=None)
     persona: str = Field(alias="persona")
-    label: Optional[str] = Field(alias="label")
-    flag: Optional[str] = Field(alias="flag")
+    label: Optional[str] = Field(None, alias="label")
+    flag: Optional[str] = Field(None, alias="flag")
     identities: Optional[List[SimplifiedIdentity]] = Field(alias="identities", default=[])
     fields: Optional[List[SimplifiedField]] = Field(alias="fields", default=[])
     points_of_contact: Optional[List[SimplifiedPointOfContact]] = Field(alias="pointsOfContact", default=[])
@@ -120,55 +125,60 @@ class BorrowerSummaryAPIDTO(BaseModel):
     current_step: Optional[StepDataInBorrower] = Field(alias="currentStep", default=None)
     cms_client_ids: Optional[List[str]] = Field(alias="cmsClientIds", default=[])
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateBorrowerDTO(BaseModel):
     persona: str = Field(alias="persona")
     external_id: str = Field(alias="externalId", default=None)
-    label: Optional[str] = Field(alias="label")
+    label: Optional[str] = Field(None, alias="label")
     risk_rating: Optional[str] = Field(alias="riskRating", default=None)
     repayment_risk_rating: Optional[int] = Field(alias="repaymentRiskRating", default=None)
     flag: Optional[str] = Field(alias="flag", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class UpdateBorrowerDTO(BaseModel):
     label: Optional[str] = Field(alias="label", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class BorrowerLoginAPIDTO(BaseModel):
     otp_id: str = Field(alias="otpId")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class BorrowerExportAPIDTO(BaseModel):
     signed_url: str = Field(alias="signedUrl")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class BorrowerBase:
@@ -365,7 +375,7 @@ class BorrowersAsyncModule:
             response = await client.post(
                 "/v1/borrowers",
                 headers=self.build_headers(),
-                json=CreateBorrowerDTO.parse_obj(new_entity_data).dict(by_alias=True),
+                json=CreateBorrowerDTO.model_validate(new_entity_data).model_dump(by_alias=True),
                 timeout=120
             )
             raise_for_status_improved(response)
@@ -377,7 +387,7 @@ class BorrowersAsyncModule:
             response = await client.patch(
                 f"/v1/borrowers/{resource_id}",
                 headers=self.build_headers(),
-                json=UpdateBorrowerDTO.parse_obj(patch_data).dict(by_alias=True),
+                json=UpdateBorrowerDTO.model_validate(patch_data).model_dump(by_alias=True),
                 timeout=120
             )
             raise_for_status_improved(response)
@@ -407,7 +417,7 @@ class BorrowersAsyncModule:
                     base_url=self.altscore_client._borrower_central_base_url,
                     header_builder=self.build_headers,
                     renew_token=self.renew_token,
-                    data=BorrowerAPIDTO.parse_obj(response.json())
+                    data=BorrowerAPIDTO.model_validate(response.json())
                 )
             elif response.status_code in [404]:
                 return None
@@ -458,7 +468,7 @@ class BorrowersAsyncModule:
                 base_url=self.altscore_client._borrower_central_base_url,
                 header_builder=self.build_headers,
                 renew_token=self.renew_token,
-                data=BorrowerAPIDTO.parse_obj(e)
+                data=BorrowerAPIDTO.model_validate(e)
             ) for e in response.json()]
 
     @retry_on_401_async
@@ -480,7 +490,7 @@ class BorrowersAsyncModule:
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [BorrowerSummaryAPIDTO.parse_obj(e) for e in response.json()]
+            return [BorrowerSummaryAPIDTO.model_validate(e) for e in response.json()]
 
     @retry_on_401_async
     async def retrieve_all(self, **kwargs):
@@ -559,7 +569,7 @@ class BorrowersAsyncModule:
                 timeout=120
             )
             raise_for_status_improved(response)
-            return BorrowerLoginAPIDTO.parse_obj(response.json())
+            return BorrowerLoginAPIDTO.model_validate(response.json())
 
     @retry_on_401_async
     async def commands_export(self):
@@ -570,7 +580,7 @@ class BorrowersAsyncModule:
                 timeout=120
             )
             raise_for_status_improved(response)
-            return BorrowerExportAPIDTO.parse_obj(response.json())
+            return BorrowerExportAPIDTO.model_validate(response.json())
 
 
 class BorrowersSyncModule:
@@ -590,7 +600,7 @@ class BorrowersSyncModule:
             response = client.post(
                 "/v1/borrowers",
                 headers=self.build_headers(),
-                json=CreateBorrowerDTO.parse_obj(new_entity_data).dict(by_alias=True),
+                json=CreateBorrowerDTO.model_validate(new_entity_data).model_dump(by_alias=True),
                 timeout=120
             )
             raise_for_status_improved(response)
@@ -602,7 +612,7 @@ class BorrowersSyncModule:
             response = client.patch(
                 f"/v1/borrowers/{resource_id}",
                 headers=self.build_headers(),
-                json=UpdateBorrowerDTO.parse_obj(patch_data).dict(by_alias=True),
+                json=UpdateBorrowerDTO.model_validate(patch_data).model_dump(by_alias=True),
                 timeout=120
             )
             raise_for_status_improved(response)
@@ -632,7 +642,7 @@ class BorrowersSyncModule:
                     base_url=self.altscore_client._borrower_central_base_url,
                     header_builder=self.build_headers,
                     renew_token=self.renew_token,
-                    data=BorrowerAPIDTO.parse_obj(response.json())
+                    data=BorrowerAPIDTO.model_validate(response.json())
                 )
             elif response.status_code in [404]:
                 return None
@@ -683,7 +693,7 @@ class BorrowersSyncModule:
                 base_url=self.altscore_client._borrower_central_base_url,
                 header_builder=self.build_headers,
                 renew_token=self.renew_token,
-                data=BorrowerAPIDTO.parse_obj(e)
+                data=BorrowerAPIDTO.model_validate(e)
             ) for e in response.json()]
 
     @retry_on_401
@@ -705,7 +715,7 @@ class BorrowersSyncModule:
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [BorrowerSummaryAPIDTO.parse_obj(e) for e in response.json()]
+            return [BorrowerSummaryAPIDTO.model_validate(e) for e in response.json()]
 
     @retry_on_401
     def retrieve_all(self, **kwargs):
@@ -781,7 +791,7 @@ class BorrowersSyncModule:
                 timeout=120
             )
             raise_for_status_improved(response)
-            return BorrowerLoginAPIDTO.parse_obj(response.json())
+            return BorrowerLoginAPIDTO.model_validate(response.json())
 
     @retry_on_401
     def commands_export(self):
@@ -792,7 +802,7 @@ class BorrowersSyncModule:
                 timeout=120
             )
             raise_for_status_improved(response)
-            return BorrowerExportAPIDTO.parse_obj(response.json())
+            return BorrowerExportAPIDTO.model_validate(response.json())
 
 
 class BorrowerAsync(BorrowerBase):

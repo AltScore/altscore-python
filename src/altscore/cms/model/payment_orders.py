@@ -8,10 +8,11 @@ class AmountInfo(BaseModel):
     currency: str = Field(alias="currency")
     display: str = Field(alias="display")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ClientInfo(BaseModel):
@@ -20,10 +21,11 @@ class ClientInfo(BaseModel):
     legal_name: str = Field(alias="legalName")
     tax_id: str = Field(alias="taxId")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class PartnerInfo(BaseModel):
@@ -31,10 +33,11 @@ class PartnerInfo(BaseModel):
     partner_id: str = Field(alias="partnerId")
     tax_id: str = Field(alias="taxId")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class PayerInfo(BaseModel):
@@ -43,10 +46,11 @@ class PayerInfo(BaseModel):
     institution_name: str = Field(alias="institutionName")
     name: str = Field(alias="name")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class PaymentOrderAPIDTO(BaseModel):
@@ -58,7 +62,7 @@ class PaymentOrderAPIDTO(BaseModel):
     debt_id: str = Field(alias="debtId")
     disbursement_date: str = Field(alias="disbursementDate")
     gateway: str = Field(alias="gateway")
-    notes: Optional[str] = Field(alias="notes")
+    notes: Optional[str] = Field(None, alias="notes")
     partner: PartnerInfo = Field(alias="partner")
     payer: Optional[PayerInfo] = Field(alias="payer", default=None)
     payment_date: Optional[str] = Field(alias="paymentDate", default=None)
@@ -69,10 +73,11 @@ class PaymentOrderAPIDTO(BaseModel):
     updated_at: str = Field(alias="updatedAt")
     version: int = Field(alias="version")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class PaymentOrdersBase:

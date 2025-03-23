@@ -9,13 +9,14 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
 class HistoricValue(BaseModel):
     execution_id: Optional[str] = Field(alias="executionId", default=None)
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
-    value: Any = Field(alias="value")
+    value: Any = Field(None, alias="value")
     updated_at: str = Field(alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class MetricsAPIDTO(BaseModel):
@@ -23,17 +24,18 @@ class MetricsAPIDTO(BaseModel):
     borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
     key: str = Field(alias="key")
     label: str = Field(alias="label")
-    value: Any = Field(alias="value")
+    value: Any = Field(None, alias="value")
     data_type: str = Field(alias="dataType")
     history: List[HistoricValue] = Field(alias="history")
     tags: List[str] = Field(alias="tags", default=[])
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateMetric(BaseModel):
@@ -41,41 +43,43 @@ class CreateMetric(BaseModel):
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
     execution_id: Optional[str] = Field(alias="executionId", default=None)
     key: str = Field(alias="key")
-    value: str = Field(alias="value")
+    value: Any = Field(alias="value")
     data_type: Optional[str] = Field(alias="dataType", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class UpdateMetric(BaseModel):
     borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
     execution_id: Optional[str] = Field(alias="executionId", default=None)
-    value: Optional[str] = Field(alias="value")
+    value: Optional[Any] = Field(None, alias="value")
     date: Optional[str] = Field(alias="date", default=None)
-    data_type: Optional[str] = Field(alias="dataType")
+    data_type: Optional[str] = Field(None, alias="dataType")
     tags: List[str] = Field(alias="tags", default=[])
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class MetricSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "metrics", header_builder, renew_token, MetricsAPIDTO.parse_obj(data))
+        super().__init__(base_url, "metrics", header_builder, renew_token, MetricsAPIDTO.model_validate(data))
 
 
 class MetricAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "metrics", header_builder, renew_token, MetricsAPIDTO.parse_obj(data))
+        super().__init__(base_url, "metrics", header_builder, renew_token, MetricsAPIDTO.model_validate(data))
 
 
 class MetricsSyncModule(GenericSyncModule):

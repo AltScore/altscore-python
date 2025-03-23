@@ -23,12 +23,13 @@ class PartnerAPIDTO(BaseModel):
     is_aggregator: bool = Field(alias="isAggregator")
     email: str = Field(alias="email")
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreatePartnerDTO(BaseModel):
@@ -39,10 +40,11 @@ class CreatePartnerDTO(BaseModel):
     is_aggregator: Optional[bool] = Field(alias="isAggregator", default=False)
     avatar: Optional[str] = Field(alias="avatar", default="")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class DPASettingsDefaults(BaseModel):
@@ -53,14 +55,15 @@ class DPASettingsDefaults(BaseModel):
     segmentation_id: Optional[str] = Field(alias="segmentationId", default=None)
     calendar_type: Optional[str] = Field(alias="calendarType", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class DPASettingsAPIDTO(BaseModel):
-    partner_id: Optional[str] = Field(alias="partnerId")
+    partner_id: Optional[str] = Field(None, alias="partnerId")
     defaults: Optional[DPASettingsDefaults] = Field(alias="defaults", default=None)
     timezone: Optional[str] = Field(alias="timezone", default=None)
     on_approve_flow_reserve_all_assigned_amount: Optional[bool] = \
@@ -68,10 +71,11 @@ class DPASettingsAPIDTO(BaseModel):
     invoice_over_limit: Optional[float] = Field(alias="invoiceOverLimit", default=None)
     reserve_on_start: Optional[bool] = Field(alias="reserveOnStart", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class PartnerBase:
@@ -140,7 +144,7 @@ class PartnerAsync(PartnerBase):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [DPAProductAPIDTO.parse_obj(e) for e in response.json()]
+            return [DPAProductAPIDTO.model_validate(e) for e in response.json()]
 
     @retry_on_401_async
     async def get_dpa_product(self, product_id: str) -> Optional[DPAProductAPIDTO]:
@@ -153,7 +157,7 @@ class PartnerAsync(PartnerBase):
             if response.status_code == 404:
                 return None
             elif response.status_code == 200:
-                return DPAProductAPIDTO.parse_obj(response.json())
+                return DPAProductAPIDTO.model_validate(response.json())
             raise_for_status_improved(response)
 
     @retry_on_401_async
@@ -161,7 +165,7 @@ class PartnerAsync(PartnerBase):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 f"/v2/partners/{self.data.partner_id}/products/dpa",
-                json=CreateDPAProductAPIDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
+                json=CreateDPAProductAPIDTO.model_validate(new_entity_data).model_dump(by_alias=True, exclude_none=True),
                 headers=self._header_builder(),
                 timeout=30
             )
@@ -183,12 +187,12 @@ class PartnerAsync(PartnerBase):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.patch(
                 f"/v2/partners/{self.data.partner_id}/products/dpa/{product_id}",
-                json=UpdateDPAProductAPIDTO.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
+                json=UpdateDPAProductAPIDTO.model_validate(patch_data).model_dump(by_alias=True, exclude_none=True),
                 headers=self._header_builder(),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return DPAProductAPIDTO.parse_obj(response.json())
+            return DPAProductAPIDTO.model_validate(response.json())
 
     @retry_on_401_async
     async def put_dpa_product_status(self, product_id: str, status: str) -> None:
@@ -212,7 +216,7 @@ class PartnerAsync(PartnerBase):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [DPASegmentationAPIDTO.parse_obj(e) for e in response.json()]
+            return [DPASegmentationAPIDTO.model_validate(e) for e in response.json()]
 
     @retry_on_401_async
     async def get_dpa_segmentation(self, segmentation_id: str) -> Optional[DPASegmentationAPIDTO]:
@@ -225,7 +229,7 @@ class PartnerAsync(PartnerBase):
             if response.status_code == 404:
                 return None
             elif response.status_code == 200:
-                return DPASegmentationAPIDTO.parse_obj(response.json())
+                return DPASegmentationAPIDTO.model_validate(response.json())
             raise_for_status_improved(response)
 
     @retry_on_401_async
@@ -233,7 +237,7 @@ class PartnerAsync(PartnerBase):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 f"/v2/partners/{self.data.partner_id}/segmentations/dpa",
-                json=CreateDPASegmentationDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
+                json=CreateDPASegmentationDTO.model_validate(new_entity_data).model_dump(by_alias=True, exclude_none=True),
                 headers=self._header_builder(),
                 timeout=30
             )
@@ -245,12 +249,12 @@ class PartnerAsync(PartnerBase):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.patch(
                 f"/v2/partners/{self.data.partner_id}/segmentations/dpa/{segmentation_id}",
-                json=UpdateDPASegmentationDTO.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
+                json=UpdateDPASegmentationDTO.model_validate(patch_data).model_dump(by_alias=True, exclude_none=True),
                 headers=self._header_builder(),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return DPASegmentationAPIDTO.parse_obj(response.json())
+            return DPASegmentationAPIDTO.model_validate(response.json())
 
     @retry_on_401_async
     async def put_dpa_segmentation_status(self, segmentation_id: str, status: str) -> None:
@@ -282,7 +286,7 @@ class PartnerAsync(PartnerBase):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [DPACalendarAPIDTO.parse_obj(e) for e in response.json()]
+            return [DPACalendarAPIDTO.model_validate(e) for e in response.json()]
 
     @retry_on_401_async
     async def get_dpa_calendar(self, calendar_id: str) -> Optional[DPACalendarAPIDTO]:
@@ -295,7 +299,7 @@ class PartnerAsync(PartnerBase):
             if response.status_code == 404:
                 return None
             elif response.status_code == 200:
-                return DPACalendarAPIDTO.parse_obj(response.json())
+                return DPACalendarAPIDTO.model_validate(response.json())
             raise_for_status_improved(response)
 
     @retry_on_401_async
@@ -303,7 +307,7 @@ class PartnerAsync(PartnerBase):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 f"/v2/partners/{self.data.partner_id}/calendars/dpa",
-                json=CreateCalendarAPIDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
+                json=CreateCalendarAPIDTO.model_validate(new_entity_data).model_dump(by_alias=True, exclude_none=True),
                 headers=self._header_builder(),
                 timeout=30
             )
@@ -348,7 +352,7 @@ class PartnerSync(PartnerBase):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [DPAProductAPIDTO.parse_obj(e) for e in response.json()]
+            return [DPAProductAPIDTO.model_validate(e) for e in response.json()]
 
     @retry_on_401
     def get_dpa_product(self, product_id: str) -> Optional[DPAProductAPIDTO]:
@@ -361,7 +365,7 @@ class PartnerSync(PartnerBase):
             if response.status_code == 404:
                 return None
             elif response.status_code == 200:
-                return DPAProductAPIDTO.parse_obj(response.json())
+                return DPAProductAPIDTO.model_validate(response.json())
             raise_for_status_improved(response)
 
     @retry_on_401
@@ -369,7 +373,7 @@ class PartnerSync(PartnerBase):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 f"/v2/partners/{self.data.partner_id}/products/dpa",
-                json=CreateDPAProductAPIDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
+                json=CreateDPAProductAPIDTO.model_validate(new_entity_data).model_dump(by_alias=True, exclude_none=True),
                 headers=self._header_builder(),
                 timeout=30
             )
@@ -391,12 +395,12 @@ class PartnerSync(PartnerBase):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.patch(
                 f"/v2/partners/{self.data.partner_id}/products/dpa/{product_id}",
-                json=UpdateDPAProductAPIDTO.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
+                json=UpdateDPAProductAPIDTO.model_validate(patch_data).model_dump(by_alias=True, exclude_none=True),
                 headers=self._header_builder(),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return DPAProductAPIDTO.parse_obj(response.json())
+            return DPAProductAPIDTO.model_validate(response.json())
 
     @retry_on_401
     def put_dpa_product_status(self, product_id: str, status: str) -> None:
@@ -420,7 +424,7 @@ class PartnerSync(PartnerBase):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [DPASegmentationAPIDTO.parse_obj(e) for e in response.json()]
+            return [DPASegmentationAPIDTO.model_validate(e) for e in response.json()]
 
     @retry_on_401
     def get_dpa_segmentation(self, segmentation_id: str) -> Optional[DPASegmentationAPIDTO]:
@@ -433,7 +437,7 @@ class PartnerSync(PartnerBase):
             if response.status_code == 404:
                 return None
             elif response.status_code == 200:
-                return DPASegmentationAPIDTO.parse_obj(response.json())
+                return DPASegmentationAPIDTO.model_validate(response.json())
             raise_for_status_improved(response)
 
     @retry_on_401
@@ -441,7 +445,7 @@ class PartnerSync(PartnerBase):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 f"/v2/partners/{self.data.partner_id}/segmentations/dpa",
-                json=CreateDPASegmentationDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
+                json=CreateDPASegmentationDTO.model_validate(new_entity_data).model_dump(by_alias=True, exclude_none=True),
                 headers=self._header_builder(),
                 timeout=30
             )
@@ -453,12 +457,12 @@ class PartnerSync(PartnerBase):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.patch(
                 f"/v2/partners/{self.data.partner_id}/segmentations/dpa/{segmentation_id}",
-                json=UpdateDPASegmentationDTO.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
+                json=UpdateDPASegmentationDTO.model_validate(patch_data).model_dump(by_alias=True, exclude_none=True),
                 headers=self._header_builder(),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return DPASegmentationAPIDTO.parse_obj(response.json())
+            return DPASegmentationAPIDTO.model_validate(response.json())
 
     @retry_on_401
     def put_dpa_segmentation_status(self, segmentation_id: str, status: str) -> None:
@@ -490,7 +494,7 @@ class PartnerSync(PartnerBase):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [DPACalendarAPIDTO.parse_obj(e) for e in response.json()]
+            return [DPACalendarAPIDTO.model_validate(e) for e in response.json()]
 
     @retry_on_401
     def get_dpa_calendar(self, calendar_id: str) -> Optional[DPACalendarAPIDTO]:
@@ -503,7 +507,7 @@ class PartnerSync(PartnerBase):
             if response.status_code == 404:
                 return None
             elif response.status_code == 200:
-                return DPACalendarAPIDTO.parse_obj(response.json())
+                return DPACalendarAPIDTO.model_validate(response.json())
             raise_for_status_improved(response)
 
     @retry_on_401
@@ -511,7 +515,7 @@ class PartnerSync(PartnerBase):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 f"/v2/partners/{self.data.partner_id}/calendars/dpa",
-                json=CreateCalendarAPIDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
+                json=CreateCalendarAPIDTO.model_validate(new_entity_data).model_dump(by_alias=True, exclude_none=True),
                 headers=self._header_builder(),
                 timeout=30
             )
@@ -556,7 +560,7 @@ class PartnersAsyncModule(GenericAsyncModule):
                 base_url=self.altscore_client._cms_base_url,
                 header_builder=self.build_headers,
                 renew_token=self.renew_token,
-                data=PartnerAPIDTO.parse_obj(response.json())
+                data=PartnerAPIDTO.model_validate(response.json())
             )
 
     @retry_on_401_async
@@ -568,20 +572,20 @@ class PartnersAsyncModule(GenericAsyncModule):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return DPASettingsAPIDTO.parse_obj(response.json())
+            return DPASettingsAPIDTO.model_validate(response.json())
 
     @retry_on_401_async
     async def update_dpa_settings(self, partner_id: str, settings: dict) -> DPASettingsAPIDTO:
         async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
-            settings = DPASettingsAPIDTO.parse_obj(settings)
+            settings = DPASettingsAPIDTO.model_validate(settings)
             response = await client.patch(
                 f"/v2/partners/{partner_id}/settings/dpa",
-                json=settings.dict(by_alias=True, exclude_none=True),
+                json=settings.model_dump(by_alias=True, exclude_none=True),
                 headers=build_headers(self),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return DPASettingsAPIDTO.parse_obj(response.json())
+            return DPASettingsAPIDTO.model_validate(response.json())
 
 
 
@@ -612,7 +616,7 @@ class PartnersSyncModule(GenericSyncModule):
                 base_url=self.altscore_client._cms_base_url,
                 header_builder=self.build_headers,
                 renew_token=self.renew_token,
-                data=PartnerAPIDTO.parse_obj(response.json())
+                data=PartnerAPIDTO.model_validate(response.json())
             )
 
     @retry_on_401
@@ -624,19 +628,19 @@ class PartnersSyncModule(GenericSyncModule):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return DPASettingsAPIDTO.parse_obj(response.json())
+            return DPASettingsAPIDTO.model_validate(response.json())
 
     @retry_on_401
     def update_dpa_settings(self, partner_id: str, settings: dict) -> DPASettingsAPIDTO:
-        settings = DPASettingsAPIDTO.parse_obj(settings)
+        settings = DPASettingsAPIDTO.model_validate(settings)
         with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
             response = client.patch(
                 f"/v2/partners/{partner_id}/settings/dpa",
-                json=settings.dict(by_alias=True, exclude_none=True),
+                json=settings.model_dump(by_alias=True, exclude_none=True),
                 headers=build_headers(self),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return DPASettingsAPIDTO.parse_obj(response.json())
+            return DPASettingsAPIDTO.model_validate(response.json())
 
 

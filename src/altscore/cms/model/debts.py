@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 from typing import Optional, List
 import httpx
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
@@ -9,17 +9,18 @@ import datetime as dt
 
 
 class Balance(BaseModel):
-    fees: Optional[Money] = Field(alias="fees")
-    interest: Optional[Money] = Field(alias="interest")
-    principal: Optional[Money] = Field(alias="principal")
-    taxes: Optional[Money] = Field(alias="taxes")
-    penalties: Optional[Money] = Field(alias="penalties")
-    total: Optional[Money] = Field(alias="total")
+    fees: Optional[Money] = Field(None, alias="fees")
+    interest: Optional[Money] = Field(None, alias="interest")
+    principal: Optional[Money] = Field(None, alias="principal")
+    taxes: Optional[Money] = Field(None, alias="taxes")
+    penalties: Optional[Money] = Field(None, alias="penalties")
+    total: Optional[Money] = Field(None, alias="total")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class Client(BaseModel):
@@ -29,25 +30,27 @@ class Client(BaseModel):
     email: str = Field(alias="email")
     legal_name: str = Field(alias="legalName")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class Transaction(BaseModel):
     id: str = Field(alias="transactionId")
-    breakdown: Optional[List[Balance]] = Field(alias="breakdown")
+    breakdown: Optional[List[Balance]] = Field(None, alias="breakdown")
     amount: Money = Field(alias="amount")
     type: str = Field(alias="type")
     date: str = Field(alias="date")
     reference_id: str = Field(alias="referenceId", default=None)
     notes: Optional[str] = Field(alias="notes", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class DebtAPIDTO(BaseModel):
@@ -69,10 +72,11 @@ class DebtAPIDTO(BaseModel):
     days_past_due: Optional[int] = Field(alias="daysPastDue", default=None)
     max_days_past_due: Optional[int] = Field(alias="maxDaysPastDue", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class Payment(BaseModel):
@@ -80,12 +84,13 @@ class Payment(BaseModel):
     amount: Money = Field(alias="amount")
     payment_date: str = Field(alias="paymentDate")
     reference_id: str = Field(alias="referenceId")
-    notes: Optional[str] = Field(alias="notes")
+    notes: Optional[str] = Field(None, alias="notes")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class PenaltyBalance(BaseModel):
@@ -97,17 +102,18 @@ class PenaltyBalance(BaseModel):
     total: Money = Field(alias="total")
     installment: int = Field(alias="installment")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class Penalty(BaseModel):
     amount: Money = Field(alias="amount")
     breakdown: List[PenaltyBalance] = Field(alias="breakdown")
     date: str = Field(alias="date")
-    notes: Optional[str] = Field(alias="notes")
+    notes: Optional[str] = Field(None, alias="notes")
     reference_id: str = Field(alias="referenceId")
     transaction_id: str = Field(alias="transactionId")
     type: str = Field(alias="type")
@@ -117,11 +123,7 @@ class CreateDebt(BaseModel):
     flow_id: str = Field(alias="flowId")
     disbursed_at: Optional[str] = Field(alias="disbursedAt", default=None)
     amount: Optional[Money] = Field(alias="amount", default=None)
-
-    class Config:
-        allow_population_by_field_name = True
-        populate_by_alias = True
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class DebtBase:
@@ -154,7 +156,7 @@ class DebtAsync(DebtBase):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [Payment.parse_obj(e) for e in response.json()]
+            return [Payment.model_validate(e) for e in response.json()]
 
     @retry_on_401_async
     async def submit_payment(self, amount: str, currency: str, reference_id: str, notes: Optional[str] = None,
@@ -189,7 +191,7 @@ class DebtAsync(DebtBase):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [Penalty.parse_obj(e) for e in response.json()]
+            return [Penalty.model_validate(e) for e in response.json()]
 
     def __str__(self):
         return str(self.data)
@@ -217,7 +219,7 @@ class DebtSync(DebtBase):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [Payment.parse_obj(e) for e in response.json()]
+            return [Payment.model_validate(e) for e in response.json()]
 
     @retry_on_401
     def submit_payment(self, amount: str, currency: str, reference_id: str, notes: Optional[str] = None,
@@ -252,7 +254,7 @@ class DebtSync(DebtBase):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [Penalty.parse_obj(e) for e in response.json()]
+            return [Penalty.model_validate(e) for e in response.json()]
 
     def __str__(self):
         return str(self.data)
@@ -281,10 +283,10 @@ class DebtsAsyncModule(GenericAsyncModule):
             except ValueError:
                 raise ValueError("Invalid disbursement date, must be in the format YYYY-MM-DD")
         if amount is not None:
-            amount = Money.parse_obj(amount)
+            amount = Money.model_validate(amount)
 
-        create_debt = CreateDebt.parse_obj({
-            "amount": amount.dict(by_alias=True) if amount else None,
+        create_debt = CreateDebt.model_validate({
+            "amount": amount.model_dump(by_alias=True) if amount else None,
             "disbursed_at": disbursement_date.strftime("%Y-%m-%d") if disbursement_date else None,
             "flow_id": flow_id,
         })
@@ -292,7 +294,7 @@ class DebtsAsyncModule(GenericAsyncModule):
             response = await client.post(
                 f"/{self.resource_version}/{self.resource}",
                 headers=self.build_headers(),
-                json=create_debt.dict(by_alias=True, exclude_none=True),
+                json=create_debt.model_dump(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -320,9 +322,9 @@ class DebtsSyncModule(GenericSyncModule):
             except ValueError:
                 raise ValueError("Invalid disbursement date, must be in the format YYYY-MM-DD")
         if amount is not None:
-            amount = Money.parse_obj(amount)
-        create_debt = CreateDebt.parse_obj({
-            "amount": amount.dict(by_alias=True) if amount else None,
+            amount = Money.model_validate(amount)
+        create_debt = CreateDebt.model_validate({
+            "amount": amount.model_dump(by_alias=True) if amount else None,
             "disbursed_at": disbursement_date.strftime("%Y-%m-%d") if disbursement_date else None,
             "flow_id": flow_id,
         })
@@ -330,7 +332,7 @@ class DebtsSyncModule(GenericSyncModule):
             response = client.post(
                 f"/{self.resource_version}/{self.resource}",
                 headers=self.build_headers(),
-                json=create_debt.dict(by_alias=True, exclude_none=True),
+                json=create_debt.model_dump(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)

@@ -65,7 +65,7 @@ class CommunicationsSyncModule:
             response = client.post(
                 "/v1/tools/send-email",
                 headers=self.build_headers(),
-                json=mail_request.to_dict(),
+                json=mail_request.model_dump(),
                 timeout=120
             )
             raise_for_status_improved(response)
@@ -86,7 +86,7 @@ class CommunicationsAsyncModule:
             response = await client.post(
                 "/v1/tools/send-email",
                 headers=self.build_headers(),
-                json=mail_request.to_dict(),
+                json=mail_request.model_dump(),
                 timeout=120
             )
             raise_for_status_improved(response)

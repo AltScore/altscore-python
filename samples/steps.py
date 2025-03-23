@@ -62,5 +62,5 @@ for data_model in steps_models:
 borrowers = altscore.borrower_central.borrowers.query()
 borrowers[0].set_current_step("active")
 #%%
-borrowers[0].get_current_step().data.dict()
+borrowers[0].get_current_step().data.model_dump()
 #%%

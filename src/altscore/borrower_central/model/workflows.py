@@ -11,10 +11,11 @@ class WorkflowSchedule(BaseModel):
     utc_delta_hours: int = Field(alias="utcDeltaHours", default=0, ge=-12, le=14)
     execution_settings: Optional[dict] = Field(alias="executionSettings", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class WorkflowDataAPIDTO(BaseModel):
@@ -22,26 +23,27 @@ class WorkflowDataAPIDTO(BaseModel):
     execution_mode: Optional[str] = Field(alias="executionMode", default=None)
     alias: str = Field(alias="alias")
     version: str = Field(alias="version")
-    label: Optional[str] = Field(alias="label")
-    type: Optional[str] = Field(alias="type")
-    description: Optional[str] = Field(alias="description")
-    context: Optional[str] = Field(alias="context")
+    label: Optional[str] = Field(None, alias="label")
+    type: Optional[str] = Field(None, alias="type")
+    description: Optional[str] = Field(None, alias="description")
+    context: Optional[str] = Field(None, alias="context")
     input_schema: Optional[str] = Field(alias="inputSchema", default=None)
     json_schema: Optional[str] = Field(alias="jsonSchema", default=None)
     ui_schema: Optional[str] = Field(alias="uiSchema", default=None)
     initial_data: Optional[str] = Field(alias="initialData", default=None)
-    flow_definition: Optional[dict] = Field(alias="flowDefinition")
-    batch_flow_definition: Optional[dict] = Field(alias="batchFlowDefinition")
+    flow_definition: Optional[dict] = Field(None, alias="flowDefinition")
+    batch_flow_definition: Optional[dict] = Field(None, alias="batchFlowDefinition")
     schedule: Optional[WorkflowSchedule] = Field(alias="schedule", default=None)
     schedule_batch: Optional[WorkflowSchedule] = Field(alias="scheduleBatch", default=None)
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
     use_high_memory: Optional[bool] = Field(alias="useHighMemory", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class Lambda(BaseModel):
@@ -50,12 +52,12 @@ class Lambda(BaseModel):
 
 
 class CreateWorkflowDTO(BaseModel):
-    label: Optional[str] = Field(alias="label")
+    label: Optional[str] = Field(None, alias="label")
     alias: str = Field(alias="alias")
     version: str = Field(alias="version")
     type: Optional[str] = Field(alias="type", default=None)
     execution_mode: Optional[str] = Field(alias="executionMode", default=None)
-    description: Optional[str] = Field(alias="description")
+    description: Optional[str] = Field(None, alias="description")
     context: Optional[str] = Field(alias="context", default=None)
     flow_definition: Optional[dict] = Field(alias="flowDefinition", default=None)
     batch_flow_definition: Optional[dict] = Field(alias="batchFlowDefinition", default=None)
@@ -68,15 +70,16 @@ class CreateWorkflowDTO(BaseModel):
     schedule_batch: Optional[WorkflowSchedule] = Field(alias="scheduleBatch", default=None)
     use_high_memory: Optional[bool] = Field(alias="useHighMemory", default=False)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class UpdateWorkflowDTO(BaseModel):
-    label: Optional[str] = Field(alias="label")
-    description: Optional[str] = Field(alias="description")
+    label: Optional[str] = Field(None, alias="label")
+    description: Optional[str] = Field(None, alias="description")
     type: Optional[str] = Field(alias="type", default=None)
     route: Optional[Lambda] = Field(alias="route", default=None)
     flow_definition: Optional[dict] = Field(alias="flowDefinition", default=None)
@@ -87,10 +90,11 @@ class UpdateWorkflowDTO(BaseModel):
     input_schema: Optional[str] = Field(alias="inputSchema", default=None)
     use_high_memory: Optional[bool] = Field(alias="useHighMemory", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ConfigureSchedulesDTO(BaseModel):
@@ -98,10 +102,11 @@ class ConfigureSchedulesDTO(BaseModel):
     schedule: Optional[WorkflowSchedule] = Field(alias="schedule", default=None)
     schedule_batch: Optional[WorkflowSchedule] = Field(alias="scheduleBatch", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class WorkflowExecutionResponseAPIDTO(BaseModel):
@@ -109,22 +114,23 @@ class WorkflowExecutionResponseAPIDTO(BaseModel):
     workflow_id: str = Field(alias="workflowId")
     workflow_alias: str = Field(alias="workflowAlias")
     workflow_version: str = Field(alias="workflowVersion")
-    is_success: Optional[bool] = Field(alias="isSuccess")
+    is_success: Optional[bool] = Field(None, alias="isSuccess")
     executed_at: str = Field(alias="executedAt")
-    execution_output: Any = Field(alias="executionOutput")
-    execution_custom_output: Any = Field(alias="executionCustomOutput")
+    execution_output: Any = Field(None, alias="executionOutput")
+    execution_custom_output: Any = Field(None, alias="executionCustomOutput")
     error_message: Optional[str] = Field(alias="errorMessage", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class WorkflowSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "workflows", header_builder, renew_token, WorkflowDataAPIDTO.parse_obj(data))
+        super().__init__(base_url, "workflows", header_builder, renew_token, WorkflowDataAPIDTO.model_validate(data))
 
 
     @retry_on_401
@@ -136,11 +142,11 @@ class WorkflowSync(GenericSyncResource):
                 url,
                 headers=self._header_builder(),
                 timeout=300,
-                json=ConfigureSchedulesDTO.parse_obj({
+                json=ConfigureSchedulesDTO.model_validate({
                     "workflowId": self.data.id,
                     "schedule": schedule,
                     "scheduleBatch": schedule_batch
-                }).dict(by_alias=True)
+                }).model_dump(by_alias=True)
             )
 
             raise_for_status_improved(response)
@@ -168,7 +174,7 @@ class WorkflowSync(GenericSyncResource):
 class WorkflowAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "workflows", header_builder, renew_token, WorkflowDataAPIDTO.parse_obj(data))
+        super().__init__(base_url, "workflows", header_builder, renew_token, WorkflowDataAPIDTO.model_validate(data))
 
 
     @retry_on_401_async
@@ -180,11 +186,11 @@ class WorkflowAsync(GenericAsyncResource):
                 url,
                 headers=self._header_builder(),
                 timeout=300,
-                json=ConfigureSchedulesDTO.parse_obj({
+                json=ConfigureSchedulesDTO.model_validate({
                     "workflowId": self.data.id,
                     "schedule": schedule,
                     "scheduleBatch": schedule_batch
-                }).dict(by_alias=True)
+                }).model_dump(by_alias=True)
             )
             raise_for_status_improved(response)
 
@@ -236,7 +242,7 @@ class WorkflowsSyncModule(GenericSyncModule):
                 base_url=self.altscore_client._borrower_central_base_url,
                 header_builder=self.build_headers,
                 renew_token=self.renew_token,
-                data=self.retrieve_data_model.parse_obj(e)
+                data=self.retrieve_data_model.model_validate(e)
             ) for e in response.json()]
 
             if len(res) == 0:
@@ -272,7 +278,7 @@ class WorkflowsSyncModule(GenericSyncModule):
                     timeout=900
                 )
                 raise_for_status_improved(response)
-                return WorkflowExecutionResponseAPIDTO.parse_obj(response.json())
+                return WorkflowExecutionResponseAPIDTO.model_validate(response.json())
 
         elif workflow_alias is not None and workflow_version is not None:
             with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
@@ -283,7 +289,7 @@ class WorkflowsSyncModule(GenericSyncModule):
                     timeout=900
                 )
                 raise_for_status_improved(response)
-                return WorkflowExecutionResponseAPIDTO.parse_obj(response.json())
+                return WorkflowExecutionResponseAPIDTO.model_validate(response.json())
         else:
             raise ValueError("You must provide a workflow id or a workflow alias and version")
 
@@ -317,7 +323,7 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                 base_url=self.altscore_client._borrower_central_base_url,
                 header_builder=self.build_headers,
                 renew_token=self.renew_token,
-                data=self.retrieve_data_model.parse_obj(e)
+                data=self.retrieve_data_model.model_validate(e)
             ) for e in response.json()]
 
             if len(res) == 0:
@@ -353,7 +359,7 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                     timeout=900
                 )
                 raise_for_status_improved(response)
-                return WorkflowExecutionResponseAPIDTO.parse_obj(response.json())
+                return WorkflowExecutionResponseAPIDTO.model_validate(response.json())
 
         elif workflow_alias is not None and workflow_version is not None:
             async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
@@ -364,6 +370,6 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                     timeout=900
                 )
                 raise_for_status_improved(response)
-                return WorkflowExecutionResponseAPIDTO.parse_obj(response.json())
+                return WorkflowExecutionResponseAPIDTO.model_validate(response.json())
         else:
             raise ValueError("You must provide a workflow id or a workflow alias and version")

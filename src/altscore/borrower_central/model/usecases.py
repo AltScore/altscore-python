@@ -12,10 +12,11 @@ class UsecasesAPDTO(BaseModel):
     root_task_instance_input: Dict = Field(alias="rootTaskInstanceInput")
     task_instances: Dict = Field(alias="taskInstances")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
     pass
 
 class CreateUsecaseDTO(BaseModel):
@@ -25,30 +26,32 @@ class CreateUsecaseDTO(BaseModel):
     root_task_instance_input: Dict = Field(alias="rootTaskInstanceInput")
     task_instances: Dict = Field(alias="taskInstances")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class UpdateUsecaseDTO(BaseModel):
-    name: Optional[str] = Field(alias="name")
-    description: Optional[str] = Field(alias="description")
-    root_task_instance_alias: Optional[str] = Field(alias="rootTaskInstanceAlias")
-    root_task_instance_input: Optional[Dict] = Field(alias="rootTaskInstanceInput")
-    task_instances: Optional[Dict] = Field(alias="taskInstances")
+    name: Optional[str] = Field(None, alias="name")
+    description: Optional[str] = Field(None, alias="description")
+    root_task_instance_alias: Optional[str] = Field(None, alias="rootTaskInstanceAlias")
+    root_task_instance_input: Optional[Dict] = Field(None, alias="rootTaskInstanceInput")
+    task_instances: Optional[Dict] = Field(None, alias="taskInstances")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class UsecasesSync(GenericSyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "usecases", header_builder, renew_token, UsecasesAPDTO.parse_obj(data))
+        super().__init__(base_url, "usecases", header_builder, renew_token, UsecasesAPDTO.model_validate(data))
 
 class UsecasesAsync(GenericAsyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "usecases", header_builder, renew_token, UsecasesAPDTO.parse_obj(data))
+        super().__init__(base_url, "usecases", header_builder, renew_token, UsecasesAPDTO.model_validate(data))
 
 class UsecasesSyncModule(GenericSyncModule):
     def __init__(self, altscore_client):

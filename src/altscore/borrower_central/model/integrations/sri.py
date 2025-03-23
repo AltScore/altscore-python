@@ -1,6 +1,6 @@
 import datetime as dt
 import httpx
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.borrower_central.helpers import build_headers
 from typing import Optional
@@ -12,10 +12,7 @@ class ExtractionCoverageInfo(BaseModel):
     date_to: str = Field(alias="dateTo")
     has_coverage: bool = Field(alias="hasCoverage")
     has_running_extractions: bool = Field(alias="hasRunningExtractions")
-
-    class Config:
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = ConfigDict(populate_by_name=True, allow_population_by_alias=True)
 
 
 class SriIntegrationAsyncModule:
@@ -46,7 +43,7 @@ class SriIntegrationAsyncModule:
                 timeout=120,
             )
             raise_for_status_improved(response)
-            return ExtractionCoverageInfo.parse_obj(response.json())
+            return ExtractionCoverageInfo.model_validate(response.json())
 
     async def start_extractions(
             self, ruc: str, date_to_analyze: Optional[dt.datetime] = None
@@ -113,7 +110,7 @@ class SriIntegrationSyncModule:
                 timeout=120
             )
             raise_for_status_improved(response)
-            return ExtractionCoverageInfo.parse_obj(response.json())
+            return ExtractionCoverageInfo.model_validate(response.json())
 
     def start_extractions(
             self, ruc: str, date_to_analyze: Optional[dt.datetime] = None

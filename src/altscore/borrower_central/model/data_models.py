@@ -14,14 +14,15 @@ class DataModelAPIDTO(BaseModel):
     order: Optional[int] = Field(alias="order", default=None)
     allowed_values: Optional[List[Any]] = Field(alias="allowedValues", default=None)
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
-    metadata: Optional[Dict[str, Any]] = Field(alias="metadata")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
+    metadata: Optional[Dict[str, Any]] = Field(None, alias="metadata")
     is_segmentation_field: Optional[bool] = Field(alias="isSegmentationField", default=False)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class DataModelCreate(BaseModel):
@@ -35,38 +36,40 @@ class DataModelCreate(BaseModel):
     metadata: Optional[dict] = Field(alias="metadata", default={})
     is_segmentation_field: Optional[bool] = Field(alias="isSegmentationField", default=False)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class DataModelUpdate(BaseModel):
     path: Optional[str] = Field(alias="path", default="")
-    key: Optional[str] = Field(alias="key")
-    label: Optional[str] = Field(alias="label")
+    key: Optional[str] = Field(None, alias="key")
+    label: Optional[str] = Field(None, alias="label")
     priority: Optional[int] = Field(alias="priority", default=None)
     order: Optional[int] = Field(alias="order", default=None)
     allowed_values: Optional[List[Any]] = Field(alias="allowedValues", default=None)
     metadata: Optional[dict] = Field(alias="metadata", default={})
     is_segmentation_field: Optional[bool] = Field(alias="isSegmentationField", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class DataModelSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "data-models", header_builder, renew_token, DataModelAPIDTO.parse_obj(data))
+        super().__init__(base_url, "data-models", header_builder, renew_token, DataModelAPIDTO.model_validate(data))
 
 
 class DataModelAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "data-models", header_builder, renew_token, DataModelAPIDTO.parse_obj(data))
+        super().__init__(base_url, "data-models", header_builder, renew_token, DataModelAPIDTO.model_validate(data))
 
 
 class DataModelSyncModule(GenericSyncModule):

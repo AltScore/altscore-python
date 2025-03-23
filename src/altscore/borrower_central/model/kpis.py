@@ -19,10 +19,11 @@ class HistoricValue(BaseModel):
     value: KpiValue = Field(alias="value")
     updated_at: str = Field(alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class KpiAPIDTO(BaseModel):
@@ -35,12 +36,13 @@ class KpiAPIDTO(BaseModel):
     value: KpiValue = Field(alias="value")
     history: List[Dict] = Field(alias="history")
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateKpi(BaseModel):
@@ -49,13 +51,14 @@ class CreateKpi(BaseModel):
     label: str = Field(alias="label")
     description: str = Field(alias="description")
     key: str = Field(alias="key")
-    persona: Optional[str] = Field(alias="persona")
+    persona: Optional[str] = Field(None, alias="persona")
     value: KpiValue = Field(alias="value")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class UpdateKpi(BaseModel):
@@ -63,25 +66,26 @@ class UpdateKpi(BaseModel):
     execution_id: Optional[str] = Field(alias="executionId", default=None)
     label: Optional[str] = Field(alias="label", default=None)
     description: Optional[str] = Field(alias="description", default=None)
-    value: Optional[KpiValue] = Field(alias="value")
+    value: Optional[KpiValue] = Field(None, alias="value")
     date: Optional[str] = Field(alias="date", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class KpiSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "kpis", header_builder, renew_token, KpiAPIDTO.parse_obj(data))
+        super().__init__(base_url, "kpis", header_builder, renew_token, KpiAPIDTO.model_validate(data))
 
 
 class KpiAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "kpis", header_builder, renew_token, KpiAPIDTO.parse_obj(data))
+        super().__init__(base_url, "kpis", header_builder, renew_token, KpiAPIDTO.model_validate(data))
 
 
 class KpisSyncModule(GenericSyncModule):

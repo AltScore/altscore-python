@@ -7,37 +7,41 @@ class Rule(BaseModel):
     operator: str = Field(alias="operator")
     values: List[str] = Field(alias="values")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class RuleGroup(BaseModel):
     operator: str = Field(alias="operator")
     rules: list[Rule] = Field(alias="rules")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class RuleGroups(BaseModel):
     operator: str = Field(alias="operator")
     rule_group: RuleGroup = Field(alias="ruleGroup")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class RuleSet(BaseModel):
     name: str = Field(alias="name")
     rule_groups: list[RuleGroups] = Field(alias="ruleGroups")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class DPASegmentationAPIDTO(BaseModel):
     id: str = Field(alias="segmentationId")
@@ -51,10 +55,11 @@ class DPASegmentationAPIDTO(BaseModel):
     updated_at: Optional[str] = Field(alias="updatedAt", default=None)
     tenant: str = Field(alias="tenant")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class CreateDPASegmentationDTO(BaseModel):
     name: str = Field(alias="name")
@@ -62,10 +67,11 @@ class CreateDPASegmentationDTO(BaseModel):
     rule_set: RuleSet = Field(alias="ruleSet")
     product_id: str = Field(alias="productId")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class UpdateDPASegmentationDTO(BaseModel):
     name: str = Field(alias="name")
@@ -73,10 +79,11 @@ class UpdateDPASegmentationDTO(BaseModel):
     rule_set: RuleSet = Field(alias="ruleSet")
     product_id: str = Field(alias="productId")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class SegmentationBase:

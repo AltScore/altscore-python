@@ -8,15 +8,16 @@ from altscore.common.http_errors import raise_for_status_improved, retry_on_401,
 
 class PolicyVersion(BaseModel):
     version: int = Field(alias="version")
-    short_text: Optional[str] = Field(alias="shortText")
-    long_text: Optional[str] = Field(alias="longText")
+    short_text: Optional[str] = Field(None, alias="shortText")
+    long_text: Optional[str] = Field(None, alias="longText")
     policy_url: Optional[str] = Field(alias="policyUrl", default=None)
     updated_at: str = Field(alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class PolicyAPIDTO(BaseModel):
@@ -30,27 +31,29 @@ class PolicyAPIDTO(BaseModel):
     policy_url: Optional[str] = Field(alias="policyUrl", default=None)
     version_history: List[PolicyVersion] = Field(alias="versionHistory", default=[])
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
     tags: List[str] = Field(alias="tags", default=[])
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreatePolicyDTO(BaseModel):
     key: str = Field(alias="key")
     label: Optional[str] = Field(alias="label", default=None)
-    short_text: Optional[str] = Field(alias="shortText")
-    long_text: Optional[str] = Field(alias="longText")
-    policy_url: Optional[str] = Field(alias="policyUrl")
+    short_text: Optional[str] = Field(None, alias="shortText")
+    long_text: Optional[str] = Field(None, alias="longText")
+    policy_url: Optional[str] = Field(None, alias="policyUrl")
     tags: List[str] = Field(alias="tags", default=[])
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class UpdatePolicyDTO(BaseModel):
@@ -60,22 +63,23 @@ class UpdatePolicyDTO(BaseModel):
     policy_url: Optional[str] = Field(alias="policyUrl", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class PolicySync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "policies", header_builder, renew_token, PolicyAPIDTO.parse_obj(data))
+        super().__init__(base_url, "policies", header_builder, renew_token, PolicyAPIDTO.model_validate(data))
 
 
 class PolicyAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "policies", header_builder, renew_token, PolicyAPIDTO.parse_obj(data))
+        super().__init__(base_url, "policies", header_builder, renew_token, PolicyAPIDTO.model_validate(data))
 
 
 class PolicySyncModule(GenericSyncModule):
@@ -105,7 +109,7 @@ class PolicySyncModule(GenericSyncModule):
                 base_url=self.altscore_client._borrower_central_base_url,
                 header_builder=self.build_headers,
                 renew_token=self.renew_token,
-                data=self.retrieve_data_model.parse_obj(e)
+                data=self.retrieve_data_model.model_validate(e)
             ) for e in response.json()]
 
             if len(res) == 0:
@@ -140,7 +144,7 @@ class PolicyAsyncModule(GenericAsyncModule):
                 base_url=self.altscore_client._borrower_central_base_url,
                 header_builder=self.build_headers,
                 renew_token=self.renew_token,
-                data=self.retrieve_data_model.parse_obj(e)
+                data=self.retrieve_data_model.model_validate(e)
             ) for e in response.json()]
 
             if len(res) == 0:

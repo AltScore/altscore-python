@@ -12,12 +12,13 @@ class SourceAPIDTO(BaseModel):
     tags: List[str] = Field(alias="tags", default=[])
     transformer_config: Optional[Dict] = Field(alias="transformerConfig", default=None)
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class TransformerConfig(BaseModel):
@@ -31,10 +32,11 @@ class CreateSourceDTO(BaseModel):
     tags: List[str] = Field(alias="tags", default=[])
     transformer_config: Optional[TransformerConfig] = Field(alias="transformerConfig", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateAltdataSourceDTO(BaseModel):
@@ -42,22 +44,23 @@ class CreateAltdataSourceDTO(BaseModel):
     altdata_source_id: str = Field(alias="altdataSourceId")
     altdata_source_version: str = Field(alias="altdataSourceVersion")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class SourceSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "/stores/sources", header_builder, renew_token, SourceAPIDTO.parse_obj(data))
+        super().__init__(base_url, "/stores/sources", header_builder, renew_token, SourceAPIDTO.model_validate(data))
 
 
 class SourceAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "/stores/sources", header_builder, renew_token, SourceAPIDTO.parse_obj(data))
+        super().__init__(base_url, "/stores/sources", header_builder, renew_token, SourceAPIDTO.model_validate(data))
 
 
 class SourcesSyncModule(GenericSyncModule):
@@ -80,7 +83,7 @@ class SourcesSyncModule(GenericSyncModule):
             response = client.post(
                 f"/v1/stores/sources/altdata",
                 headers=self.build_headers(),
-                json=CreateAltdataSourceDTO.parse_obj(new_entity_data).dict(by_alias=True),
+                json=CreateAltdataSourceDTO.model_validate(new_entity_data).model_dump(by_alias=True),
                 timeout=120
             )
             raise_for_status_improved(response)
@@ -107,7 +110,7 @@ class SourcesAsyncModule(GenericAsyncModule):
             response = await client.post(
                 f"/v1/stores/sources/altdata",
                 headers=self.build_headers(),
-                json=CreateAltdataSourceDTO.parse_obj(new_entity_data).dict(by_alias=True),
+                json=CreateAltdataSourceDTO.model_validate(new_entity_data).model_dump(by_alias=True),
                 timeout=120
             )
             raise_for_status_improved(response)

@@ -11,10 +11,11 @@ class Attachment(BaseModel):
     filename: str
     content: str
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class MailBody(BaseModel):
     to: List[Email]
@@ -35,10 +36,10 @@ class MailBody(BaseModel):
 
     def to_dict(self):
         return {
-            'to': [m.dict() for m in self.to],
-            'cc': [m.dict() for m in self.cc],
-            'bcc': [m.dict() for m in self.bcc],
+            'to': [m.model_dump() for m in self.to],
+            'cc': [m.model_dump() for m in self.cc],
+            'bcc': [m.model_dump() for m in self.bcc],
             'subject': self.subject,
             'content': self.content,
-            'attachments': [a.dict(by_alias=True) for a in self.attachments]
+            'attachments': [a.model_dump(by_alias=True) for a in self.attachments]
         }

@@ -16,10 +16,11 @@ class DPACalendarAPIDTO(BaseModel):
     type: str = Field(alias="type")
     year: int = Field(alias="year")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateCalendarAPIDTO(BaseModel):
@@ -28,7 +29,8 @@ class CreateCalendarAPIDTO(BaseModel):
     exclusionDays: Optional[List[str]] = Field(alias="exclusionDays", default=None)
     holidays: Optional[List[str]] = Field(alias="holidays", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }

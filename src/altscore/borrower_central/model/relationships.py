@@ -12,14 +12,15 @@ class RelationshipAPIDTO(BaseModel):
     is_active: bool = Field(alias="isActive")
     is_legal_representative: bool = Field(alias="isLegalRepresentative")
     relationship: str = Field(alias="relationship")
-    ownership_pct: Optional[float] = Field(alias="ownershipPct")
+    ownership_pct: Optional[float] = Field(None, alias="ownershipPct")
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateRelationshipDTO(BaseModel):
@@ -27,39 +28,41 @@ class CreateRelationshipDTO(BaseModel):
     contact_id: str = Field(alias="contactId")
     priority: Optional[int] = Field(alias="priority", default=None)
     relationship: str = Field(alias="relationship")
-    is_legal_representative: Optional[bool] = Field(alias="isLegalRepresentative")
-    is_active: Optional[bool] = Field(alias="isActive")
+    is_legal_representative: Optional[bool] = Field(None, alias="isLegalRepresentative")
+    is_active: Optional[bool] = Field(None, alias="isActive")
     ownership_pct: Optional[float] = Field(None, alias="ownershipPct")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class UpdateRelationshipDTO(BaseModel):
     priority: Optional[int] = Field(alias="priority", default=None)
-    relationship: Optional[str] = Field(alias="relationship")
-    is_legal_representative: Optional[bool] = Field(alias="isLegalRepresentative")
-    is_active: Optional[bool] = Field(alias="isActive")
+    relationship: Optional[str] = Field(None, alias="relationship")
+    is_legal_representative: Optional[bool] = Field(None, alias="isLegalRepresentative")
+    is_active: Optional[bool] = Field(None, alias="isActive")
     ownership_pct: Optional[float] = Field(None, alias="ownershipPct")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class RelationshipSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "relationships", header_builder, renew_token, RelationshipAPIDTO.parse_obj(data))
+        super().__init__(base_url, "relationships", header_builder, renew_token, RelationshipAPIDTO.model_validate(data))
 
 
 class RelationshipAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "relationships", header_builder, renew_token, RelationshipAPIDTO.parse_obj(data))
+        super().__init__(base_url, "relationships", header_builder, renew_token, RelationshipAPIDTO.model_validate(data))
 
 
 class RelationshipsSyncModule(GenericSyncModule):

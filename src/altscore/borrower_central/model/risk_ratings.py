@@ -10,12 +10,13 @@ class RiskRatingAPIDTO(BaseModel):
     value: str = Field(alias="value")
     history: List[Dict] = Field(alias="history")
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateUpdateRiskRatingDTO(BaseModel):
@@ -23,22 +24,23 @@ class CreateUpdateRiskRatingDTO(BaseModel):
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
     value: str = Field(alias="value")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class RiskRatingSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "risk-ratings", header_builder, renew_token, RiskRatingAPIDTO.parse_obj(data))
+        super().__init__(base_url, "risk-ratings", header_builder, renew_token, RiskRatingAPIDTO.model_validate(data))
 
 
 class RiskRatingAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "risk-ratings", header_builder, renew_token, RiskRatingAPIDTO.parse_obj(data))
+        super().__init__(base_url, "risk-ratings", header_builder, renew_token, RiskRatingAPIDTO.model_validate(data))
 
 
 class RiskRatingsSyncModule(GenericSyncModule):

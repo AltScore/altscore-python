@@ -9,10 +9,11 @@ class InterestRate(BaseModel):
     period_time: int = Field(alias="periodTime")
     tier: dict
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class PenaltyRate(BaseModel):
     rate: str
@@ -26,27 +27,29 @@ class Penalty(BaseModel):
     times_to_compute: int = Field(alias="timesToCompute")
     enabled: bool
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ProductTier(BaseModel):
     minimum: Money
     maximum: Money
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 
 class DPAProductAPIDTO(BaseModel):
     id: str = Field(alias="productId")
     name: str
-    description: Optional[str]
+    description: Optional[str] = None
     partner_id: str = Field(alias="partnerId")
     amortization_type: str = Field(alias="amortizationType")
     repay_every: int = Field(alias="repayEvery")
@@ -61,16 +64,17 @@ class DPAProductAPIDTO(BaseModel):
     status: str
     tenant: str
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 
 class CreateDPAProductAPIDTO(BaseModel):
     name: str = Field(alias="name")
-    description: Optional[str] = Field(alias="description")
+    description: Optional[str] = Field(None, alias="description")
     amortization_type: str = Field(alias="amortizationType")
     disbursement_settings: DisbursementSettings = Field(alias="disbursementSettings")
     installments: int = Field(alias="installments")
@@ -81,10 +85,11 @@ class CreateDPAProductAPIDTO(BaseModel):
     repay_every: int = Field(alias="repayEvery")
     interest_tax: float = Field(alias="interestTax")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class UpdateDPAProductAPIDTO(BaseModel):
@@ -100,10 +105,11 @@ class UpdateDPAProductAPIDTO(BaseModel):
     repay_every: Optional[int] = Field(alias="repayEvery", default=None)
     interest_tax: float = Field(alias="interestTax")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 

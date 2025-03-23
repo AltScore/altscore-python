@@ -16,15 +16,16 @@ class AlertAPIDTO(BaseModel):
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
     execution_id: Optional[str] = Field(alias="executionId", default=None)
     is_acknowledged: bool = Field(alias="isAcknowledged")
-    acknowledged_by: Optional[str] = Field(alias="acknowledgedBy")
-    acknowledged_at: Optional[str] = Field(alias="acknowledgedAt")
+    acknowledged_by: Optional[str] = Field(None, alias="acknowledgedBy")
+    acknowledged_at: Optional[str] = Field(None, alias="acknowledgedAt")
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateAlert(BaseModel):
@@ -36,31 +37,33 @@ class CreateAlert(BaseModel):
     level: int = Field(alias="level")
     message: Optional[str] = Field(alias="message", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class AcknowledgeAlert(BaseModel):
     acknowledged_by: str = Field(alias="acknowledgedBy")
-    acknowledged_at: Optional[str] = Field(alias="acknowledgedAt")
+    acknowledged_at: Optional[str] = Field(None, alias="acknowledgedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class AlertSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "alerts", header_builder, renew_token, AlertAPIDTO.parse_obj(data))
+        super().__init__(base_url, "alerts", header_builder, renew_token, AlertAPIDTO.model_validate(data))
 
     @retry_on_401
     def acknowledge(self, acknowledged_by: str, acknowledged_at: Optional[str] = None) -> str:
         with httpx.Client(base_url=self.base_url._borrower_central_base_url) as client:
-            data = AcknowledgeAlert(acknowledged_by=acknowledged_by, acknowledged_at=acknowledged_at).dict(
+            data = AcknowledgeAlert(acknowledged_by=acknowledged_by, acknowledged_at=acknowledged_at).model_dump(
                 by_alias=True)
             response = client.put(
                 f"{self.resource}/{self.data.id}/acknowledge",
@@ -74,12 +77,12 @@ class AlertSync(GenericSyncResource):
 class AlertAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "alerts", header_builder, renew_token, AlertAPIDTO.parse_obj(data))
+        super().__init__(base_url, "alerts", header_builder, renew_token, AlertAPIDTO.model_validate(data))
 
     @retry_on_401_async
     async def acknowledge(self, acknowledged_by: str, acknowledged_at: Optional[str] = None) -> str:
         async with httpx.AsyncClient(base_url=self.base_url._borrower_central_base_url) as client:
-            data = AcknowledgeAlert(acknowledged_by=acknowledged_by, acknowledged_at=acknowledged_at).dict(
+            data = AcknowledgeAlert(acknowledged_by=acknowledged_by, acknowledged_at=acknowledged_at).model_dump(
                 by_alias=True)
             response = await client.put(
                 f"{self.resource}/{self.data.id}/acknowledge",

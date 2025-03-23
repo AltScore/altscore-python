@@ -24,7 +24,7 @@ setup(
         "loguru",
         "click",
         "requests",
-        "pydantic==1.10.13",
+        "pydantic==2.10.6",
         "httpx",
         "stringcase",
         "python-decouple",

@@ -23,13 +23,14 @@ class AddressAPIDTO(BaseModel):
     is_home: bool = Field(alias="isHome", default=False)
     is_work: bool = Field(alias="isWork", default=False)
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
     has_attachments: bool = Field(alias="hasAttachments")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
     def get_location(self):
         if self.lat is None or self.lon is None:
@@ -90,10 +91,11 @@ class CreateAddressDTO(BaseModel):
     is_home: bool = Field(alias="isHome", default=False)
     is_work: bool = Field(alias="isWork", default=False)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class UpdateAddressDTO(BaseModel):
@@ -113,22 +115,23 @@ class UpdateAddressDTO(BaseModel):
     is_home: Optional[bool] = Field(alias="isHome", default=None)
     is_work: Optional[bool] = Field(alias="isWork", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class AddressSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "addresses", header_builder, renew_token, AddressAPIDTO.parse_obj(data))
+        super().__init__(base_url, "addresses", header_builder, renew_token, AddressAPIDTO.model_validate(data))
 
 
 class AddressAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "addresses", header_builder, renew_token, AddressAPIDTO.parse_obj(data))
+        super().__init__(base_url, "addresses", header_builder, renew_token, AddressAPIDTO.model_validate(data))
 
 
 class AddressesSyncModule(GenericSyncModule):

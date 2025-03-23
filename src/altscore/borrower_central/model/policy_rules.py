@@ -17,12 +17,13 @@ class RuleAPIDTO(BaseModel):
     label: str = Field(alias="label")
     alerts: List[RuleAlert] = Field(alias="alerts", default=[])
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
     def get_alert_by_level(self, level: int):
         for alert in self.alerts:
@@ -36,22 +37,23 @@ class CreateRuleDTO(BaseModel):
     code: str = Field(alias="code")
     alerts: List[RuleAlert] = Field(alias="alerts")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class RulesSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "rules", header_builder, renew_token, RuleAPIDTO.parse_obj(data))
+        super().__init__(base_url, "rules", header_builder, renew_token, RuleAPIDTO.model_validate(data))
 
 
 class RulesAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "rules", header_builder, renew_token, RuleAPIDTO.parse_obj(data))
+        super().__init__(base_url, "rules", header_builder, renew_token, RuleAPIDTO.model_validate(data))
 
 
 class RulesSyncModule(GenericSyncModule):
@@ -81,7 +83,7 @@ class RulesSyncModule(GenericSyncModule):
                 base_url=self.altscore_client._borrower_central_base_url,
                 header_builder=self.build_headers,
                 renew_token=self.renew_token,
-                data=self.retrieve_data_model.parse_obj(e)
+                data=self.retrieve_data_model.model_validate(e)
             ) for e in response.json()]
 
             if len(res) == 0:
@@ -116,7 +118,7 @@ class RulesAsyncModule(GenericAsyncModule):
                 base_url=self.altscore_client._borrower_central_base_url,
                 header_builder=self.build_headers,
                 renew_token=self.renew_token,
-                data=self.retrieve_data_model.parse_obj(e)
+                data=self.retrieve_data_model.model_validate(e)
             ) for e in response.json()]
 
             if len(res) == 0:

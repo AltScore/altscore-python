@@ -9,16 +9,17 @@ class DocumentsAPIDTO(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
     key: str = Field(alias="key")
     label: Optional[str] = Field(alias="label", default=None)
-    value: Optional[Any] = Field(alias="value")
+    value: Optional[Any] = Field(None, alias="value")
     tags: List[str] = Field(alias="tags")
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
     has_attachments: bool = Field(alias="hasAttachments")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateDocumentDTO(BaseModel):
@@ -27,10 +28,11 @@ class CreateDocumentDTO(BaseModel):
     value: Optional[Any] = Field(alias="value", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class UpdateDocumentDTO(BaseModel):
@@ -38,22 +40,23 @@ class UpdateDocumentDTO(BaseModel):
     value: Optional[Any] = Field(alias="value", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class DocumentSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "documents", header_builder, renew_token, DocumentsAPIDTO.parse_obj(data))
+        super().__init__(base_url, "documents", header_builder, renew_token, DocumentsAPIDTO.model_validate(data))
 
 
 class DocumentAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "documents", header_builder, renew_token, DocumentsAPIDTO.parse_obj(data))
+        super().__init__(base_url, "documents", header_builder, renew_token, DocumentsAPIDTO.model_validate(data))
 
 
 class DocumentsSyncModule(GenericSyncModule):

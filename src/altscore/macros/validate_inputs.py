@@ -54,7 +54,7 @@ def validate_against_model(entity: str, data: dict, model):
         # we inject a dummie borrower_id to avoid validation errors because its going to be
         # created at execution time
         data["borrowerId"] = "dummy"
-        model.parse_obj(data)
+        model.model_validate(data)
     except ValidationError as e:
         pretty_errors = _format_pydantic_errors(e)
         formatted_error_message = f"Validation error on {entity}:\n" + pretty_errors

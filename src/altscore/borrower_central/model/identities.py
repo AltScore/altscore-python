@@ -10,52 +10,55 @@ class IdentityAPIDTO(BaseModel):
     id: str = Field(alias="id")
     borrower_id: str = Field(alias="borrowerId")
     key: str = Field(alias="key")
-    label: Optional[str] = Field(alias="label")
-    value: Optional[str] = Field(alias="value")
-    priority: Optional[int] = Field(alias="priority")
+    label: Optional[str] = Field(None, alias="label")
+    value: Optional[str] = Field(None, alias="value")
+    priority: Optional[int] = Field(None, alias="priority")
     tags: List[str] = Field(alias="tags")
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
     has_attachments: bool = Field(alias="hasAttachments", default=False)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateIdentityDTO(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
     key: str = Field(alias="key")
-    value: Optional[str] = Field(alias="value")
+    value: Optional[str] = Field(None, alias="value")
     tags: List[str] = Field(alias="tags", default=[])
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class UpdateIdentityDTO(BaseModel):
     value: Optional[str] = Field(alias="value", default=None)
     tags: Optional[List[str]] = Field(alias="tags", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class IdentitySync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "identities", header_builder, renew_token, IdentityAPIDTO.parse_obj(data))
+        super().__init__(base_url, "identities", header_builder, renew_token, IdentityAPIDTO.model_validate(data))
 
 
 class IdentityAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "identities", header_builder, renew_token, IdentityAPIDTO.parse_obj(data))
+        super().__init__(base_url, "identities", header_builder, renew_token, IdentityAPIDTO.model_validate(data))
 
 
 class IdentitiesSyncModule(GenericSyncModule):

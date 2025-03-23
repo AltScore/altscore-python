@@ -34,10 +34,11 @@ class BatchItemsExecutionSummary(BaseModel):
     success: Optional[int] = Field(alias="success", default=0)
     unsuccessful_sources: Optional[int] = Field(alias="unsuccessfulSources", default=0)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ExecutionBatchInputs(BaseModel):
@@ -45,10 +46,11 @@ class ExecutionBatchInputs(BaseModel):
     raw_package_ids: List[str] = Field(alias="rawPackageIds", default=[])
     custom_input: Dict = Field(alias="customInput", default={})
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ExecutionBatchPreProcessingOutput(BaseModel):
@@ -57,10 +59,11 @@ class ExecutionBatchPreProcessingOutput(BaseModel):
     result: str = Field(alias="result")
     notices: List[str] = Field(alias="notices")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ExecutionBatchPostProcessingOutput(BaseModel):
@@ -69,20 +72,22 @@ class ExecutionBatchPostProcessingOutput(BaseModel):
     result: str = Field(alias="result")
     notices: List[str] = Field(alias="notices")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ExecutionBatchOutputs(BaseModel):
     w_batch_pre_processing_output: Optional[ExecutionBatchPreProcessingOutput] = Field(alias="wBatchPreProcessingOutput", default=None)
     w_batch_post_processing_output: Optional[ExecutionBatchPostProcessingOutput] = Field(alias="wBatchPostProcessingOutput", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ExecutionBatchState(BaseModel):
@@ -97,10 +102,11 @@ class ExecutionBatchState(BaseModel):
     batch_items_outputs_generation_started_at: Optional[str] = Field(alias="batchItemsOutputsGenerationStartedAt", default=None)
     preparing_batch_items_retry: Optional[bool] = Field(alias="preparingBatchItemsRetry", default=False)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 
@@ -119,10 +125,11 @@ class CreateExecutionBatchDTO(BaseModel):
     inputs: Optional[ExecutionBatchInputs] = Field(alias="inputs", default=None)
     debug: Optional[bool] = Field(alias="debug", default=False)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class UpdateExecutionBatchDTO(BaseModel):
@@ -132,10 +139,11 @@ class UpdateExecutionBatchDTO(BaseModel):
     inputs: Optional[ExecutionBatchInputs] = Field(alias="inputs", default=None)
     outputs: Optional[ExecutionBatchOutputs] = Field(alias="outputs", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ExecutionBatchItemOutputAPIDTO(BaseModel):
@@ -144,10 +152,11 @@ class ExecutionBatchItemOutputAPIDTO(BaseModel):
     output: dict = Field(alias="output")
     is_success: bool = Field(alias="isSuccess")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ExecutionBatchAPIDTO(BaseModel):
@@ -169,15 +178,16 @@ class ExecutionBatchAPIDTO(BaseModel):
     outputs: Optional[ExecutionBatchOutputs] = Field(alias="outputs", default=None)
     debug: Optional[bool] = Field(alias="debug", default=False)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ExecutionBatchAsync(GenericAsyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "execution-batches", header_builder, renew_token, ExecutionBatchAPIDTO.parse_obj(data))
+        super().__init__(base_url, "execution-batches", header_builder, renew_token, ExecutionBatchAPIDTO.model_validate(data))
 
     def _execution_batch(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}"
@@ -208,7 +218,7 @@ class ExecutionBatchAsync(GenericAsyncResource):
             )
 
             raise_for_status_improved(response)
-            self.data = ExecutionBatchAPIDTO.parse_obj(response.json())
+            self.data = ExecutionBatchAPIDTO.model_validate(response.json())
 
 
 class ExecutionBatchAsyncModule(GenericAsyncModule):
@@ -229,14 +239,14 @@ class ExecutionBatchAsyncModule(GenericAsyncModule):
         await package.get_content()
 
         outputs = json.loads(package.content)
-        outputs = [ExecutionBatchItemOutputAPIDTO.parse_obj(result) for result in outputs]
+        outputs = [ExecutionBatchItemOutputAPIDTO.model_validate(result) for result in outputs]
 
         return outputs
 
 
 class ExecutionBatchSync(GenericSyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "execution-batches", header_builder, renew_token, ExecutionBatchAPIDTO.parse_obj(data))
+        super().__init__(base_url, "execution-batches", header_builder, renew_token, ExecutionBatchAPIDTO.model_validate(data))
 
     def _execution_batch(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}"
@@ -266,7 +276,7 @@ class ExecutionBatchSync(GenericSyncResource):
             )
 
             raise_for_status_improved(response)
-            self.data = ExecutionBatchAPIDTO.parse_obj(response.json())
+            self.data = ExecutionBatchAPIDTO.model_validate(response.json())
 
 
 class ExecutionBatchSyncModule(GenericSyncModule):
@@ -287,6 +297,6 @@ class ExecutionBatchSyncModule(GenericSyncModule):
         package.get_content()
 
         outputs = json.loads(package.content)
-        outputs = [ExecutionBatchItemOutputAPIDTO.parse_obj(result) for result in outputs]
+        outputs = [ExecutionBatchItemOutputAPIDTO.model_validate(result) for result in outputs]
 
         return outputs

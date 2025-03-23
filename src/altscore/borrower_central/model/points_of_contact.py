@@ -6,7 +6,7 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
 
 class PointOfContactAPIDTO(BaseModel):
     id: str = Field(alias="id")
-    label: Optional[str] = Field(alias="label")
+    label: Optional[str] = Field(None, alias="label")
     contact_method: str = Field(alias="contactMethod")
     value: str = Field(alias="value")
     borrower_id: str = Field(alias="borrowerId")
@@ -15,12 +15,13 @@ class PointOfContactAPIDTO(BaseModel):
     verified_at: Optional[str] = Field(alias="verifiedAt", default=None)
     tags: List[str] = Field(alias="tags", default=[])
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreatePointOfContactDTO(BaseModel):
@@ -31,10 +32,11 @@ class CreatePointOfContactDTO(BaseModel):
     priority: Optional[int] = Field(alias="priority", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class UpdatePointOfContact(BaseModel):
@@ -44,22 +46,23 @@ class UpdatePointOfContact(BaseModel):
     priority: Optional[int] = Field(alias="priority", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class PointOfContactSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "points-of-contact", header_builder, renew_token, PointOfContactAPIDTO.parse_obj(data))
+        super().__init__(base_url, "points-of-contact", header_builder, renew_token, PointOfContactAPIDTO.model_validate(data))
 
 
 class PointOfContactAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "points-of-contact", header_builder, renew_token, PointOfContactAPIDTO.parse_obj(data))
+        super().__init__(base_url, "points-of-contact", header_builder, renew_token, PointOfContactAPIDTO.model_validate(data))
 
 
 class PointOfContactSyncModule(GenericSyncModule):

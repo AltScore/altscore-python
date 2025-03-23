@@ -6,10 +6,11 @@ class AccountHolder(BaseModel):
     client_id: str = Field(alias="clientId")
     partner_id: str = Field(alias="partnerId")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class Reference(BaseModel):
@@ -20,10 +21,11 @@ class Reference(BaseModel):
     status: str = Field(alias="status")
     created_at: str = Field(alias="createdAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class PaymentAccountAPIDTO(BaseModel):
@@ -32,10 +34,11 @@ class PaymentAccountAPIDTO(BaseModel):
     references: Optional[List[Reference]] = Field(alias="references", default=[])
     created_at: str = Field(alias="createdAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
     def get_active_references_by_provider(self, provider: str):
         return [reference for reference in self.references if
@@ -47,16 +50,18 @@ class CreatePaymentAccountDTO(BaseModel):
     client_id: str = Field(alias="clientId")
     auto_create_references: bool = Field(alias="autoCreateReferences", default=True)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreatePaymentReferenceDTO(BaseModel):
     provider: Optional[str] = Field(alias="provider", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }

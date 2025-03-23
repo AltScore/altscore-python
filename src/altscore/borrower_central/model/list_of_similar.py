@@ -15,54 +15,58 @@ class SimilarEntity(BaseModel):
     key: str = Field(alias="key")
     proposed_value: str = Field(alias="proposedValue")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class Similar(BaseModel):
     label: str = Field(alias="label")
-    description: Optional[str] = Field(alias="description")
+    description: Optional[str] = Field(None, alias="description")
     entities: List[SimilarEntity] = Field(alias="entities")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ListOfSimilarAPIDTO(BaseModel):
     id: str = Field(alias="id")
     borrower_id: str = Field(alias="borrowerId")
-    execution_id: Optional[str] = Field(alias="executionId")
+    execution_id: Optional[str] = Field(None, alias="executionId")
     list_of_similar: List[Similar] = Field(alias="listOfSimilar")
-    status: Optional[str] = Field(alias="status")
-    applied_by: Optional[str] = Field(alias="appliedBy")
+    status: Optional[str] = Field(None, alias="status")
+    applied_by: Optional[str] = Field(None, alias="appliedBy")
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateListOfSimilar(BaseModel):
-    borrower_id: Optional[str] = Field(alias="borrowerId")
-    execution_id: Optional[str] = Field(alias="executionId")
+    borrower_id: Optional[str] = Field(None, alias="borrowerId")
+    execution_id: Optional[str] = Field(None, alias="executionId")
     list_of_similar: List[Similar] = Field(alias="listOfSimilar")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ListOfSimilarSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "list-of-similar", header_builder, renew_token, ListOfSimilarAPIDTO.parse_obj(data))
+        super().__init__(base_url, "list-of-similar", header_builder, renew_token, ListOfSimilarAPIDTO.model_validate(data))
 
     @retry_on_401
     def apply(self, index: int, retry_workflow: bool = False):
@@ -95,7 +99,7 @@ class ListOfSimilarSync(GenericSyncResource):
 class ListOfSimilarAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "list-of-similar", header_builder, renew_token, ListOfSimilarAPIDTO.parse_obj(data))
+        super().__init__(base_url, "list-of-similar", header_builder, renew_token, ListOfSimilarAPIDTO.model_validate(data))
 
     @retry_on_401_async
     async def apply(self, index: int, retry_workflow: bool = False):

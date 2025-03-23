@@ -5,7 +5,8 @@ class SourceConfig(BaseModel):
     source_id: str = Field(alias="sourceId")
     version: str = Field(alias="version")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }

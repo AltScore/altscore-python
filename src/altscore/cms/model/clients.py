@@ -24,12 +24,13 @@ class ClientAPIDTO(BaseModel):
     address: str = Field(alias="address")
     phone_number: Optional[str] = Field(alias="phoneNumber", default=None)
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateClientDTO(BaseModel):
@@ -43,10 +44,11 @@ class CreateClientDTO(BaseModel):
     phone_number: Optional[str] = Field(alias="phoneNumber", default="")
     activation_date: Optional[str] = Field(alias="activationDate", default=dt.date.today().strftime("%Y-%m-%d"))
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class UpdateClientDTO(BaseModel):
@@ -128,7 +130,7 @@ class ClientAsync(ClientBase):
                 base_url=self.base_url,
                 header_builder=self._header_builder,
                 renew_token=self.renew_token,
-                data=CreditAccountAPIDTO.parse_obj(response.json())
+                data=CreditAccountAPIDTO.model_validate(response.json())
             )
 
     @retry_on_401_async
@@ -143,7 +145,7 @@ class ClientAsync(ClientBase):
                 headers=self._header_builder(partner_id=self.data.partner_id)
             )
             raise_for_status_improved(response)
-            self.data = ClientAPIDTO.parse_obj(response.json())
+            self.data = ClientAPIDTO.model_validate(response.json())
 
     @retry_on_401_async
     async def disable(self):
@@ -157,7 +159,7 @@ class ClientAsync(ClientBase):
                 headers=self._header_builder(partner_id=self.data.partner_id)
             )
             raise_for_status_improved(response)
-            self.data = ClientAPIDTO.parse_obj(response.json())
+            self.data = ClientAPIDTO.model_validate(response.json())
 
     @retry_on_401_async
     async def get_payment_accounts(self) -> Optional[PaymentAccountAPIDTO]:
@@ -170,7 +172,7 @@ class ClientAsync(ClientBase):
             if response.status_code == 404:
                 return None
             raise_for_status_improved(response)
-            return PaymentAccountAPIDTO.parse_obj(response.json())
+            return PaymentAccountAPIDTO.model_validate(response.json())
 
     @retry_on_401_async
     async def create_payment_account(self, auto_create_references: bool = True) -> PaymentAccountAPIDTO:
@@ -178,15 +180,15 @@ class ClientAsync(ClientBase):
             response = await client.post(
                 self._create_payment_account(),
                 headers=self._header_builder(partner_id=self.data.partner_id),
-                json=CreatePaymentAccountDTO.parse_obj({
+                json=CreatePaymentAccountDTO.model_validate({
                     "partner_id": self.data.partner_id,
                     "client_id": self.data.id,
                     "auto_create_references": auto_create_references
-                }).dict(by_alias=True),
+                }).model_dump(by_alias=True),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return PaymentAccountAPIDTO.parse_obj(response.json())
+            return PaymentAccountAPIDTO.model_validate(response.json())
 
     @retry_on_401_async
     async def create_payment_reference(self, provider: str = None) -> List[Reference]:
@@ -194,13 +196,13 @@ class ClientAsync(ClientBase):
             response = await client.post(
                 self._create_payment_reference(self.data.id),
                 headers=self._header_builder(partner_id=self.data.partner_id),
-                json=CreatePaymentReferenceDTO.parse_obj({
+                json=CreatePaymentReferenceDTO.model_validate({
                     "provider": provider
-                }).dict(by_alias=True, exclude_none=True),
+                }).model_dump(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [Reference.parse_obj(e) for e in response.json()]
+            return [Reference.model_validate(e) for e in response.json()]
 
     @retry_on_401_async
     async def create_disbursement_account(self, bank_account: dict, country: str,
@@ -209,16 +211,16 @@ class ClientAsync(ClientBase):
             response = await client.post(
                 self._create_disbursement_account(country),
                 headers=self._header_builder(partner_id=self.data.partner_id),
-                json=CreateDisbursementClientAccountDTO.parse_obj({
+                json=CreateDisbursementClientAccountDTO.model_validate({
                     "id": self.data.id,
                     "partnerId": self.data.partner_id,
-                    "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True, exclude_none=True),
+                    "bankAccount": BankAccount.model_validate(bank_account).model_dump(by_alias=True, exclude_none=True),
                     "validationType": validation_type
-                }).dict(by_alias=True, exclude_none=True),
+                }).model_dump(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return DisbursementClientAccountAPIDTO.parse_obj(response.json())
+            return DisbursementClientAccountAPIDTO.model_validate(response.json())
 
     @retry_on_401_async
     async def update_disbursement_account(self, bank_account: dict, country: str,
@@ -228,12 +230,12 @@ class ClientAsync(ClientBase):
                 self._patch_disbursement_account(country=country, client_id=self.data.id, account_id=account_id),
                 headers=self._header_builder(partner_id=self.data.partner_id),
                 json={
-                    "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True, exclude_none=True),
+                    "bankAccount": BankAccount.model_validate(bank_account).model_dump(by_alias=True, exclude_none=True),
                 },
                 timeout=30
             )
             raise_for_status_improved(response)
-            return DisbursementClientAccountAPIDTO.parse_obj(response.json())
+            return DisbursementClientAccountAPIDTO.model_validate(response.json())
 
     @retry_on_401_async
     async def revalidate_disbursement_account(self, country: str, account_id: str):
@@ -257,7 +259,7 @@ class ClientAsync(ClientBase):
             if response.status_code == 404:
                 return None
             raise_for_status_improved(response)
-            return DisbursementClientAccountAPIDTO.parse_obj(response.json())
+            return DisbursementClientAccountAPIDTO.model_validate(response.json())
 
     @retry_on_401_async
     async def get_disbursement_accounts(self, country: str, **kwargs) -> List[DisbursementClientAccountAPIDTO]:
@@ -277,7 +279,7 @@ class ClientAsync(ClientBase):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [DisbursementClientAccountAPIDTO.parse_obj(e) for e in response.json()]
+            return [DisbursementClientAccountAPIDTO.model_validate(e) for e in response.json()]
 
     def __str__(self):
         return str(self.data)
@@ -307,7 +309,7 @@ class ClientSync(ClientBase):
                 base_url=self.base_url,
                 header_builder=self._header_builder,
                 renew_token=self.renew_token,
-                data=CreditAccountAPIDTO.parse_obj(response.json())
+                data=CreditAccountAPIDTO.model_validate(response.json())
             )
 
     @retry_on_401
@@ -322,7 +324,7 @@ class ClientSync(ClientBase):
                 headers=self._header_builder(partner_id=self.data.partner_id)
             )
             raise_for_status_improved(response)
-            self.data = ClientAPIDTO.parse_obj(response.json())
+            self.data = ClientAPIDTO.model_validate(response.json())
 
     @retry_on_401
     def disable(self):
@@ -336,7 +338,7 @@ class ClientSync(ClientBase):
                 headers=self._header_builder(partner_id=self.data.partner_id)
             )
             raise_for_status_improved(response)
-            self.data = ClientAPIDTO.parse_obj(response.json())
+            self.data = ClientAPIDTO.model_validate(response.json())
 
     @retry_on_401
     def get_payment_accounts(self) -> Optional[PaymentAccountAPIDTO]:
@@ -349,7 +351,7 @@ class ClientSync(ClientBase):
             if response.status_code == 404:
                 return None
             raise_for_status_improved(response)
-            return PaymentAccountAPIDTO.parse_obj(response.json())
+            return PaymentAccountAPIDTO.model_validate(response.json())
 
     @retry_on_401
     def create_payment_account(self, auto_create_references: bool = True) -> PaymentAccountAPIDTO:
@@ -357,15 +359,15 @@ class ClientSync(ClientBase):
             response = client.post(
                 self._create_payment_account(),
                 headers=self._header_builder(partner_id=self.data.partner_id),
-                json=CreatePaymentAccountDTO.parse_obj({
+                json=CreatePaymentAccountDTO.model_validate({
                     "partner_id": self.data.partner_id,
                     "client_id": self.data.id,
                     "auto_create_references": auto_create_references
-                }).dict(by_alias=True),
+                }).model_dump(by_alias=True),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return PaymentAccountAPIDTO.parse_obj(response.json())
+            return PaymentAccountAPIDTO.model_validate(response.json())
 
     @retry_on_401
     def create_payment_reference(self, provider: str = None) -> List[Reference]:
@@ -373,13 +375,13 @@ class ClientSync(ClientBase):
             response = client.post(
                 self._create_payment_reference(self.data.id),
                 headers=self._header_builder(partner_id=self.data.partner_id),
-                json=CreatePaymentReferenceDTO.parse_obj({
+                json=CreatePaymentReferenceDTO.model_validate({
                     "provider": provider
-                }).dict(by_alias=True, exclude_none=True),
+                }).model_dump(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [Reference.parse_obj(e) for e in response.json()]
+            return [Reference.model_validate(e) for e in response.json()]
 
     @retry_on_401
     def create_disbursement_account(self, country: str, bank_account: dict,
@@ -388,16 +390,16 @@ class ClientSync(ClientBase):
             response = client.post(
                 self._create_disbursement_account(country),
                 headers=self._header_builder(partner_id=self.data.partner_id),
-                json=CreateDisbursementClientAccountDTO.parse_obj({
+                json=CreateDisbursementClientAccountDTO.model_validate({
                     "id": self.data.id,
                     "partnerId": self.data.partner_id,
-                    "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True, exclude_none=True),
+                    "bankAccount": BankAccount.model_validate(bank_account).model_dump(by_alias=True, exclude_none=True),
                     "validationType": validation_type
-                }).dict(by_alias=True, exclude_none=True),
+                }).model_dump(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return DisbursementClientAccountAPIDTO.parse_obj(response.json())
+            return DisbursementClientAccountAPIDTO.model_validate(response.json())
 
     @retry_on_401
     def update_disbursement_account(self, bank_account: dict, country: str,
@@ -407,12 +409,12 @@ class ClientSync(ClientBase):
                 self._patch_disbursement_account(country=country, client_id=self.data.id, account_id=account_id),
                 headers=self._header_builder(partner_id=self.data.partner_id),
                 json={
-                    "bankAccount": BankAccount.parse_obj(bank_account).dict(by_alias=True, exclude_none=True),
+                    "bankAccount": BankAccount.model_validate(bank_account).model_dump(by_alias=True, exclude_none=True),
                 },
                 timeout=30
             )
             raise_for_status_improved(response)
-            return DisbursementClientAccountAPIDTO.parse_obj(response.json())
+            return DisbursementClientAccountAPIDTO.model_validate(response.json())
 
     @retry_on_401
     def revalidate_disbursement_account(self, country: str, account_id: str):
@@ -442,7 +444,7 @@ class ClientSync(ClientBase):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [DisbursementClientAccountAPIDTO.parse_obj(e) for e in response.json()]
+            return [DisbursementClientAccountAPIDTO.model_validate(e) for e in response.json()]
 
     @retry_on_401
     def get_disbursement_account(self, country: str, account_id: str) -> Optional[DisbursementClientAccountAPIDTO]:
@@ -458,7 +460,7 @@ class ClientSync(ClientBase):
             if response.status_code == 404:
                 return None
             raise_for_status_improved(response)
-            return DisbursementClientAccountAPIDTO.parse_obj(response.json())
+            return DisbursementClientAccountAPIDTO.model_validate(response.json())
 
     def __str__(self):
         return str(self.data)
@@ -500,7 +502,7 @@ class ClientsAsyncModule(GenericAsyncModule):
                     base_url=self.altscore_client._cms_base_url,
                     header_builder=self.build_headers,
                     renew_token=self.renew_token,
-                    data=self.retrieve_data_model.parse_obj(response.json())
+                    data=self.retrieve_data_model.model_validate(response.json())
                 )
             return None
 
@@ -518,7 +520,7 @@ class ClientsAsyncModule(GenericAsyncModule):
             response = await client.post(
                 "/v2/clients",
                 headers=headers,
-                json=CreateClientDTO.parse_obj(new_entity_data).dict(by_alias=True),
+                json=CreateClientDTO.model_validate(new_entity_data).model_dump(by_alias=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -559,7 +561,7 @@ class ClientsSyncModule(GenericSyncModule):
                     base_url=self.altscore_client._cms_base_url,
                     header_builder=self.build_headers,
                     renew_token=self.renew_token,
-                    data=self.retrieve_data_model.parse_obj(response.json())
+                    data=self.retrieve_data_model.model_validate(response.json())
                 )
             return None
 
@@ -577,7 +579,7 @@ class ClientsSyncModule(GenericSyncModule):
             response = client.post(
                 "/v2/clients",
                 headers=headers,
-                json=CreateClientDTO.parse_obj(new_entity_data).dict(by_alias=True),
+                json=CreateClientDTO.model_validate(new_entity_data).model_dump(by_alias=True),
                 timeout=30
             )
             raise_for_status_improved(response)

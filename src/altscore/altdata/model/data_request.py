@@ -18,20 +18,22 @@ class Address(BaseModel):
     zip_code: str = Field(alias="zipCode", default=None)
     country: str = Field(alias="country", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class Location(BaseModel):
     lat: float = Field(alias="lat")
     lon: float = Field(alias="lon")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class InputKeys(BaseModel):
@@ -60,10 +62,11 @@ class InputKeys(BaseModel):
     authorization_reference: Optional[str] = Field(alias="authorizationReference", default=None)
     passport_number: Optional[str] = Field(alias="passportNumber", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class SourceCallSummary(BaseModel):
@@ -73,10 +76,11 @@ class SourceCallSummary(BaseModel):
     is_success: bool = Field(alias="isSuccess")
     error_message: Optional[str] = Field(alias="errorMessage", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
     def __repr__(self):
         return f"<SourceCallSummary: {self.source_id}_{self.version}, isSuccess:{self.is_success}>"
@@ -95,7 +99,7 @@ class RequestStatus:
 
     @classmethod
     def from_api(cls, response: Dict):
-        return cls(data=StatusAPIDTO.parse_obj(response))
+        return cls(data=StatusAPIDTO.model_validate(response))
 
     def are_all_source_calls_success(self):
         return all([s.is_success for s in self.data.call_summary])
@@ -116,10 +120,11 @@ class RequestAPIDTO(BaseModel):
     inputs: Dict
     requested_at: str = Field(alias="requestedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class RequestResult:
@@ -127,12 +132,12 @@ class RequestResult:
         self.data = data
 
     def __repr__(self):
-        r = self.data.dict(by_alias=True)
+        r = self.data.model_dump(by_alias=True)
         return json.dumps(r, indent=4, ensure_ascii=False)
 
     @classmethod
     def from_api(cls, response: Dict):
-        return cls(data=RequestAPIDTO.parse_obj(response))
+        return cls(data=RequestAPIDTO.model_validate(response))
 
     @property
     def call_summary(self):
@@ -151,7 +156,7 @@ class RequestResult:
         return self.data.source_data.get(source_id, None)
 
     def to_package(self, source_id: str):
-        source_call_summary = self.get_source_call_summary(source_id).dict(by_alias=True)
+        source_call_summary = self.get_source_call_summary(source_id).model_dump(by_alias=True)
         return {
             "sourceId": source_id,
             "version": source_call_summary["version"],
@@ -180,13 +185,13 @@ class RequestSyncModule:
                  timeout: Optional[int] = None):
         if isinstance(input_keys, dict):
             # to validate the input keys
-            input_keys = InputKeys.parse_obj(input_keys)
-        payload = input_keys.dict(by_alias=True, exclude_none=True)
+            input_keys = InputKeys.model_validate(input_keys)
+        payload = input_keys.model_dump(by_alias=True, exclude_none=True)
         # to validate the sources config model
-        sources_config = [SourceConfig.parse_obj(s) if isinstance(s, dict) else s for s in sources_config]
+        sources_config = [SourceConfig.model_validate(s) if isinstance(s, dict) else s for s in sources_config]
         if timeout is not None:
             payload["timeout"] = timeout
-        payload["sourcesConfig"] = [s.dict(by_alias=True) for s in sources_config]
+        payload["sourcesConfig"] = [s.model_dump(by_alias=True) for s in sources_config]
         with httpx.Client(base_url=self.altscore_client._altdata_base_url) as client:
             r = client.post(
                 url="/v1/requests/sync",
@@ -203,12 +208,12 @@ class RequestSyncModule:
     def new_async(self, input_keys: Union[InputKeys, Dict], sources_config: List[Union[Dict, SourceConfig]]):
         if isinstance(input_keys, dict):
             # to validate the input keys
-            input_keys = InputKeys.parse_obj(input_keys)
-        payload = input_keys.dict(by_alias=True, exclude_none=True)
+            input_keys = InputKeys.model_validate(input_keys)
+        payload = input_keys.model_dump(by_alias=True, exclude_none=True)
         # to validate the sources config model
-        sources_config = [SourceConfig.parse_obj(s) if isinstance(s, dict) else s for s in sources_config]
+        sources_config = [SourceConfig.model_validate(s) if isinstance(s, dict) else s for s in sources_config]
 
-        payload["sourcesConfig"] = [s.dict(by_alias=True) for s in sources_config]
+        payload["sourcesConfig"] = [s.model_dump(by_alias=True) for s in sources_config]
         with httpx.Client(base_url=self.altscore_client._altdata_base_url) as client:
             r = client.post(
                 url="/v1/requests/async",
@@ -250,14 +255,14 @@ class RequestAsyncModule:
                        timeout: Optional[int] = None):
         if isinstance(input_keys, dict):
             # to validate the input keys
-            input_keys = InputKeys.parse_obj(input_keys)
-        payload = input_keys.dict(by_alias=True, exclude_none=True)
+            input_keys = InputKeys.model_validate(input_keys)
+        payload = input_keys.model_dump(by_alias=True, exclude_none=True)
         # to validate the sources config model
-        sources_config = [SourceConfig.parse_obj(s) if isinstance(s, dict) else s for s in sources_config]
+        sources_config = [SourceConfig.model_validate(s) if isinstance(s, dict) else s for s in sources_config]
         if timeout is not None:
             payload["timeout"] = timeout
 
-        payload["sourcesConfig"] = [s.dict(by_alias=True) for s in sources_config]
+        payload["sourcesConfig"] = [s.model_dump(by_alias=True) for s in sources_config]
         async with httpx.AsyncClient(base_url=self.altscore_client._altdata_base_url) as client:
             r = await client.post(
                 url="/v1/requests/sync",
@@ -273,12 +278,12 @@ class RequestAsyncModule:
     async def new_async(self, input_keys: Union[InputKeys, Dict], sources_config: List[Union[Dict, SourceConfig]]):
         if isinstance(input_keys, dict):
             # to validate the input keys
-            input_keys = InputKeys.parse_obj(input_keys)
-        payload = input_keys.dict(by_alias=True, exclude_none=True)
+            input_keys = InputKeys.model_validate(input_keys)
+        payload = input_keys.model_dump(by_alias=True, exclude_none=True)
         # to validate the sources config model
-        sources_config = [SourceConfig.parse_obj(s) if isinstance(s, dict) else s for s in sources_config]
+        sources_config = [SourceConfig.model_validate(s) if isinstance(s, dict) else s for s in sources_config]
 
-        payload["sourcesConfig"] = [s.dict(by_alias=True) for s in sources_config]
+        payload["sourcesConfig"] = [s.model_dump(by_alias=True) for s in sources_config]
         async with httpx.AsyncClient(base_url=self.altscore_client._altdata_base_url) as client:
             r = await client.post(
                 url="/v1/requests/async",

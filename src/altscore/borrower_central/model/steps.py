@@ -15,20 +15,22 @@ class StepDataAPIDTO(BaseModel):
     label: str = Field(alias="label")
     created_at: str = Field(alias="createdAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateStepDTO(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
     key: str = Field(alias="key")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class BorrowerStepSummaryAPIDTO(BaseModel):
@@ -41,13 +43,13 @@ class BorrowerStepSummaryAPIDTO(BaseModel):
 class StepSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "steps", header_builder, renew_token, StepDataAPIDTO.parse_obj(data))
+        super().__init__(base_url, "steps", header_builder, renew_token, StepDataAPIDTO.model_validate(data))
 
 
 class StepAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "steps", header_builder, renew_token, StepDataAPIDTO.parse_obj(data))
+        super().__init__(base_url, "steps", header_builder, renew_token, StepDataAPIDTO.model_validate(data))
 
 
 class StepsSyncModule(GenericSyncModule):
@@ -69,7 +71,7 @@ class StepsSyncModule(GenericSyncModule):
                 timeout=30
             )
             raise_for_status_improved(response)
-        return [BorrowerStepSummaryAPIDTO.parse_obj(data) for data in response.json()]
+        return [BorrowerStepSummaryAPIDTO.model_validate(data) for data in response.json()]
 
 
 class StepsAsyncModule(GenericAsyncModule):
@@ -91,4 +93,4 @@ class StepsAsyncModule(GenericAsyncModule):
                 timeout=30
             )
             raise_for_status_improved(response)
-        return [BorrowerStepSummaryAPIDTO.parse_obj(data) for data in response.json()]
+        return [BorrowerStepSummaryAPIDTO.model_validate(data) for data in response.json()]

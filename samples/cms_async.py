@@ -15,7 +15,7 @@ all_clients = asyncio.run(altscore.cms.clients.retrieve_all())
 # %%
 async def get_credit_line(client):
     ca = await client.get_credit_account(product_family="dpa")
-    return ca.data.dict(by_alias=True)
+    return ca.data.model_dump(by_alias=True)
 
 
 async def get_credit_lines(clients):
@@ -23,7 +23,7 @@ async def get_credit_lines(clients):
 
 
 # %%
-clients_data = [e.data.dict(by_alias=True) for e in all_clients]
+clients_data = [e.data.model_dump(by_alias=True) for e in all_clients]
 credit_lines_data = []
 for chunk in divide_in_chunks(all_clients, 10):
     credit_lines_data.extend(asyncio.run(

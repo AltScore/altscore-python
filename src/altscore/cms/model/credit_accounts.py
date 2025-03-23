@@ -12,10 +12,11 @@ class Reservation(BaseModel):
     status: str
     created_at: str = Field(alias="createdAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True,
+    }
 
 
 class CreditLine(BaseModel):
@@ -24,10 +25,11 @@ class CreditLine(BaseModel):
     consumed: Money
     reservations: Optional[List[Reservation]] = Field(alias="reservations", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class HistoryItem(BaseModel):
@@ -36,10 +38,11 @@ class HistoryItem(BaseModel):
     reason: str
     userId: str
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreditAccountAPIDTO(BaseModel):
@@ -50,12 +53,13 @@ class CreditAccountAPIDTO(BaseModel):
     credit_line: CreditLine = Field(alias="creditLine")
     history: Optional[List[HistoryItem]] = Field(alias="history", default=None)
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
     def is_enabled(self):
         return self.status == "enabled"
@@ -90,7 +94,7 @@ class CreditAccountAsync:
                 timeout=30
             )
             raise_for_status_improved(response)
-            self.data = CreditAccountAPIDTO.parse_obj(response.json())
+            self.data = CreditAccountAPIDTO.model_validate(response.json())
 
     def __str__(self):
         return str(self.data)
@@ -128,7 +132,7 @@ class CreditAccountSync:
                 timeout=30
             )
             raise_for_status_improved(response)
-            self.data = CreditAccountAPIDTO.parse_obj(response.json())
+            self.data = CreditAccountAPIDTO.model_validate(response.json())
 
     def __str__(self):
         return str(self.data)

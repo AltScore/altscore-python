@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import field_validator, BaseModel, Field
 from typing import Optional, Dict, Any, List
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule, convert_to_dash_case
@@ -17,10 +17,11 @@ class ExecutionNotice(BaseModel):
     message: str = Field(alias="message")
     severity: str = Field(alias="severity")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class CreateExecutionDTO(BaseModel):
     workflow_id: Optional[str] = Field(alias="workflowId", default=None)
@@ -32,41 +33,44 @@ class CreateExecutionDTO(BaseModel):
     batch_id: Optional[str] = Field(alias="batchId", default=None)
     tags: Optional[List[str]] = Field(alias="tags", default=[])
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class UpdateExecutionDTO(BaseModel):
     unsuccessful_sources: Optional[bool] = Field(alias="unsuccessfulSources", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ExecutionBatchMeta(BaseModel):
     id: str = Field(alias="id")
     item_index: int = Field(alias="itemIndex")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class ExecutionAPIDTO(BaseModel):
-    id: Optional[str] = Field(alias="id")
+    id: Optional[str] = Field(None, alias="id")
     principal_id: Optional[str] = Field(alias="principalId", default=None)
     workflow_id: str = Field(alias="workflowId")
     workflow_alias: str = Field(alias="workflowAlias")
     workflow_version: str = Field(alias="workflowVersion")
-    workflow_type: Optional[str] = Field(alias="workflowType")
-    batch_id: Optional[str] = Field(alias="batchId")
+    workflow_type: Optional[str] = Field(None, alias="workflowType")
+    batch_id: Optional[str] = Field(None, alias="batchId")
     execution_batch: Optional[ExecutionBatchMeta] = Field(alias="executionBatch", default=None)
-    billable_id: Optional[str] = Field(alias="billableId")
-    borrower_id: Optional[str] = Field(alias="borrowerId")
+    billable_id: Optional[str] = Field(None, alias="billableId")
+    borrower_id: Optional[str] = Field(None, alias="borrowerId")
     status: Optional[str] = Field(alias="status", default=None)
     tags: Optional[List[str]] = Field(alias="tags", default=[])
     unsuccessful_sources: Optional[bool] = Field(alias="unsuccessfulSources", default=None)
@@ -77,45 +81,48 @@ class ExecutionAPIDTO(BaseModel):
     execution_time: Optional[int] = Field(alias="executionTime", default=None)
     response_time: Optional[int] = Field(alias="responseTime", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ExecutionInputDataAPIDTO(BaseModel):
-    id: Optional[str] = Field(alias="id")
+    id: Optional[str] = Field(None, alias="id")
     workflow_id: str = Field(alias="workflowId")
     workflow_alias: str = Field(alias="workflowAlias")
     workflow_version: str = Field(alias="workflowVersion")
     input: Dict = Field(alias="input")
     created_at: str = Field(alias="createdAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ExecutionOutputDataAPIDTO(BaseModel):
-    id: Optional[str] = Field(alias="id")
-    billable_id: Optional[str] = Field(alias="billableId")
-    borrower_id: Optional[str] = Field(alias="borrowerId")
+    id: Optional[str] = Field(None, alias="id")
+    billable_id: Optional[str] = Field(None, alias="billableId")
+    borrower_id: Optional[str] = Field(None, alias="borrowerId")
     workflow_id: str = Field(alias="workflowId")
     workflow_alias: str = Field(alias="workflowAlias")
     workflow_version: str = Field(alias="workflowVersion")
-    workflow_type: Optional[str] = Field(alias="workflowType")
+    workflow_type: Optional[str] = Field(None, alias="workflowType")
     status: Optional[str] = Field(alias="status", default=None)
-    is_success: Optional[bool] = Field(alias="isSuccess")
-    output: Any = Field(alias="output")
-    custom_output: Any = Field(alias="customOutput")
+    is_success: Optional[bool] = Field(None, alias="isSuccess")
+    output: Any = Field(None, alias="output")
+    custom_output: Any = Field(None, alias="customOutput")
     has_attachments: bool = Field(alias="hasAttachments")
     created_at: str = Field(alias="createdAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateExecutionOutput(BaseModel):
@@ -130,10 +137,11 @@ class CreateExecutionOutput(BaseModel):
     execution_time: Optional[int] = Field(alias="executionTime", default=None)
     notices: Optional[List[ExecutionNotice]] = Field(alias="notices", default=[])
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 EXECUTION_STATUS_PENDING = "pending"
@@ -149,10 +157,11 @@ class ExecutionState(BaseModel):
     state: Dict = Field(alias="state")
     updated_at: Optional[dt.datetime] = Field(alias="updatedAt", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
     @classmethod
     def from_api_dto(cls, data: Dict):
@@ -196,7 +205,8 @@ class ExecutionState(BaseModel):
     def set_as_on_callback(self):
         self.status = EXECUTION_STATUS_ON_CALLBACK
 
-    @validator("status")
+    @field_validator("status")
+    @classmethod
     def status_must_be_valid(cls, v):
         valid_status = [EXECUTION_STATUS_PENDING, EXECUTION_STATUS_SCHEDULED,
                         EXECUTION_STATUS_ON_CALLBACK, EXECUTION_STATUS_COMPLETE]
@@ -211,7 +221,7 @@ class ExecutionSync(GenericSyncResource):
     state: ExecutionState
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "executions", header_builder, renew_token, ExecutionAPIDTO.parse_obj(data))
+        super().__init__(base_url, "executions", header_builder, renew_token, ExecutionAPIDTO.model_validate(data))
 
     def _state(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}/state"
@@ -234,7 +244,7 @@ class ExecutionSync(GenericSyncResource):
                 timeout=300
             )
             raise_for_status_improved(response)
-            self.input = ExecutionInputDataAPIDTO.parse_obj(response.json())
+            self.input = ExecutionInputDataAPIDTO.model_validate(response.json())
         return self.input
 
 
@@ -247,7 +257,7 @@ class ExecutionSync(GenericSyncResource):
                 timeout=300
             )
             raise_for_status_improved(response)
-            self.output = ExecutionOutputDataAPIDTO.parse_obj(response.json())
+            self.output = ExecutionOutputDataAPIDTO.model_validate(response.json())
         return self.output
 
     @retry_on_401
@@ -259,7 +269,7 @@ class ExecutionSync(GenericSyncResource):
                 timeout=300
             )
             raise_for_status_improved(response)
-            return [AttachmentAPIDTO.parse_obj(e) for e in response.json()]
+            return [AttachmentAPIDTO.model_validate(e) for e in response.json()]
 
     @retry_on_401
     def get_state(self):
@@ -270,12 +280,12 @@ class ExecutionSync(GenericSyncResource):
                 timeout=300
             )
             raise_for_status_improved(response)
-            self.state = ExecutionState.parse_obj(response.json())
+            self.state = ExecutionState.model_validate(response.json())
         return self.state
 
     @retry_on_401
     def put_state(self, state: Dict):
-        state_obj = ExecutionState.parse_obj(state)
+        state_obj = ExecutionState.model_validate(state)
         with httpx.Client() as client:
             response = client.put(
                 self._state(self.data.id),
@@ -288,12 +298,12 @@ class ExecutionSync(GenericSyncResource):
 
     @retry_on_401
     def put_output(self, output: Dict):
-        output_obj = CreateExecutionOutput.parse_obj(output)
+        output_obj = CreateExecutionOutput.model_validate(output)
         with httpx.Client() as client:
             response = client.put(
                 self._output(self.data.id),
                 headers=self._header_builder(),
-                json=output_obj.dict(by_alias=True),
+                json=output_obj.model_dump(by_alias=True),
                 timeout=300
             )
             raise_for_status_improved(response)
@@ -311,7 +321,7 @@ class ExecutionSync(GenericSyncResource):
                 timeout=900
             )
             raise_for_status_improved(response)
-            return WorkflowExecutionResponseAPIDTO.parse_obj(response.json())
+            return WorkflowExecutionResponseAPIDTO.model_validate(response.json())
 
 
 class ExecutionAsync(GenericAsyncResource):
@@ -320,7 +330,7 @@ class ExecutionAsync(GenericAsyncResource):
     state: ExecutionState
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "executions", header_builder, renew_token, ExecutionAPIDTO.parse_obj(data))
+        super().__init__(base_url, "executions", header_builder, renew_token, ExecutionAPIDTO.model_validate(data))
 
     def _state(self, resource_id):
         return f"{self.base_url}/v1/{self.resource}/{resource_id}/state"
@@ -344,7 +354,7 @@ class ExecutionAsync(GenericAsyncResource):
                 timeout=300
             )
             raise_for_status_improved(response)
-            self.input = ExecutionInputDataAPIDTO.parse_obj(response.json())
+            self.input = ExecutionInputDataAPIDTO.model_validate(response.json())
         return self.input
 
 
@@ -357,7 +367,7 @@ class ExecutionAsync(GenericAsyncResource):
                 timeout=300
             )
             raise_for_status_improved(response)
-            self.output = ExecutionOutputDataAPIDTO.parse_obj(response.json())
+            self.output = ExecutionOutputDataAPIDTO.model_validate(response.json())
         return self.output
 
     @retry_on_401_async
@@ -369,7 +379,7 @@ class ExecutionAsync(GenericAsyncResource):
                 timeout=300
             )
             raise_for_status_improved(response)
-            return [AttachmentAPIDTO.parse_obj(e) for e in response.json()]
+            return [AttachmentAPIDTO.model_validate(e) for e in response.json()]
 
     @retry_on_401_async
     async def get_state(self):
@@ -380,12 +390,12 @@ class ExecutionAsync(GenericAsyncResource):
                 timeout=300
             )
             raise_for_status_improved(response)
-            self.state = ExecutionState.parse_obj(response.json())
+            self.state = ExecutionState.model_validate(response.json())
         return self.state
 
     @retry_on_401_async
     async def put_state(self, state: Dict):
-        state_obj = ExecutionState.parse_obj(state)
+        state_obj = ExecutionState.model_validate(state)
         async with httpx.AsyncClient() as client:
             response = await client.put(
                 self._state(self.data.id),
@@ -398,12 +408,12 @@ class ExecutionAsync(GenericAsyncResource):
 
     @retry_on_401_async
     async def put_output(self, output: Dict):
-        output_obj = CreateExecutionOutput.parse_obj(output)
+        output_obj = CreateExecutionOutput.model_validate(output)
         async with httpx.AsyncClient() as client:
             response = await client.put(
                 self._output(self.data.id),
                 headers=self._header_builder(),
-                json=output_obj.dict(by_alias=True),
+                json=output_obj.model_dump(by_alias=True),
                 timeout=300
             )
             raise_for_status_improved(response)
@@ -421,7 +431,7 @@ class ExecutionAsync(GenericAsyncResource):
                 timeout=900
             )
             raise_for_status_improved(response)
-            return WorkflowExecutionResponseAPIDTO.parse_obj(response.json())
+            return WorkflowExecutionResponseAPIDTO.model_validate(response.json())
 
 
 class ExecutionSyncModule(GenericSyncModule):
@@ -445,7 +455,7 @@ class ExecutionSyncModule(GenericSyncModule):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return [ExecutionOutputDataAPIDTO.parse_obj(x) for x in response.json()]
+            return [ExecutionOutputDataAPIDTO.model_validate(x) for x in response.json()]
 
     @retry_on_401
     def overwrite_principal(self, old_principal_id: str, new_principal_id: str, from_date: Optional[str] = None,
@@ -490,7 +500,7 @@ class ExecutionAsyncModule(GenericAsyncModule):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return [ExecutionOutputDataAPIDTO.parse_obj(x) for x in response.json()]
+            return [ExecutionOutputDataAPIDTO.model_validate(x) for x in response.json()]
 
     @retry_on_401_async
     async def overwrite_principal(self, old_principal_id: str, new_principal_id: str, from_date: Optional[str] = None,

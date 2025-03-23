@@ -15,10 +15,11 @@ class Client(BaseModel):
     email: str = Field(alias="email")
     legal_name: str = Field(alias="legalName")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class DPAFlowAPIDTO(BaseModel):
@@ -34,10 +35,11 @@ class DPAFlowAPIDTO(BaseModel):
     cancellation_reason: Optional[str] = Field(None, alias="cancellationReason")
     close_reason: Optional[str] = Field(None, alias="closeReason")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateDPAFlowDTO(BaseModel):
@@ -45,12 +47,13 @@ class CreateDPAFlowDTO(BaseModel):
     disbursement_date: str = Field(alias="disbursementDate")
     client_id: str = Field(alias="clientId", default=None)
     reference_id: str = Field(alias="referenceId", default=None)
-    terms: Optional[Terms] = Field(alias="terms")
+    terms: Optional[Terms] = Field(None, alias="terms")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class InvoiceInstallment(BaseModel):
@@ -60,10 +63,11 @@ class InvoiceInstallment(BaseModel):
     amount: Money = Field(alias="amount")
     tax: Money = Field(alias="tax")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class Invoice(BaseModel):
@@ -73,10 +77,11 @@ class Invoice(BaseModel):
     notes: str = Field(alias="notes")
     reference_id: str = Field(alias="referenceId")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ApproveDPAFlowDTO(BaseModel):
@@ -86,10 +91,11 @@ class ApproveDPAFlowDTO(BaseModel):
     external_id: Optional[str] = Field(alias="externalId", default=None)
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class DPABase:
@@ -133,11 +139,11 @@ class DPAFlowAsync(DPABase):
             response = await client.put(
                 self._approval(self.data.id),
                 headers=self._header_builder(),
-                json=ApproveDPAFlowDTO.parse_obj(approve_data).dict(by_alias=True, exclude_none=True),
+                json=ApproveDPAFlowDTO.model_validate(approve_data).model_dump(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
-            self.data = DPAFlowAPIDTO.parse_obj(response.json())
+            self.data = DPAFlowAPIDTO.model_validate(response.json())
 
     @retry_on_401_async
     async def cancel(self):
@@ -148,14 +154,14 @@ class DPAFlowAsync(DPABase):
                 timeout=30
             )
             raise_for_status_improved(response)
-            self.data = DPAFlowAPIDTO.parse_obj(response.json())
+            self.data = DPAFlowAPIDTO.model_validate(response.json())
 
     @retry_on_401_async
     async def submit_invoice(self, invoice_data: dict):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 self._invoice(self.data.id),
-                json=Invoice.parse_obj(invoice_data).dict(by_alias=True, exclude_none=True),
+                json=Invoice.model_validate(invoice_data).model_dump(by_alias=True, exclude_none=True),
                 headers=self._header_builder(),
                 timeout=30
             )
@@ -195,11 +201,11 @@ class DPAFlowSync(DPABase):
             response = client.put(
                 self._approval(self.data.id),
                 headers=self._header_builder(),
-                json=ApproveDPAFlowDTO.parse_obj(approve_data).dict(by_alias=True, exclude_none=True),
+                json=ApproveDPAFlowDTO.model_validate(approve_data).model_dump(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
-            self.data = DPAFlowAPIDTO.parse_obj(response.json())
+            self.data = DPAFlowAPIDTO.model_validate(response.json())
 
     @retry_on_401
     def cancel(self):
@@ -210,7 +216,7 @@ class DPAFlowSync(DPABase):
                 timeout=30
             )
             raise_for_status_improved(response)
-            self.data = DPAFlowAPIDTO.parse_obj(response.json())
+            self.data = DPAFlowAPIDTO.model_validate(response.json())
 
     @retry_on_401
     def submit_invoice(self, invoice_data: dict):
@@ -218,7 +224,7 @@ class DPAFlowSync(DPABase):
             response = client.post(
                 self._invoice(self.data.id),
                 headers=self._header_builder(),
-                json=Invoice.parse_obj(invoice_data).dict(by_alias=True, exclude_none=True),
+                json=Invoice.model_validate(invoice_data).model_dump(by_alias=True, exclude_none=True),
                 timeout=300
             )
             raise_for_status_improved(response)
@@ -260,14 +266,14 @@ class DPAFlowsAsyncModule(GenericAsyncModule):
             response = await client.post(
                 f"/{self.resource_version}/{self.resource}",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(
+                json=self.create_data_model.model_validate(new_entity_data).model_dump(
                     by_alias=True,
                     exclude_none=True
                 ),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return self.retrieve_data_model.parse_obj(response.json()).id
+            return self.retrieve_data_model.model_validate(response.json()).id
 
     @retry_on_401_async
     async def simulate(self, new_entity_data: dict):
@@ -283,14 +289,14 @@ class DPAFlowsAsyncModule(GenericAsyncModule):
             response = await client.post(
                 f"/{self.resource_version}/{self.resource}/simulations",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(
+                json=self.create_data_model.model_validate(new_entity_data).model_dump(
                     by_alias=True,
                     exclude_none=True
                 ),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return self.retrieve_data_model.parse_obj(response.json())
+            return self.retrieve_data_model.model_validate(response.json())
 
     @retry_on_401_async
     async def simulate_advanced(self, new_entity_data: dict):
@@ -306,14 +312,14 @@ class DPAFlowsAsyncModule(GenericAsyncModule):
             response = await client.post(
                 f"/{self.resource_version}/{self.resource}/advanced/simulations",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(
+                json=self.create_data_model.model_validate(new_entity_data).model_dump(
                     by_alias=True,
                     exclude_none=True
                 ),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [DPAFlowAPIDTO.parse_obj(item) for item in response.json()]
+            return [DPAFlowAPIDTO.model_validate(item) for item in response.json()]
 
 
 class DPAFlowsSyncModule(GenericSyncModule):
@@ -344,11 +350,11 @@ class DPAFlowsSyncModule(GenericSyncModule):
             response = client.post(
                 f"/{self.resource_version}/{self.resource}",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
+                json=self.create_data_model.model_validate(new_entity_data).model_dump(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return self.retrieve_data_model.parse_obj(response.json()).id
+            return self.retrieve_data_model.model_validate(response.json()).id
 
     @retry_on_401
     def simulate(self, new_entity_data: dict):
@@ -364,14 +370,14 @@ class DPAFlowsSyncModule(GenericSyncModule):
             response = client.post(
                 f"/{self.resource_version}/{self.resource}/simulations",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(
+                json=self.create_data_model.model_validate(new_entity_data).model_dump(
                     by_alias=True,
                     exclude_none=True
                 ),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return self.retrieve_data_model.parse_obj(response.json())
+            return self.retrieve_data_model.model_validate(response.json())
 
     @retry_on_401
     def simulate_advanced(self, new_entity_data: dict):
@@ -387,11 +393,11 @@ class DPAFlowsSyncModule(GenericSyncModule):
             response = client.post(
                 f"/{self.resource_version}/{self.resource}/advanced/simulations",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(
+                json=self.create_data_model.model_validate(new_entity_data).model_dump(
                     by_alias=True,
                     exclude_none=True
                 ),
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [DPAFlowAPIDTO.parse_obj(item) for item in response.json()]
+            return [DPAFlowAPIDTO.model_validate(item) for item in response.json()]

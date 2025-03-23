@@ -22,17 +22,19 @@ class DisbursementAccountBaseModel(BaseModel):
 
 class DisbursementClientAccountAPIDTO(DisbursementAccountBaseModel):
     client_id: str = Field(alias="clientId")
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class DisbursementPartnerAccountAPIDTO(DisbursementAccountBaseModel):
     payment_concept_template: Optional[str] = Field(alias="paymentConceptTemplate", default=None)
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class CreateDisbursementClientAccountDTO(BaseModel):
     client_id: str = Field(alias="id")
@@ -40,10 +42,11 @@ class CreateDisbursementClientAccountDTO(BaseModel):
     bank_account: BankAccount = Field(alias="bankAccount")
     validation_type: Optional[str] = Field(alias="validationType", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class CreateDisbursementPartnerAccountDTO(BaseModel):
     name: str = Field(alias="name")
@@ -52,7 +55,8 @@ class CreateDisbursementPartnerAccountDTO(BaseModel):
     payment_concept_template: Optional[str] = Field(alias="paymentConceptTemplate",default=None)
     bank_account: BankAccount = Field(alias="bankAccount")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }

@@ -11,20 +11,22 @@ class WebhookEventAPIDTO(BaseModel):
     name: str = Field(alias="name")
     description: dict = Field(alias="description")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class WebhookAuthorizationDTO(BaseModel):
     header_name: str = Field(alias="headerName")
     secret_key: str = Field(alias="secret")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class WebhookConfigurationAPIDTO(BaseModel):
@@ -37,10 +39,11 @@ class WebhookConfigurationAPIDTO(BaseModel):
     partner_id: str = Field(alias="partnerId")
     authorization: Optional[WebhookAuthorizationDTO] = Field(alias="authorization", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class CreateWebhookConfigurationDTO(BaseModel):
     name: str = Field(alias="name")
@@ -49,10 +52,11 @@ class CreateWebhookConfigurationDTO(BaseModel):
     ssl_skip_verification: bool = Field(alias="skipCertVerification")
     authorization: Optional[WebhookAuthorizationDTO] = Field(alias="authorization", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class UpdateWebhookConfigurationDTO(BaseModel):
     name: str = Field(alias="name")
@@ -61,10 +65,11 @@ class UpdateWebhookConfigurationDTO(BaseModel):
     ssl_skip_verification: bool = Field(alias="skipCertVerification")
     authorization: Optional[WebhookAuthorizationDTO] = Field(alias="authorization", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 class WebhookBase:
     @staticmethod
@@ -192,7 +197,7 @@ class WebhookSyncModule(GenericSyncModule):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [WebhookEventAPIDTO.parse_obj(e) for e in response.json()]
+            return [WebhookEventAPIDTO.model_validate(e) for e in response.json()]
 
 
 class WebhookAsyncModule(GenericAsyncModule):
@@ -219,4 +224,4 @@ class WebhookAsyncModule(GenericAsyncModule):
                 timeout=30
             )
             raise_for_status_improved(response)
-            return [WebhookEventAPIDTO.parse_obj(e) for e in response.json()]
+            return [WebhookEventAPIDTO.model_validate(e) for e in response.json()]

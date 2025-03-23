@@ -13,14 +13,15 @@ class MessageAPIDTO(BaseModel):
     conversation_id: str = Field(alias="conversationId")
     content: str = Field(alias="content")
     sender_type: str = Field(alias="senderType")
-    sender_id: Optional[str] = Field(alias="senderId")
-    metadata: Optional[Dict[str, Any]] = Field(alias="metadata")
+    sender_id: Optional[str] = Field(None, alias="senderId")
+    metadata: Optional[Dict[str, Any]] = Field(None, alias="metadata")
     created_at: str = Field(alias="createdAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class MessageCreate(BaseModel):
@@ -33,24 +34,25 @@ class MessageCreate(BaseModel):
     sender_id: Optional[str] = Field(alias="senderId", default=None)
     metadata: Optional[Dict[str, Any]] = Field(alias="metadata", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class MessageSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "/conversational/messages", header_builder, renew_token,
-                         MessageAPIDTO.parse_obj(data))
+                         MessageAPIDTO.model_validate(data))
 
 
 class MessageAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "/conversational/messages", header_builder, renew_token,
-                         MessageAPIDTO.parse_obj(data))
+                         MessageAPIDTO.model_validate(data))
 
 
 class MessageSyncModule(GenericSyncModule):

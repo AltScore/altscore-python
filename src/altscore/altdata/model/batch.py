@@ -5,7 +5,7 @@ from typing import Optional
 from typing import Union
 import httpx
 from altscore.altdata.helpers import build_headers
-from pydantic import BaseModel, validator, Field
+from pydantic import field_validator, BaseModel, Field
 from altscore.altdata.model.common_schemas import SourceConfig
 from altscore.altdata.utils.dataframes import df_to_base64
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
@@ -33,10 +33,11 @@ class BatchSourceSuccessStats(BaseModel):
     processing_count: int = Field(alias="processingCount")
     non_retryable_count: int = Field(alias="nonRetryableCount")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class BatchStatus(BaseModel):
@@ -50,26 +51,28 @@ class BatchStatus(BaseModel):
     non_retryable_pct: float = Field(alias="nonRetryablePct")
     source_stats: List[BatchSourceSuccessStats] = Field(alias="sourceStats")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
-    @validator("requested_at")
+    @field_validator("requested_at")
+    @classmethod
     def parse_requested_at(cls, v):
         if isinstance(v, str):
             return parse(v, yearfirst=True)
         return v
 
     def __str__(self):
-        r = self.dict(by_alias=True)
+        r = self.model_dump(by_alias=True)
         if isinstance(r.get("requestedAt"), dt.datetime):
             r["requestedAt"] = r["requestedAt"].isoformat()
         return json.dumps(r, indent=4, ensure_ascii=False)
 
     def print_source_stats(self):
         import pandas as pd
-        df = pd.DataFrame([e.dict() for e in self.source_stats])
+        df = pd.DataFrame([e.model_dump() for e in self.source_stats])
         print(df.to_markdown())
 
 
@@ -227,7 +230,7 @@ class BatchSync(BatchBase):
             response = client.get(self._status(batch_id=self.data.batch_id),
                                   headers=self.header_builder())
             raise_for_status_improved(response)
-            self.data.status = BatchStatus.parse_obj(response.json())
+            self.data.status = BatchStatus.model_validate(response.json())
 
     @retry_on_401
     def retry(self):
@@ -300,7 +303,7 @@ class BatchAsync(BatchBase):
             response = await client.get(self._status(batch_id=self.data.batch_id),
                                         headers=self.header_builder())
             raise_for_status_improved(response)
-            self.data.status = BatchStatus.parse_obj(response.json())
+            self.data.status = BatchStatus.model_validate(response.json())
 
     @retry_on_401_async
     async def retry(self):
@@ -347,10 +350,10 @@ def df_to_batch_payload(df, label, sources_config):
     import numpy as np
     data = df.replace({np.nan: None})
     base_64 = df_to_base64(data)
-    sources_config_obj = [SourceConfig.parse_obj(x) for x in sources_config]
+    sources_config_obj = [SourceConfig.model_validate(x) for x in sources_config]
     payload = BatchDataRequest(
         label=label,
         sourcesConfig=sources_config_obj,
         file=BatchFileRequest(name="df_from_sdk.csv", base64=base_64),
-    ).dict(by_alias=True)
+    ).model_dump(by_alias=True)
     return payload

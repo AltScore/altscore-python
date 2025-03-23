@@ -8,13 +8,14 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
 
 class HistoricValue(BaseModel):
     reference_id: str = Field(alias="referenceId")  # this is the id an identifier for the source of the value
-    value: Any = Field(alias="value")
+    value: Any = Field(None, alias="value")
     updated_at: str = Field(alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class BorrowerFieldAPIDTO(BaseModel):
@@ -22,17 +23,18 @@ class BorrowerFieldAPIDTO(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
     key: str = Field(alias="key")
     label: str = Field(alias="label")
-    value: Any = Field(alias="value")
+    value: Any = Field(None, alias="value")
     data_type: str = Field(alias="dataType")
     history: List[HistoricValue] = Field(alias="history")
     tags: List[str] = Field(alias="tags", default=[])
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateBorrowerFieldDTO(BaseModel):
@@ -40,40 +42,42 @@ class CreateBorrowerFieldDTO(BaseModel):
     form_id: Optional[str] = Field(alias="formId", default=None)
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
     key: str = Field(alias="key")
-    value: Any = Field(alias="value")
+    value: Any = Field(None, alias="value")
     data_type: Optional[str] = Field(alias="dataType", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class UpdateBorrowerFieldDTO(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
     form_id: Optional[str] = Field(alias="formId", default=None)
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
-    value: Optional[str] = Field(alias="value")
+    value: Optional[str] = Field(None, alias="value")
     data_type: Optional[str] = Field(alias="dataType", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class BorrowerFieldSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "borrower-fields", header_builder, renew_token, BorrowerFieldAPIDTO.parse_obj(data))
+        super().__init__(base_url, "borrower-fields", header_builder, renew_token, BorrowerFieldAPIDTO.model_validate(data))
 
 
 class BorrowerFieldAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "borrower-fields", header_builder, renew_token, BorrowerFieldAPIDTO.parse_obj(data))
+        super().__init__(base_url, "borrower-fields", header_builder, renew_token, BorrowerFieldAPIDTO.model_validate(data))
 
 
 class BorrowerFieldsSyncModule(GenericSyncModule):

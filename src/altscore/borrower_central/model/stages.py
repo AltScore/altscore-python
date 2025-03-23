@@ -10,12 +10,13 @@ class StageAPIDTO(BaseModel):
     value: str = Field(alias="value")
     history: List[Dict] = Field(alias="history")
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateUpdateStageDTO(BaseModel):
@@ -23,22 +24,23 @@ class CreateUpdateStageDTO(BaseModel):
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
     value: str = Field(alias="value")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class StageSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "stages", header_builder, renew_token, StageAPIDTO.parse_obj(data))
+        super().__init__(base_url, "stages", header_builder, renew_token, StageAPIDTO.model_validate(data))
 
 
 class StageAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "stages", header_builder, renew_token, StageAPIDTO.parse_obj(data))
+        super().__init__(base_url, "stages", header_builder, renew_token, StageAPIDTO.model_validate(data))
 
 
 class StagesSyncModule(GenericSyncModule):

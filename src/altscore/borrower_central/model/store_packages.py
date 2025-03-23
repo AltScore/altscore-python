@@ -12,11 +12,11 @@ from altscore.common.http_errors import raise_for_status_improved, retry_on_401,
 
 class PackageAPIDTO(BaseModel):
     id: str = Field(alias="id")
-    borrower_id: Optional[str] = Field(alias="borrowerId")
+    borrower_id: Optional[str] = Field(None, alias="borrowerId")
     source_id: Optional[str] = Field(alias="sourceId", default=None)
     alias: Optional[str] = Field(alias="alias", default=None)
     workflow_id: Optional[str] = Field(alias="workflowId", default=None)
-    label: Optional[str] = Field(alias="label")
+    label: Optional[str] = Field(None, alias="label")
     content_type: Optional[str] = Field(alias="contentType", default=None)
     tags: List[str] = Field(alias="tags")
     created_at: str = Field(alias="createdAt")
@@ -24,10 +24,11 @@ class PackageAPIDTO(BaseModel):
     has_attachments: bool = Field(alias="hasAttachments")
     forced_stale: Optional[bool] = Field(alias="forcedStale", default=False)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 
@@ -38,23 +39,25 @@ class CreatePackageDTO(BaseModel):
     alias: Optional[str] = Field(alias="alias", default=None)
     label: Optional[str] = Field(alias="label", default=None)
     tags: List[str] = Field(alias="tags", default=[])
-    content: Any = Field(alias="content")
+    content: Any = Field(None, alias="content")
     content_type: Optional[str] = Field(alias="contentType", default=None)
     ttl_minutes: Optional[int] = Field(alias="ttlMinutes", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class GenerateAttachmentUploadSignedURL(BaseModel):
     file_name: str = Field(alias="fileName")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CommitAttachmentSignedURUpload(BaseModel):
@@ -64,10 +67,11 @@ class CommitAttachmentSignedURUpload(BaseModel):
     label: Optional[str] = Field(alias="label", default=None)
 
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class UploadSignedURLAPIDTO(BaseModel):
@@ -76,16 +80,17 @@ class UploadSignedURLAPIDTO(BaseModel):
     content_type: str = Field(alias="contentType")
     attachment_id: str = Field(alias="attachmentId")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class PackageSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "/stores/packages", header_builder, renew_token, PackageAPIDTO.parse_obj(data))
+        super().__init__(base_url, "/stores/packages", header_builder, renew_token, PackageAPIDTO.model_validate(data))
 
 
     @retry_on_401
@@ -96,12 +101,12 @@ class PackageSync(GenericSyncResource):
             headers = self._header_builder()
             response = client.post(
                 f"/v1/stores/packages/commands/attachments/generate-upload-signed-url",
-                json=GenerateAttachmentUploadSignedURL(file_name=file_name).dict(),
+                json=GenerateAttachmentUploadSignedURL(file_name=file_name).model_dump(),
                 headers=headers,
                 timeout=900
             )
             raise_for_status_improved(response)
-            signed_url = UploadSignedURLAPIDTO.parse_obj(response.json())
+            signed_url = UploadSignedURLAPIDTO.model_validate(response.json())
 
         with open(file_path, "rb") as f:
             content = f.read()
@@ -124,7 +129,7 @@ class PackageSync(GenericSyncResource):
                 f"/v1/stores/packages/commands/attachments/commit-signed-url-upload",
                 json=CommitAttachmentSignedURUpload(
                     package_id=self.data.id, attachment_file_name=signed_url.file_name, metadata=metadata, label=label
-                ).dict(),
+                ).model_dump(),
                 headers=headers,
                 timeout=900
             )
@@ -152,7 +157,7 @@ class PackageSync(GenericSyncResource):
 class PackageAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "/stores/packages", header_builder, renew_token, PackageAPIDTO.parse_obj(data))
+        super().__init__(base_url, "/stores/packages", header_builder, renew_token, PackageAPIDTO.model_validate(data))
 
 
     @retry_on_401_async
@@ -163,13 +168,13 @@ class PackageAsync(GenericAsyncResource):
             headers = self._header_builder()
             response = await client.post(
                 f"/v1/stores/packages/commands/attachments/generate-upload-signed-url",
-                json=GenerateAttachmentUploadSignedURL(file_name=file_name).dict(),
+                json=GenerateAttachmentUploadSignedURL(file_name=file_name).model_dump(),
                 headers=headers,
                 timeout=900
             )
             raise_for_status_improved(response)
 
-            signed_url = UploadSignedURLAPIDTO.parse_obj(response.json())
+            signed_url = UploadSignedURLAPIDTO.model_validate(response.json())
 
         with open(file_path, "rb") as f:
             content = f.read()
@@ -192,7 +197,7 @@ class PackageAsync(GenericAsyncResource):
                 f"/v1/stores/packages/commands/attachments/commit-signed-url-upload",
                 json=CommitAttachmentSignedURUpload(
                     package_id=self.data.id, attachment_file_name=signed_url.file_name, metadata=metadata, label=label
-                ).dict(),
+                ).model_dump(),
                 headers=headers,
                 timeout=900
             )

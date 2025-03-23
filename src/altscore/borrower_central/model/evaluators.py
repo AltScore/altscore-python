@@ -2,7 +2,7 @@ from typing import Optional, List, Dict, Any
 import httpx
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 
 
@@ -10,40 +10,43 @@ class EvaluatorAPIDTO(BaseModel):
     id: str = Field(alias="id")
     alias: str = Field(alias="alias")
     version: str = Field(alias="version")
-    label: Optional[str] = Field(alias="label")
-    description: Optional[str] = Field(alias="description")
+    label: Optional[str] = Field(None, alias="label")
+    description: Optional[str] = Field(None, alias="description")
     created_at: str = Field(alias="createdAt")
-    updated_at: Optional[str] = Field(alias="updatedAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
     specs: Dict = Field(alias="specs")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class CreateEvaluatorDTO(BaseModel):
-    label: Optional[str] = Field(alias="label")
+    label: Optional[str] = Field(None, alias="label")
     alias: str = Field(alias="alias")
     version: str = Field(alias="version")
-    description: Optional[str] = Field(alias="description")
+    description: Optional[str] = Field(None, alias="description")
     specs: Dict = Field(alias="specs")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class UpdateEvaluatorDTO(BaseModel):
-    label: Optional[str] = Field(alias="label")
-    description: Optional[str] = Field(alias="description")
+    label: Optional[str] = Field(None, alias="label")
+    description: Optional[str] = Field(None, alias="description")
     specs: Dict = Field(alias="specs")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class Instance(BaseModel):
@@ -63,10 +66,11 @@ class EvaluatorInput(BaseModel):
     instance: Instance = Field(alias="instance")
     entities: List[Entity] = Field(alias="entities")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class BusinessRuleOutput(BaseModel):
@@ -78,10 +82,7 @@ class BusinessRuleOutput(BaseModel):
     alert_level: Optional[int] = Field(alias="alertLevel", default=None)
     # hit can be None if the rule cannot be evaluated due to missing fields
     hit: Optional[bool] = Field(alias="hit", default=None)
-
-    class Config:
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = ConfigDict(populate_by_name=True, allow_population_by_alias=True)
 
 
 class ScoreOutput(BaseModel):
@@ -89,31 +90,25 @@ class ScoreOutput(BaseModel):
     label: str = Field(alias="label")
     value: float = Field(alias="value")
     max_value: Optional[float] = Field(alias="maxValue", default=None)
-
-    class Config:
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = ConfigDict(populate_by_name=True, allow_population_by_alias=True)
 
 
 class ScoreCardRuleOutput(BaseModel):
     field: str = Field(alias="field")
     order: int = Field(alias="order")
-    value: Any = Field(alias="value")
+    value: Any = Field(None, alias="value")
     bucket: int = Field(alias="bucket")
     points: int = Field(alias="points")
     max_points: int = Field(alias="maxPoints")
     label: str = Field(alias="label")
     bucket_label: str = Field(alias="bucketLabel")
-
-    class Config:
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = ConfigDict(populate_by_name=True, allow_population_by_alias=True)
 
 
 class MetricOutput(BaseModel):
     key: str = Field(alias="key")
     label: str = Field(alias="label")
-    value: Any = Field(alias="value")
+    value: Any = Field(None, alias="value")
     metadata: Optional[Dict] = Field(alias="metadata", default=None)
 
 
@@ -123,25 +118,19 @@ class EvaluatorOutput(BaseModel):
     metrics: List[MetricOutput] = Field(alias="metrics", default=[])
     rules: List[BusinessRuleOutput] = Field(alias="rules", default=[])
     decision: str = Field(alias="decision")
-
-    class Config:
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = ConfigDict(populate_by_name=True, allow_population_by_alias=True)
 
 
 class EvaluatorOutputError(BaseModel):
     detail: str = Field(alias="detail")
     traceback: List[str] = Field(alias="traceback")
-
-    class Config:
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = ConfigDict(populate_by_name=True, allow_population_by_alias=True)
 
 
 class EvaluatorSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "evaluators", header_builder, renew_token, EvaluatorAPIDTO.parse_obj(data))
+        super().__init__(base_url, "evaluators", header_builder, renew_token, EvaluatorAPIDTO.model_validate(data))
 
     @retry_on_401
     def evaluate(self, evaluator_input: EvaluatorInput) -> EvaluatorOutput | EvaluatorOutputError:
@@ -149,20 +138,20 @@ class EvaluatorSync(GenericSyncResource):
             response = client.post(
                 f"{self.base_url}/{self.resource}/{self.data.id}/evaluate",
                 headers=self._header_builder(),
-                json=evaluator_input.dict(by_alias=True),
+                json=evaluator_input.model_dump(by_alias=True),
                 timeout=300
             )
             raise_for_status_improved(response)
             if "traceback" in response.json():
-                return EvaluatorOutputError.parse_obj(response.json())
+                return EvaluatorOutputError.model_validate(response.json())
             else:
-                return EvaluatorOutput.parse_obj(response.json())
+                return EvaluatorOutput.model_validate(response.json())
 
 
 class EvaluatorAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
-        super().__init__(base_url, "evaluators", header_builder, renew_token, EvaluatorAPIDTO.parse_obj(data))
+        super().__init__(base_url, "evaluators", header_builder, renew_token, EvaluatorAPIDTO.model_validate(data))
 
     @retry_on_401_async
     async def evaluate(self, evaluator_input: EvaluatorInput) -> EvaluatorOutput | EvaluatorOutputError:
@@ -170,14 +159,14 @@ class EvaluatorAsync(GenericAsyncResource):
             response = await client.post(
                 f"{self.base_url}/{self.resource}/{self.data.id}/evaluate",
                 headers=self._header_builder(),
-                json=evaluator_input.dict(by_alias=True),
+                json=evaluator_input.model_dump(by_alias=True),
                 timeout=300
             )
             raise_for_status_improved(response)
             if "traceback" in response.json():
-                return EvaluatorOutputError.parse_obj(response.json())
+                return EvaluatorOutputError.model_validate(response.json())
             else:
-                return EvaluatorOutput.parse_obj(response.json())
+                return EvaluatorOutput.model_validate(response.json())
 
 
 class EvaluatorSyncModule(GenericSyncModule):
@@ -210,14 +199,14 @@ class EvaluatorSyncModule(GenericSyncModule):
             response = client.post(
                 url,
                 headers=self.build_headers(),
-                json=EvaluatorInput.parse_obj(evaluator_input).dict(by_alias=True),
+                json=EvaluatorInput.model_validate(evaluator_input).model_dump(by_alias=True),
                 timeout=120
             )
             raise_for_status_improved(response)
             if "traceback" in response.json():
-                return EvaluatorOutputError.parse_obj(response.json())
+                return EvaluatorOutputError.model_validate(response.json())
             else:
-                return EvaluatorOutput.parse_obj(response.json())
+                return EvaluatorOutput.model_validate(response.json())
 
 
 class EvaluatorAsyncModule(GenericAsyncModule):
@@ -250,11 +239,11 @@ class EvaluatorAsyncModule(GenericAsyncModule):
             response = await client.post(
                 url,
                 headers=self.build_headers(),
-                json=EvaluatorInput.parse_obj(evaluator_input).dict(by_alias=True),
+                json=EvaluatorInput.model_validate(evaluator_input).model_dump(by_alias=True),
                 timeout=120
             )
             raise_for_status_improved(response)
             if "traceback" in response.json():
-                return EvaluatorOutputError.parse_obj(response.json())
+                return EvaluatorOutputError.model_validate(response.json())
             else:
-                return EvaluatorOutput.parse_obj(response.json())
+                return EvaluatorOutput.model_validate(response.json())

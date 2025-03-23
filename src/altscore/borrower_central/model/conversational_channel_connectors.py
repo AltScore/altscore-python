@@ -10,43 +10,46 @@ class ChannelConnectorAPIDTO(BaseModel):
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt", default=None)
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ChannelConnectorCreate(BaseModel):
     channel: str = Field(alias="channel")
     url: str = Field(alias="url")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ChannelConnectorUpdate(BaseModel):
     url: str = Field(alias="url")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        allow_population_by_alias = True
+    model_config = {
+        'populate_by_name': True,
+        'alias_generator': None,
+        'str_strip_whitespace': True
+    }
 
 
 class ChannelConnectorSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "/conversational/channel-connectors", header_builder, renew_token,
-                         ChannelConnectorAPIDTO.parse_obj(data))
+                         ChannelConnectorAPIDTO.model_validate(data))
 
 
 class ChannelConnectorAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "/conversational/channel-connectors", header_builder, renew_token,
-                         ChannelConnectorAPIDTO.parse_obj(data))
+                         ChannelConnectorAPIDTO.model_validate(data))
 
 
 class ChannelConnectorSyncModule(GenericSyncModule):
