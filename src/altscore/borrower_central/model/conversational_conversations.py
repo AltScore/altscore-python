@@ -103,6 +103,10 @@ class ConversationSync(GenericSyncResource):
             )
             raise_for_status_improved(response)
 
+    @property
+    def bot_state(self):
+        return self.data.bot_state
+
 
 class ConversationAsync(GenericAsyncResource):
 
@@ -124,6 +128,10 @@ class ConversationAsync(GenericAsyncResource):
                 timeout=120
             )
             raise_for_status_improved(response)
+
+    @property
+    def bot_state(self):
+        return self.data.bot_state
 
 
 class ConversationSyncModule(GenericSyncModule):
