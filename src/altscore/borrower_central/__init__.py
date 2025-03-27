@@ -33,9 +33,14 @@ from altscore.borrower_central.model.steps import StepsAsyncModule, StepsSyncMod
 from altscore.borrower_central.model.list_of_similar import ListOfSimilarAsyncModule, ListOfSimilarSyncModule
 from altscore.borrower_central.model.execution_batches import ExecutionBatchAsyncModule, ExecutionBatchSyncModule
 from altscore.borrower_central.model.cms_settings import CMSSettingsAsyncModule, CMSSettingsSyncModule
-from altscore.borrower_central.model.conversational_channel_connectors import  ChannelConnectorAsyncModule, ChannelConnectorSyncModule
+from altscore.borrower_central.model.conversational_channel_connectors import ChannelConnectorAsyncModule, \
+    ChannelConnectorSyncModule
 from altscore.borrower_central.model.conversational_conversations import ConversationAsyncModule, ConversationSyncModule
 from altscore.borrower_central.model.conversational_messages import MessageAsyncModule, MessageSyncModule
+from altscore.borrower_central.model.custom_reports import CustomReportsSyncModule, CustomReportsAsyncModule
+from altscore.borrower_central.model.custom_report_templates import ReportTemplateSyncModule, \
+    ReportTemplateSyncModule
+
 
 class BorrowerCentralAsync:
     def __init__(self, altscore_client):
@@ -77,6 +82,8 @@ class BorrowerCentralAsync:
         self.conversational_channel_connectors = ChannelConnectorAsyncModule(altscore_client)
         self.conversational_conversations = ConversationAsyncModule(altscore_client)
         self.conversational_messages = MessageAsyncModule(altscore_client)
+        self.custom_reports = CustomReportsSyncModule(altscore_client)
+        self.report_templates = ReportTemplateSyncModule(altscore_client)
 
 
 class BorrowerCentralSync:
@@ -119,3 +126,5 @@ class BorrowerCentralSync:
         self.conversational_channel_connectors = ChannelConnectorSyncModule(altscore_client)
         self.conversational_conversations = ConversationSyncModule(altscore_client)
         self.conversational_messages = MessageSyncModule(altscore_client)
+        self.custom_reports = CustomReportsSyncModule(altscore_client)
+        self.report_templates = ReportTemplateSyncModule(altscore_client)
