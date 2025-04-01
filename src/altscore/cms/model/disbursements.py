@@ -79,6 +79,10 @@ class DisbursementBase:
     @staticmethod
     def _conciliate_disbursement(payOrderId: str):
         return f"/v1/disbursements/{payOrderId}/reconcile"
+    
+    @staticmethod
+    def _disbursement_success(payOrderId: str):
+        return f"/v1/disbursements/{payOrderId}/success"
 
 class DisbursementAsync(DisbursementBase):
     data: DisbursementAPIDTO
@@ -106,6 +110,16 @@ class DisbursementAsync(DisbursementBase):
             )
             raise_for_status_improved(response)
 
+    @retry_on_401_async
+    async def disbursement_success(self):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.put(
+                self._disbursement_success(self.data.id),
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+
 class DisbursementSync(DisbursementBase):
     data: DisbursementAPIDTO
 
@@ -127,6 +141,16 @@ class DisbursementSync(DisbursementBase):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.put(
                 self._conciliate_disbursement(self.data.id),
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+    
+    @retry_on_401
+    def disbursement_success(self):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.put(
+                self._disbursement_success(self.data.id),
                 headers=self._header_builder(),
                 timeout=30
             )
