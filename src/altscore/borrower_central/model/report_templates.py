@@ -28,6 +28,9 @@ class ReportConfig(BaseModel):
     include_metrics: bool = Field(alias="includeMetrics", default=False)
     include_steps: bool = Field(alias="includeSteps", default=False)
     include_credit_lines: bool = Field(alias="includeCreditLines", default=False)
+    include_debts: bool = Field(alias="includeDebts", default=False)
+    include_debts_schedules: bool = Field(alias="includeDebtsSchedules", default=False)
+    include_debts_transactions: bool = Field(alias="includeDebtsTransactions", default=False)
     filters: Optional[ReportFilter] = Field(alias="filters", default=None)
 
     class Config:
