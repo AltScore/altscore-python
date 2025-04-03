@@ -38,7 +38,7 @@ from altscore.borrower_central.model.conversational_channel_connectors import Ch
 from altscore.borrower_central.model.conversational_conversations import ConversationAsyncModule, ConversationSyncModule
 from altscore.borrower_central.model.conversational_messages import MessageAsyncModule, MessageSyncModule
 from altscore.borrower_central.model.custom_reports import CustomReportsSyncModule, CustomReportsAsyncModule
-from altscore.borrower_central.model.custom_report_templates import ReportTemplateSyncModule, \
+from altscore.borrower_central.model.report_templates import ReportTemplateSyncModule, \
     ReportTemplateSyncModule
 
 

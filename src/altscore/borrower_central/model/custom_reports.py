@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any, Union
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
-from altscore.borrower_central.model.custom_report_templates import ReportFilter, ReportConfig
+from altscore.borrower_central.model.report_templates import ReportFilter, ReportConfig
 
 
 # DTO for report requests
