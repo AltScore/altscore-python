@@ -43,7 +43,8 @@ class ReportConfig(BaseModel):
 class ReportTemplateDTO(BaseModel):
     """Data transfer object for report templates"""
     id: str = Field(alias="id")
-    name: str = Field(alias="name")
+    key: str = Field(alias="key")
+    label: str = Field(alias='label')
     description: Optional[str] = Field(alias="description", default=None)
     config: ReportConfig = Field(alias="config")
     created_by: str = Field(alias="createdBy")
@@ -58,7 +59,8 @@ class ReportTemplateDTO(BaseModel):
 
 class CreateReportTemplate(BaseModel):
     """Model for creating a new report template"""
-    name: str = Field(alias="name")
+    key: str = Field(alias="key")
+    label: str = Field(alias='label')
     description: Optional[str] = Field(alias="description", default=None)
     config: ReportConfig = Field(alias="config")
 
@@ -70,7 +72,8 @@ class CreateReportTemplate(BaseModel):
 
 class UpdateReportTemplate(BaseModel):
     """Model for updating a report template"""
-    name: Optional[str] = Field(alias="name", default=None)
+    key: str = Field(alias="key")
+    label: Optional[str] = Field(alias='label')
     description: Optional[str] = Field(alias="description", default=None)
     config: Optional[ReportConfig] = Field(alias="config", default=None)
 
@@ -102,13 +105,13 @@ class ReportTemplateSyncModule(GenericSyncModule):
                          resource="report-templates")
 
     @retry_on_401
-    def find_by_name(self, name: str):
-        """Find a report template by its name"""
+    def find_by_key(self, key: str):
+        """Find a report template by its key"""
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             request = client.get(
                 f"/v1/report-templates",
                 params={
-                    "search": name,
+                    "search": key,
                     "per-page": 10,
                     "page": 1
                 },
@@ -119,12 +122,12 @@ class ReportTemplateSyncModule(GenericSyncModule):
                 data = request.json()
                 if len(data) == 0:
                     return None
-                
-                # Filter exact name match
+
+                # Filter exact key match
                 for item in data:
-                    if item["name"].lower() == name.lower():
+                    if item["key"].lower() == key.lower():
                         return self.retrieve(item["id"])
-                        
+
                 return None
             return None
 
@@ -140,13 +143,13 @@ class ReportTemplateAsyncModule(GenericAsyncModule):
                          resource="report-templates")
 
     @retry_on_401_async
-    async def find_by_name(self, name: str):
-        """Find a report template by its name"""
+    async def find_by_key(self, key: str):
+        """Find a report template by its key"""
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             request = await client.get(
                 f"/v1/report-templates",
                 params={
-                    "search": name,
+                    "search": key,
                     "per-page": 10,
                     "page": 1
                 },
@@ -157,10 +160,10 @@ class ReportTemplateAsyncModule(GenericAsyncModule):
             data = request.json()
             if len(data) == 0:
                 return None
-            
-            # Filter exact name match
+
+            # Filter exact key match
             for item in data:
-                if item["name"].lower() == name.lower():
+                if item["key"].lower() == key.lower():
                     return await self.retrieve(item["id"])
-                    
+
             return None
