@@ -64,7 +64,6 @@ class CustomReportResult(BaseModel):
 
 class GenerateReportRequest(BaseModel):
     """Model for generating a report"""
-    email: str = Field(alias="email")
     config: Optional[ReportConfig] = Field(alias="config", default=None)
     template_id: Optional[str] = Field(alias="templateId", default=None)
 
@@ -96,15 +95,14 @@ class CustomReportsSyncModule(GenericSyncModule):
                          resource="custom-reports")
 
     @retry_on_401
-    def generate_report(self, email: str, config: Optional[ReportConfig] = None,
-                        template_id: Optional[str] = None) -> CustomReportResult:
+    def generate_report(self, config: Optional[ReportConfig] = None,
+                        template_id: Optional[str] = None):
         """
         Generate a custom report based on the specified configuration or template.
         Returns immediately with a request ID that can be used to check the status.
         The report will be generated asynchronously and an email will be sent when it's ready.
         
         Args:
-            email: Email address to send the report to
             config: Report configuration (optional if template_id is provided)
             template_id: ID of a report template to use (optional if config is provided)
             
@@ -115,20 +113,19 @@ class CustomReportsSyncModule(GenericSyncModule):
             raise ValueError("Either config or template_id must be provided")
 
         request_data = GenerateReportRequest(
-            email=email,
             config=config,
             templateId=template_id
         )
 
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
-                "/v1/high-memory/custom-reports/generate",
+                "/v1/custom-reports/commands/generate",
                 json=request_data.dict(by_alias=True, exclude_none=True),
                 headers=self.build_headers(),
                 timeout=120,
             )
             raise_for_status_improved(response)
-            return CustomReportResult.parse_obj(response.json())
+            return None
 
     @retry_on_401
     def get_reports_by_status(self, status: str, page: int = 1, per_page: int = 20):
@@ -159,7 +156,7 @@ class CustomReportsAsyncModule(GenericAsyncModule):
                          resource="custom-reports")
 
     @retry_on_401_async
-    async def generate_report(self, email: str, config: Optional[ReportConfig] = None,
+    async def generate_report(self, config: Optional[ReportConfig] = None,
                               template_id: Optional[str] = None) -> CustomReportResult:
         """
         Generate a custom report based on the specified configuration or template.
@@ -167,7 +164,6 @@ class CustomReportsAsyncModule(GenericAsyncModule):
         The report will be generated asynchronously and an email will be sent when it's ready.
         
         Args:
-            email: Email address to send the report to
             config: Report configuration (optional if template_id is provided)
             template_id: ID of a report template to use (optional if config is provided)
             
@@ -178,20 +174,19 @@ class CustomReportsAsyncModule(GenericAsyncModule):
             raise ValueError("Either config or template_id must be provided")
 
         request_data = GenerateReportRequest(
-            email=email,
             config=config,
             templateId=template_id
         )
 
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
-                "/v1/high-memory/custom-reports/generate",
+                "/v1/custom-reports/commands/generate",
                 json=request_data.dict(by_alias=True, exclude_none=True),
                 headers=self.build_headers(),
                 timeout=120,
             )
             await raise_for_status_improved(response)
-            return CustomReportResult.parse_obj(response.json())
+            return None
 
     @retry_on_401_async
     async def get_reports_by_status(self, status: str, page: int = 1, per_page: int = 20):

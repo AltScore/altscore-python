@@ -72,7 +72,7 @@ class CreateReportTemplate(BaseModel):
 
 class UpdateReportTemplate(BaseModel):
     """Model for updating a report template"""
-    key: str = Field(alias="key")
+    key: Optional[str] = Field(alias="key")
     label: Optional[str] = Field(alias='label')
     description: Optional[str] = Field(alias="description", default=None)
     config: Optional[ReportConfig] = Field(alias="config", default=None)
