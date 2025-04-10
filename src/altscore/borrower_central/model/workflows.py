@@ -126,7 +126,6 @@ class WorkflowSync(GenericSyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "workflows", header_builder, renew_token, WorkflowDataAPIDTO.parse_obj(data))
 
-
     @retry_on_401
     def configure_schedules(self, schedule: dict = None, schedule_batch: dict = None):
         url = f"{self.base_url}/v1/{self.resource}/commands/configure-schedules"
@@ -144,7 +143,6 @@ class WorkflowSync(GenericSyncResource):
             )
 
             raise_for_status_improved(response)
-
 
     @retry_on_401
     def delete_schedules(self, schedule: bool = False, schedule_batch: bool = False):
@@ -170,7 +168,6 @@ class WorkflowAsync(GenericAsyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "workflows", header_builder, renew_token, WorkflowDataAPIDTO.parse_obj(data))
 
-
     @retry_on_401_async
     async def configure_schedules(self, schedule: dict = None, schedule_batch: dict = None):
         url = f"{self.base_url}/v1/{self.resource}/commands/configure-schedules"
@@ -187,7 +184,6 @@ class WorkflowAsync(GenericAsyncResource):
                 }).dict(by_alias=True)
             )
             raise_for_status_improved(response)
-
 
     @retry_on_401_async
     async def delete_schedules(self, schedule: bool = False, schedule_batch: bool = False):
@@ -287,6 +283,232 @@ class WorkflowsSyncModule(GenericSyncModule):
         else:
             raise ValueError("You must provide a workflow id or a workflow alias and version")
 
+    @retry_on_401
+    def execute_batch(self,
+                      workflow_id=None,
+                      workflow_alias=None,
+                      workflow_version=None,
+                      label=None,
+                      description=None,
+                      max_executions_per_second=1,
+                      max_concurrent_dispatches=1,
+                      max_item_execution_runs=2,
+                      items=None,
+                      raw_package_ids=None,
+                      custom_input=None,
+                      attachment_file_names=None,
+                      tags=None,
+                      debug=False,
+                      billable=True):
+        """
+        Execute a batch workflow with the given parameters.
+        
+        Args:
+            workflow_id: ID of the workflow to execute
+            workflow_alias: Alias of the workflow (required if workflow_id not provided)
+            workflow_version: Version of the workflow (required if workflow_id not provided)
+            label: Optional label for the batch execution
+            description: Optional description for the batch execution
+            max_executions_per_second: Rate limit for executions
+            max_concurrent_dispatches: Maximum number of concurrent dispatches
+            max_item_execution_runs: Maximum number of execution runs per item
+            items: List of items to process (max 10)
+            raw_package_ids: List of package IDs containing items to process (max 5)
+            custom_input: Custom input for the workflow
+            attachment_file_names: List of attachment file names
+            tags: List of tags for the execution
+            debug: Whether to run in debug mode
+            billable: Whether the execution is billable
+        
+        Returns:
+            Execution response
+        """
+        # Basic validation
+        if workflow_id is None and (workflow_alias is None or workflow_version is None):
+            raise ValueError("Either workflow_id or both workflow_alias and workflow_version must be provided")
+
+        # Prepare headers
+        headers = self.build_headers()
+        if tags:
+            headers["x-tags"] = ",".join(tags) if isinstance(tags, list) else tags
+        headers["x-debug"] = str(debug).lower()
+        headers["x-billable"] = str(billable).lower()
+
+        # Prepare payload
+        execute_input = {
+            "label": label,
+            "description": description,
+            "maxExecutionsPerSecond": max_executions_per_second,
+            "maxConcurrentDispatches": max_concurrent_dispatches,
+            "maxItemExecutionRuns": max_item_execution_runs,
+            "workflowInput": {
+                "items": items or [],
+                "rawPackageIds": raw_package_ids or [],
+                "customInput": custom_input or {}
+            },
+            "attachmentFileNames": attachment_file_names or []
+        }
+
+        # Execute API call
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            if workflow_id:
+                url = f"/v1/workflows/{workflow_id}/execute-batch"
+            else:
+                url = f"/v1/workflows/{workflow_alias}/{workflow_version}/execute-batch"
+
+            response = client.post(
+                url,
+                json=execute_input,
+                headers=headers,
+                timeout=900
+            )
+            raise_for_status_improved(response)
+            return response.json()
+
+    @retry_on_401
+    def execute_batch_with_dataframe(self,
+                                     dataframe,
+                                     workflow_id=None,
+                                     workflow_alias=None,
+                                     workflow_version=None,
+                                     alias=None,
+                                     label=None,
+                                     description=None,
+                                     max_executions_per_second=1,
+                                     max_concurrent_dispatches=1,
+                                     max_item_execution_runs=2,
+                                     custom_input=None,
+                                     attachment_file_names=None,
+                                     output_format="csv",
+                                     file_name=None,
+                                     export_params=None,
+                                     tags=None,
+                                     debug=False,
+                                     billable=True):
+        """
+        Execute a batch workflow with data from a pandas DataFrame.
+
+        This method handles converting the dataframe to the specified format (CSV, XLSX, JSON, or Parquet),
+        uploading it as a package attachment, and executing the batch workflow with the package.
+
+        Args:
+            dataframe: Pandas DataFrame containing the data to process
+            workflow_id: ID of the workflow to execute
+            workflow_alias: Alias of the workflow (required if workflow_id not provided)
+            workflow_version: Version of the workflow (required if workflow_id not provided)
+            alias: Optional alias for the created package
+            label: Optional label for the batch execution
+            description: Optional description for the batch execution
+            max_executions_per_second: Rate limit for executions
+            max_concurrent_dispatches: Maximum number of concurrent dispatches
+            max_item_execution_runs: Maximum number of execution runs per item
+            custom_input: Custom input for the workflow
+            attachment_file_names: List of attachment file names (will include the generated file)
+            output_format: Format for the dataframe export ("csv", "xlsx", "json", or "parquet")
+            file_name: Name for the output file (default: "dataframe.[format]")
+            export_params: Additional parameters to pass to the pandas export function
+            tags: List of tags for the execution
+            debug: Whether to run in debug mode
+            billable: Whether the execution is billable
+
+        Returns:
+            Execution response
+        """
+        import os
+        import tempfile
+        import uuid
+
+        # Backward compatibility
+        if file_name is None and 'csv_filename' in locals():
+            file_name = locals()['csv_filename']
+        if export_params is None and 'csv_params' in locals():
+            export_params = locals()['csv_params']
+
+        # Validate the output format
+        valid_formats = ["csv", "xlsx", "json", "parquet"]
+        if output_format not in valid_formats:
+            raise ValueError(f"Invalid output_format. Must be one of: {', '.join(valid_formats)}")
+
+        # Set default export parameters
+        if export_params is None:
+            if output_format == "csv":
+                export_params = {"index": False}
+            elif output_format == "xlsx":
+                export_params = {"index": False}
+            elif output_format == "json":
+                export_params = {"orient": "records"}
+            elif output_format == "parquet":
+                export_params = {}
+
+        # Set default file name with appropriate extension
+        if file_name is None:
+            file_name = f"dataframe.{output_format}"
+        elif not file_name.endswith(f".{output_format}"):
+            file_name = f"{file_name}.{output_format}"
+
+        temp_dir = tempfile.gettempdir()
+        temp_file_path = os.path.join(temp_dir, file_name)
+
+        # Export dataframe to the specified format
+        if output_format == "csv":
+            dataframe.to_csv(temp_file_path, **export_params)
+        elif output_format == "xlsx":
+            try:
+                dataframe.to_excel(temp_file_path, **export_params)
+            except ImportError:
+                raise ImportError("Excel export requires openpyxl. Install with 'pip install openpyxl'")
+        elif output_format == "json":
+            dataframe.to_json(temp_file_path, **export_params)
+        elif output_format == "parquet":
+            try:
+                dataframe.to_parquet(temp_file_path, **export_params)
+            except ImportError:
+                raise ImportError(
+                    "Parquet export requires pyarrow or fastparquet. Install with 'pip install pyarrow' or 'pip install fastparquet'")
+
+        try:
+            # Create a package with minimal content
+            package_data = {
+                "alias": alias or f'batch-{uuid.uuid4()}',
+            }
+
+            # Create the package
+            package_id = self.altscore_client.borrower_central.store_packages.create(package_data)
+
+            # Retrieve the package to upload attachment
+            package = self.altscore_client.borrower_central.store_packages.retrieve(package_id)
+
+            # Upload the file as an attachment
+            package.upload_package_attachment(temp_file_path)
+
+            # Update attachment file names to include our file
+            if attachment_file_names is None:
+                attachment_file_names = []
+            if file_name not in attachment_file_names:
+                attachment_file_names.append(file_name)
+
+            # Execute batch with the package_id
+            return self.execute_batch(
+                workflow_id=workflow_id,
+                workflow_alias=workflow_alias,
+                workflow_version=workflow_version,
+                label=label,
+                description=description,
+                max_executions_per_second=max_executions_per_second,
+                max_concurrent_dispatches=max_concurrent_dispatches,
+                max_item_execution_runs=max_item_execution_runs,
+                raw_package_ids=[package_id],
+                custom_input=custom_input,
+                attachment_file_names=attachment_file_names,
+                tags=tags,
+                debug=debug,
+                billable=billable
+            )
+        finally:
+            # Clean up the temporary file
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
+
 
 class WorkflowsAsyncModule(GenericAsyncModule):
 
@@ -367,3 +589,229 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                 return WorkflowExecutionResponseAPIDTO.parse_obj(response.json())
         else:
             raise ValueError("You must provide a workflow id or a workflow alias and version")
+
+    @retry_on_401_async
+    async def execute_batch(self,
+                            workflow_id=None,
+                            workflow_alias=None,
+                            workflow_version=None,
+                            label=None,
+                            description=None,
+                            max_executions_per_second=1,
+                            max_concurrent_dispatches=1,
+                            max_item_execution_runs=2,
+                            items=None,
+                            raw_package_ids=None,
+                            custom_input=None,
+                            attachment_file_names=None,
+                            tags=None,
+                            debug=False,
+                            billable=True):
+        """
+        Execute a batch workflow with the given parameters asynchronously.
+
+        Args:
+            workflow_id: ID of the workflow to execute
+            workflow_alias: Alias of the workflow (required if workflow_id not provided)
+            workflow_version: Version of the workflow (required if workflow_id not provided)
+            label: Optional label for the batch execution
+            description: Optional description for the batch execution
+            max_executions_per_second: Rate limit for executions
+            max_concurrent_dispatches: Maximum number of concurrent dispatches
+            max_item_execution_runs: Maximum number of execution runs per item
+            items: List of items to process (max 10)
+            raw_package_ids: List of package IDs containing items to process (max 5)
+            custom_input: Custom input for the workflow
+            attachment_file_names: List of attachment file names
+            tags: List of tags for the execution
+            debug: Whether to run in debug mode
+            billable: Whether the execution is billable
+
+        Returns:
+            Execution response
+        """
+        # Basic validation
+        if workflow_id is None and (workflow_alias is None or workflow_version is None):
+            raise ValueError("Either workflow_id or both workflow_alias and workflow_version must be provided")
+
+        # Prepare headers
+        headers = self.build_headers()
+        if tags:
+            headers["x-tags"] = ",".join(tags) if isinstance(tags, list) else tags
+        headers["x-debug"] = str(debug).lower()
+        headers["x-billable"] = str(billable).lower()
+
+        # Prepare payload
+        execute_input = {
+            "label": label,
+            "description": description,
+            "maxExecutionsPerSecond": max_executions_per_second,
+            "maxConcurrentDispatches": max_concurrent_dispatches,
+            "maxItemExecutionRuns": max_item_execution_runs,
+            "workflowInput": {
+                "items": items or [],
+                "rawPackageIds": raw_package_ids or [],
+                "customInput": custom_input or {}
+            },
+            "attachmentFileNames": attachment_file_names or []
+        }
+
+        # Execute API call
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            if workflow_id:
+                url = f"/v1/workflows/{workflow_id}/execute-batch"
+            else:
+                url = f"/v1/workflows/{workflow_alias}/{workflow_version}/execute-batch"
+
+            response = await client.post(
+                url,
+                json=execute_input,
+                headers=headers,
+                timeout=900
+            )
+            raise_for_status_improved(response)
+            return response.json()
+
+    @retry_on_401_async
+    async def execute_batch_with_dataframe(self,
+                                           dataframe,
+                                           workflow_id=None,
+                                           workflow_alias=None,
+                                           workflow_version=None,
+                                           alias=None,
+                                           label=None,
+                                           description=None,
+                                           max_executions_per_second=1,
+                                           max_concurrent_dispatches=1,
+                                           max_item_execution_runs=2,
+                                           custom_input=None,
+                                           attachment_file_names=None,
+                                           output_format="csv",
+                                           file_name=None,
+                                           export_params=None,
+                                           tags=None,
+                                           debug=False,
+                                           billable=True):
+        """
+        Execute a batch workflow with data from a pandas DataFrame asynchronously.
+
+        This method handles converting the dataframe to the specified format (CSV, XLSX, JSON, or Parquet),
+        uploading it as a package attachment, and executing the batch workflow with the package.
+
+        Args:
+            dataframe: Pandas DataFrame containing the data to process
+            workflow_id: ID of the workflow to execute
+            workflow_alias: Alias of the workflow (required if workflow_id not provided)
+            workflow_version: Version of the workflow (required if workflow_id not provided)
+            alias: Optional alias for the created package
+            label: Optional label for the batch execution
+            description: Optional description for the batch execution
+            max_executions_per_second: Rate limit for executions
+            max_concurrent_dispatches: Maximum number of concurrent dispatches
+            max_item_execution_runs: Maximum number of execution runs per item
+            custom_input: Custom input for the workflow
+            attachment_file_names: List of attachment file names (will include the generated file)
+            output_format: Format for the dataframe export ("csv", "xlsx", "json", or "parquet")
+            file_name: Name for the output file (default: "dataframe.[format]")
+            export_params: Additional parameters to pass to the pandas export function
+            tags: List of tags for the execution
+            debug: Whether to run in debug mode
+            billable: Whether the execution is billable
+
+        Returns:
+            Execution response
+        """
+        import os
+        import tempfile
+        import uuid
+
+        # Backward compatibility
+        if file_name is None and 'csv_filename' in locals():
+            file_name = locals()['csv_filename']
+        if export_params is None and 'csv_params' in locals():
+            export_params = locals()['csv_params']
+
+        # Validate the output format
+        valid_formats = ["csv", "xlsx", "json", "parquet"]
+        if output_format not in valid_formats:
+            raise ValueError(f"Invalid output_format. Must be one of: {', '.join(valid_formats)}")
+
+        # Set default export parameters
+        if export_params is None:
+            if output_format == "csv":
+                export_params = {"index": False}
+            elif output_format == "xlsx":
+                export_params = {"index": False}
+            elif output_format == "json":
+                export_params = {"orient": "records"}
+            elif output_format == "parquet":
+                export_params = {}
+
+        # Set default file name with appropriate extension
+        if file_name is None:
+            file_name = f"dataframe.{output_format}"
+        elif not file_name.endswith(f".{output_format}"):
+            file_name = f"{file_name}.{output_format}"
+
+        temp_dir = tempfile.gettempdir()
+        temp_file_path = os.path.join(temp_dir, file_name)
+
+        # Export dataframe to the specified format
+        if output_format == "csv":
+            dataframe.to_csv(temp_file_path, **export_params)
+        elif output_format == "xlsx":
+            try:
+                dataframe.to_excel(temp_file_path, **export_params)
+            except ImportError:
+                raise ImportError("Excel export requires openpyxl. Install with 'pip install openpyxl'")
+        elif output_format == "json":
+            dataframe.to_json(temp_file_path, **export_params)
+        elif output_format == "parquet":
+            try:
+                dataframe.to_parquet(temp_file_path, **export_params)
+            except ImportError:
+                raise ImportError(
+                    "Parquet export requires pyarrow or fastparquet. Install with 'pip install pyarrow' or 'pip install fastparquet'")
+
+        try:
+            # Create a package with minimal content
+            package_data = {
+                "alias": alias or f'batch-{uuid.uuid4()}',
+            }
+
+            # Create the package
+            package_id = await self.altscore_client.borrower_central.store_packages.create(package_data)
+
+            # Retrieve the package to upload attachment
+            package = await self.altscore_client.borrower_central.store_packages.retrieve(package_id)
+
+            # Upload the file as an attachment
+            await package.upload_package_attachment(temp_file_path)
+
+            # Update attachment file names to include our file
+            if attachment_file_names is None:
+                attachment_file_names = []
+            if file_name not in attachment_file_names:
+                attachment_file_names.append(file_name)
+
+            # Execute batch with the package_id
+            return await self.execute_batch(
+                workflow_id=workflow_id,
+                workflow_alias=workflow_alias,
+                workflow_version=workflow_version,
+                label=label,
+                description=description,
+                max_executions_per_second=max_executions_per_second,
+                max_concurrent_dispatches=max_concurrent_dispatches,
+                max_item_execution_runs=max_item_execution_runs,
+                raw_package_ids=[package_id],
+                custom_input=custom_input,
+                attachment_file_names=attachment_file_names,
+                tags=tags,
+                debug=debug,
+                billable=billable
+            )
+        finally:
+            # Clean up the temporary file
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
