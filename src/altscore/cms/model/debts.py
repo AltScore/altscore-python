@@ -124,6 +124,19 @@ class CreateDebt(BaseModel):
         populate_by_name = True
 
 
+class Waiver(BaseModel):
+    amount: Money = Field(alias="amount") # This amount should be the sum of the breakdown amounts
+    breakdown: Optional[Balance] = Field(alias="breakdown", default=None) # These amount should be negative floats
+    notes: Optional[str] = Field(alias="notes", default=None)
+    reference_id: str = Field(alias="referenceId")
+    waiver_date: str = Field(alias="waiverDate")
+
+    class Config:
+        allow_population_by_field_name = True
+        populate_by_alias = True
+        populate_by_name = True
+
+
 class DebtBase:
 
     @staticmethod
@@ -133,6 +146,10 @@ class DebtBase:
     @staticmethod
     def _penalties(debt_id: str):
         return f"/v1/debts/{debt_id}/penalties"
+
+    @staticmethod
+    def _waivers(debt_id: str):
+        return f"/v1/debts/{debt_id}/waivers"
 
 
 class DebtAsync(DebtBase):
@@ -184,12 +201,24 @@ class DebtAsync(DebtBase):
     async def get_penalties(self) -> List[Penalty]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
-                self._penalties(self.data.id),
+                self._waivers(self.data.id),
                 headers=self._header_builder(),
                 timeout=30
             )
             raise_for_status_improved(response)
             return [Penalty.parse_obj(e) for e in response.json()]
+
+    @retry_on_401_async
+    async def apply_waiver(self, waiver: dict) -> None:
+        waiver = Waiver.parse_obj(waiver)
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.post(
+                self._waivers(self.data.id),
+                headers=self._header_builder(),
+                json=waiver.dict(by_alias=True, exclude_none=True),
+                timeout=30
+            )
+            raise_for_status_improved(response)
 
     def __str__(self):
         return str(self.data)
@@ -253,6 +282,19 @@ class DebtSync(DebtBase):
             )
             raise_for_status_improved(response)
             return [Penalty.parse_obj(e) for e in response.json()]
+
+    @retry_on_401
+    def apply_waiver(self, waiver: dict) -> None:
+        waiver = Waiver.parse_obj(waiver)
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.post(
+                self._waivers(self.data.id),
+                headers=self._header_builder(),
+                json=waiver.dict(by_alias=True, exclude_none=True),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return None
 
     def __str__(self):
         return str(self.data)
