@@ -296,13 +296,12 @@ class WorkflowsSyncModule(GenericSyncModule):
                       items=None,
                       raw_package_ids=None,
                       custom_input=None,
-                      attachment_file_names=None,
                       tags=None,
                       debug=False,
                       billable=True):
         """
         Execute a batch workflow with the given parameters.
-        
+
         Args:
             workflow_id: ID of the workflow to execute
             workflow_alias: Alias of the workflow (required if workflow_id not provided)
@@ -315,11 +314,10 @@ class WorkflowsSyncModule(GenericSyncModule):
             items: List of items to process (max 10)
             raw_package_ids: List of package IDs containing items to process (max 5)
             custom_input: Custom input for the workflow
-            attachment_file_names: List of attachment file names
             tags: List of tags for the execution
             debug: Whether to run in debug mode
             billable: Whether the execution is billable
-        
+
         Returns:
             Execution response
         """
@@ -346,7 +344,7 @@ class WorkflowsSyncModule(GenericSyncModule):
                 "rawPackageIds": raw_package_ids or [],
                 "customInput": custom_input or {}
             },
-            "attachmentFileNames": attachment_file_names or []
+            "attachmentFileNames": []
         }
 
         # Execute API call
@@ -378,9 +376,7 @@ class WorkflowsSyncModule(GenericSyncModule):
                                      max_concurrent_dispatches=1,
                                      max_item_execution_runs=2,
                                      custom_input=None,
-                                     attachment_file_names=None,
                                      output_format="csv",
-                                     file_name=None,
                                      export_params=None,
                                      tags=None,
                                      debug=False,
@@ -403,9 +399,7 @@ class WorkflowsSyncModule(GenericSyncModule):
             max_concurrent_dispatches: Maximum number of concurrent dispatches
             max_item_execution_runs: Maximum number of execution runs per item
             custom_input: Custom input for the workflow
-            attachment_file_names: List of attachment file names (will include the generated file)
             output_format: Format for the dataframe export ("csv", "xlsx", "json", or "parquet")
-            file_name: Name for the output file (default: "dataframe.[format]")
             export_params: Additional parameters to pass to the pandas export function
             tags: List of tags for the execution
             debug: Whether to run in debug mode
@@ -417,12 +411,6 @@ class WorkflowsSyncModule(GenericSyncModule):
         import os
         import tempfile
         import uuid
-
-        # Backward compatibility
-        if file_name is None and 'csv_filename' in locals():
-            file_name = locals()['csv_filename']
-        if export_params is None and 'csv_params' in locals():
-            export_params = locals()['csv_params']
 
         # Validate the output format
         valid_formats = ["csv", "xlsx", "json", "parquet"]
@@ -441,10 +429,7 @@ class WorkflowsSyncModule(GenericSyncModule):
                 export_params = {}
 
         # Set default file name with appropriate extension
-        if file_name is None:
-            file_name = f"dataframe.{output_format}"
-        elif not file_name.endswith(f".{output_format}"):
-            file_name = f"{file_name}.{output_format}"
+        file_name = f"{uuid.uuid4()}.{output_format}"
 
         temp_dir = tempfile.gettempdir()
         temp_file_path = os.path.join(temp_dir, file_name)
@@ -481,12 +466,6 @@ class WorkflowsSyncModule(GenericSyncModule):
             # Upload the file as an attachment
             package.upload_package_attachment(temp_file_path)
 
-            # Update attachment file names to include our file
-            if attachment_file_names is None:
-                attachment_file_names = []
-            if file_name not in attachment_file_names:
-                attachment_file_names.append(file_name)
-
             # Execute batch with the package_id
             return self.execute_batch(
                 workflow_id=workflow_id,
@@ -499,7 +478,6 @@ class WorkflowsSyncModule(GenericSyncModule):
                 max_item_execution_runs=max_item_execution_runs,
                 raw_package_ids=[package_id],
                 custom_input=custom_input,
-                attachment_file_names=attachment_file_names,
                 tags=tags,
                 debug=debug,
                 billable=billable
@@ -603,7 +581,6 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                             items=None,
                             raw_package_ids=None,
                             custom_input=None,
-                            attachment_file_names=None,
                             tags=None,
                             debug=False,
                             billable=True):
@@ -622,7 +599,6 @@ class WorkflowsAsyncModule(GenericAsyncModule):
             items: List of items to process (max 10)
             raw_package_ids: List of package IDs containing items to process (max 5)
             custom_input: Custom input for the workflow
-            attachment_file_names: List of attachment file names
             tags: List of tags for the execution
             debug: Whether to run in debug mode
             billable: Whether the execution is billable
@@ -653,7 +629,7 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                 "rawPackageIds": raw_package_ids or [],
                 "customInput": custom_input or {}
             },
-            "attachmentFileNames": attachment_file_names or []
+            "attachmentFileNames": []
         }
 
         # Execute API call
@@ -685,9 +661,7 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                                            max_concurrent_dispatches=1,
                                            max_item_execution_runs=2,
                                            custom_input=None,
-                                           attachment_file_names=None,
                                            output_format="csv",
-                                           file_name=None,
                                            export_params=None,
                                            tags=None,
                                            debug=False,
@@ -710,9 +684,7 @@ class WorkflowsAsyncModule(GenericAsyncModule):
             max_concurrent_dispatches: Maximum number of concurrent dispatches
             max_item_execution_runs: Maximum number of execution runs per item
             custom_input: Custom input for the workflow
-            attachment_file_names: List of attachment file names (will include the generated file)
             output_format: Format for the dataframe export ("csv", "xlsx", "json", or "parquet")
-            file_name: Name for the output file (default: "dataframe.[format]")
             export_params: Additional parameters to pass to the pandas export function
             tags: List of tags for the execution
             debug: Whether to run in debug mode
@@ -724,12 +696,6 @@ class WorkflowsAsyncModule(GenericAsyncModule):
         import os
         import tempfile
         import uuid
-
-        # Backward compatibility
-        if file_name is None and 'csv_filename' in locals():
-            file_name = locals()['csv_filename']
-        if export_params is None and 'csv_params' in locals():
-            export_params = locals()['csv_params']
 
         # Validate the output format
         valid_formats = ["csv", "xlsx", "json", "parquet"]
@@ -748,10 +714,7 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                 export_params = {}
 
         # Set default file name with appropriate extension
-        if file_name is None:
-            file_name = f"dataframe.{output_format}"
-        elif not file_name.endswith(f".{output_format}"):
-            file_name = f"{file_name}.{output_format}"
+        file_name = f"{uuid.uuid4()}.{output_format}"
 
         temp_dir = tempfile.gettempdir()
         temp_file_path = os.path.join(temp_dir, file_name)
@@ -788,12 +751,6 @@ class WorkflowsAsyncModule(GenericAsyncModule):
             # Upload the file as an attachment
             await package.upload_package_attachment(temp_file_path)
 
-            # Update attachment file names to include our file
-            if attachment_file_names is None:
-                attachment_file_names = []
-            if file_name not in attachment_file_names:
-                attachment_file_names.append(file_name)
-
             # Execute batch with the package_id
             return await self.execute_batch(
                 workflow_id=workflow_id,
@@ -806,7 +763,6 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                 max_item_execution_runs=max_item_execution_runs,
                 raw_package_ids=[package_id],
                 custom_input=custom_input,
-                attachment_file_names=attachment_file_names,
                 tags=tags,
                 debug=debug,
                 billable=billable
