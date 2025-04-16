@@ -79,7 +79,7 @@ class DealContactsSyncModule(GenericSyncModule):
             per_page: Number of results per page
             
         Returns:
-            Dict with contacts and pagination info
+            List[DealContactDTO]: List of contacts for the deal
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
@@ -106,7 +106,7 @@ class DealContactsSyncModule(GenericSyncModule):
             per_page: Number of results per page
             
         Returns:
-            Dict with contacts and pagination info
+            List[DealContactDTO]: List of deal contacts for the borrower
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
@@ -134,7 +134,7 @@ class DealContactsSyncModule(GenericSyncModule):
             per_page: Number of results per page
             
         Returns:
-            Dict with contacts and pagination info
+            List[DealContactDTO]: List of contacts for the deal and borrower
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
@@ -142,6 +142,33 @@ class DealContactsSyncModule(GenericSyncModule):
                 params={
                     "deal-id": deal_id,
                     "borrower-id": borrower_id,
+                    "page": page,
+                    "per-page": per_page
+                },
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            raise_for_status_improved(response)
+            return [DealContactDTO.parse_obj(data) for data in response.json()]
+    
+    @retry_on_401
+    def get_by_role_key(self, role_key: str, page: int = 1, per_page: int = 100):
+        """
+        Get all contacts with a specific role
+        
+        Args:
+            role_key: The role key to filter by
+            page: Page number for pagination
+            per_page: Number of results per page
+            
+        Returns:
+            List[DealContactDTO]: List of contacts with the specified role
+        """
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                f"/v1/deal-contacts",
+                params={
+                    "role-key": role_key,
                     "page": page,
                     "per-page": per_page
                 },
@@ -173,7 +200,7 @@ class DealContactsAsyncModule(GenericAsyncModule):
             per_page: Number of results per page
             
         Returns:
-            Dict with contacts and pagination info
+            List[DealContactDTO]: List of contacts for the deal
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
@@ -200,7 +227,7 @@ class DealContactsAsyncModule(GenericAsyncModule):
             per_page: Number of results per page
             
         Returns:
-            Dict with contacts and pagination info
+            List[DealContactDTO]: List of deal contacts for the borrower
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
@@ -228,7 +255,7 @@ class DealContactsAsyncModule(GenericAsyncModule):
             per_page: Number of results per page
             
         Returns:
-            Dict with contacts and pagination info
+            List[DealContactDTO]: List of contacts for the deal and borrower
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
@@ -236,6 +263,33 @@ class DealContactsAsyncModule(GenericAsyncModule):
                 params={
                     "deal-id": deal_id,
                     "borrower-id": borrower_id,
+                    "page": page,
+                    "per-page": per_page
+                },
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            await raise_for_status_improved(response)
+            return [DealContactDTO.parse_obj(data) for data in response.json()]
+    
+    @retry_on_401_async
+    async def get_by_role_key(self, role_key: str, page: int = 1, per_page: int = 100):
+        """
+        Get all contacts with a specific role
+        
+        Args:
+            role_key: The role key to filter by
+            page: Page number for pagination
+            per_page: Number of results per page
+            
+        Returns:
+            List[DealContactDTO]: List of contacts with the specified role
+        """
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                f"/v1/deal-contacts",
+                params={
+                    "role-key": role_key,
                     "page": page,
                     "per-page": per_page
                 },

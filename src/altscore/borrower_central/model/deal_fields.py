@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any, Union, Literal
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
-import datetime as dt
 
 
 # DTO for field value history
@@ -111,7 +110,7 @@ class DealFieldsSyncModule(GenericSyncModule):
             per_page: Number of results per page
             
         Returns:
-            Dict with fields and pagination info
+            List[DealFieldDTO]: List of deal fields
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
@@ -137,7 +136,7 @@ class DealFieldsSyncModule(GenericSyncModule):
             key: The field key
             
         Returns:
-            DealFieldSync resource instance
+            List[DealFieldDTO]: List of deal fields matching the key
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
@@ -148,7 +147,6 @@ class DealFieldsSyncModule(GenericSyncModule):
             raise_for_status_improved(response)
             return [DealFieldDTO.parse_obj(data) for data in response.json()]
 
-
     @retry_on_401
     def get_unique_values(self, key: str):
         """
@@ -158,7 +156,7 @@ class DealFieldsSyncModule(GenericSyncModule):
             key: The field key
             
         Returns:
-            List of unique values
+            List[ValueCounterDTO]: List of unique values with counts
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
@@ -217,7 +215,7 @@ class DealFieldsAsyncModule(GenericAsyncModule):
             per_page: Number of results per page
             
         Returns:
-            Dict with fields and pagination info
+            List[DealFieldDTO]: List of deal fields
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
@@ -243,7 +241,7 @@ class DealFieldsAsyncModule(GenericAsyncModule):
             key: The field key
             
         Returns:
-            DealFieldAsync resource instance
+            List[DealFieldDTO]: List of deal fields matching the key
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
@@ -254,7 +252,6 @@ class DealFieldsAsyncModule(GenericAsyncModule):
             await raise_for_status_improved(response)
             return [DealFieldDTO.parse_obj(data) for data in response.json()]
 
-
     @retry_on_401_async
     async def get_unique_values(self, key: str):
         """
@@ -264,7 +261,7 @@ class DealFieldsAsyncModule(GenericAsyncModule):
             key: The field key
             
         Returns:
-            List of unique values
+            List[ValueCounterDTO]: List of unique values with counts
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(

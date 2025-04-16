@@ -78,11 +78,22 @@ class ExternalIdRequest(BaseModel):
         allow_population_by_alias = True
 
 
+class PutCurrentStepRequest(BaseModel):
+    """Model for setting the current step of a deal"""
+    key: str = Field(alias="key")
+    comment: Optional[str] = Field(alias="comment", default=None)
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
 # Resource classes for deals
 class DealSync(GenericSyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "deals", header_builder, renew_token, DealDTO.parse_obj(data))
-        
+
     @retry_on_401
     def get_current_step(self):
         """
@@ -92,7 +103,7 @@ class DealSync(GenericSyncResource):
             DealStepDTO: The current step
         """
         from altscore.borrower_central.model.deal_steps import DealStepSync
-        
+
         with httpx.Client(base_url=self.base_url) as client:
             response = client.get(
                 f"{self.base_url}/v1/deals/{self.data.id}/steps/current",
@@ -105,33 +116,51 @@ class DealSync(GenericSyncResource):
                 renew_token=self.renew_token,
                 data=response.json()
             )
-    
+
     @retry_on_401
-    def set_current_step(self, key: str):
+    def set_current_step(self, key: str, comment: Optional[str] = None):
         """
         Set the current step for a deal
         
         Args:
             key: The key of the step to set as current
+            comment: Optional comment for the step change
             
         Returns:
             None
         """
         with httpx.Client(base_url=self.base_url) as client:
+            request_data = PutCurrentStepRequest(key=key, comment=comment)
             response = client.put(
                 f"{self.base_url}/v1/deals/{self.data.id}/steps/current",
-                json={
-                    "key": key
-                },
+                json=request_data.dict(by_alias=True, exclude_none=True),
                 headers=self._header_builder()
             )
             raise_for_status_improved(response)
+
+    @retry_on_401
+    def get_steps(self):
+        """
+        Get all steps for this deal
+        
+        Returns:
+            List[DealStepDTO]: List of all steps for this deal
+        """
+        from altscore.borrower_central.model.deal_steps import DealStepDTO
+
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.get(
+                f"{self.base_url}/v1/deals/{self.data.id}/steps",
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
+            return [DealStepDTO.parse_obj(data) for data in response.json()]
 
 
 class DealAsync(GenericAsyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "deals", header_builder, renew_token, DealDTO.parse_obj(data))
-        
+
     @retry_on_401_async
     async def get_current_step(self):
         """
@@ -141,7 +170,7 @@ class DealAsync(GenericAsyncResource):
             DealStepDTO: The current step
         """
         from altscore.borrower_central.model.deal_steps import DealStepAsync
-        
+
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
                 f"{self.base_url}/v1/deals/{self.data.id}/steps/current",
@@ -154,27 +183,45 @@ class DealAsync(GenericAsyncResource):
                 renew_token=self.renew_token,
                 data=response.json()
             )
-    
+
     @retry_on_401_async
-    async def set_current_step(self, key: str):
+    async def set_current_step(self, key: str, comment: Optional[str] = None):
         """
         Set the current step for a deal
         
         Args:
             key: The key of the step to set as current
+            comment: Optional comment for the step change
             
         Returns:
             None
         """
         async with httpx.AsyncClient(base_url=self.base_url) as client:
+            request_data = PutCurrentStepRequest(key=key, comment=comment)
             response = await client.put(
                 f"{self.base_url}/v1/deals/{self.data.id}/steps/current",
-                json={
-                    "key": key
-                },
+                json=request_data.dict(by_alias=True, exclude_none=True),
                 headers=self._header_builder()
             )
             raise_for_status_improved(response)
+
+    @retry_on_401_async
+    async def get_steps(self):
+        """
+        Get all steps for this deal
+        
+        Returns:
+            List[DealStepDTO]: List of all steps for this deal
+        """
+        from altscore.borrower_central.model.deal_steps import DealStepDTO
+
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
+                f"{self.base_url}/v1/deals/{self.data.id}/steps",
+                headers=self._header_builder()
+            )
+            raise_for_status_improved(response)
+            return [DealStepDTO.parse_obj(data) for data in response.json()]
 
 
 # Module for deals - synchronous
@@ -211,6 +258,60 @@ class DealsSyncModule(GenericSyncModule):
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401
+    def query_by_borrower_id(self, borrower_id: str, page: int = 1, per_page: int = 10):
+        """
+        Find deals by borrower ID
+        
+        Args:
+            borrower_id: The ID of the borrower to filter by
+            page: Page number for pagination
+            per_page: Number of results per page
+            
+        Returns:
+            Dict with deals and pagination info
+        """
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                f"/v1/deals",
+                params={
+                    "borrower-id": borrower_id,
+                    "page": page,
+                    "per-page": per_page
+                },
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            raise_for_status_improved(response)
+            return response.json()
+
+    @retry_on_401
+    def query_by_status(self, status: str, page: int = 1, per_page: int = 10):
+        """
+        Find deals by status
+        
+        Args:
+            status: The status to filter by
+            page: Page number for pagination
+            per_page: Number of results per page
+            
+        Returns:
+            Dict with deals and pagination info
+        """
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                f"/v1/deals",
+                params={
+                    "status": status,
+                    "page": page,
+                    "per-page": per_page
+                },
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            raise_for_status_improved(response)
+            return response.json()
+
 
 # Module for deals - asynchronous
 class DealsAsyncModule(GenericAsyncModule):
@@ -245,3 +346,57 @@ class DealsAsyncModule(GenericAsyncModule):
             )
             await raise_for_status_improved(response)
             return None
+
+    @retry_on_401_async
+    async def query_by_borrower_id(self, borrower_id: str, page: int = 1, per_page: int = 10):
+        """
+        Find deals by borrower ID
+        
+        Args:
+            borrower_id: The ID of the borrower to filter by
+            page: Page number for pagination
+            per_page: Number of results per page
+            
+        Returns:
+            Dict with deals and pagination info
+        """
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                f"/v1/deals",
+                params={
+                    "borrower-id": borrower_id,
+                    "page": page,
+                    "per-page": per_page
+                },
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            await raise_for_status_improved(response)
+            return response.json()
+
+    @retry_on_401_async
+    async def query_by_status(self, status: str, page: int = 1, per_page: int = 10):
+        """
+        Find deals by status
+        
+        Args:
+            status: The status to filter by
+            page: Page number for pagination
+            per_page: Number of results per page
+            
+        Returns:
+            Dict with deals and pagination info
+        """
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                f"/v1/deals",
+                params={
+                    "status": status,
+                    "page": page,
+                    "per-page": per_page
+                },
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            await raise_for_status_improved(response)
+            return response.json()

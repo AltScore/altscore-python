@@ -81,13 +81,13 @@ class DealStepsSyncModule(GenericSyncModule):
             per_page: Number of results per page
             
         Returns:
-            Dict with steps and pagination info
+            List[DealStepDTO]: List of steps for the deal
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
                 f"/v1/deal-steps",
                 params={
-                    "dealId": deal_id,
+                    "deal-id": deal_id,
                     "page": page,
                     "per-page": per_page
                 },
@@ -95,7 +95,7 @@ class DealStepsSyncModule(GenericSyncModule):
                 timeout=120,
             )
             raise_for_status_improved(response)
-            return response.json()
+            return [DealStepDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401
     def get_latest_by_deal_id(self, deal_id: str):
@@ -136,7 +136,7 @@ class DealStepsSyncModule(GenericSyncModule):
             per_page: Number of results per page
             
         Returns:
-            Dict with steps and pagination info
+            List[DealStepDTO]: List of steps matching the key
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
@@ -149,7 +149,7 @@ class DealStepsSyncModule(GenericSyncModule):
                 timeout=120,
             )
             raise_for_status_improved(response)
-            return response.json()
+            return [DealStepDTO.parse_obj(data) for data in response.json()]
 
 
 # Module for deal steps - asynchronous
@@ -173,13 +173,13 @@ class DealStepsAsyncModule(GenericAsyncModule):
             per_page: Number of results per page
             
         Returns:
-            Dict with steps and pagination info
+            List[DealStepDTO]: List of steps for the deal
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
                 f"/v1/deal-steps",
                 params={
-                    "dealId": deal_id,
+                    "deal-id": deal_id,
                     "page": page,
                     "per-page": per_page
                 },
@@ -187,7 +187,7 @@ class DealStepsAsyncModule(GenericAsyncModule):
                 timeout=120,
             )
             await raise_for_status_improved(response)
-            return response.json()
+            return [DealStepDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401_async
     async def get_latest_by_deal_id(self, deal_id: str):
@@ -228,7 +228,7 @@ class DealStepsAsyncModule(GenericAsyncModule):
             per_page: Number of results per page
             
         Returns:
-            Dict with steps and pagination info
+            List[DealStepDTO]: List of steps matching the key
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
@@ -241,4 +241,4 @@ class DealStepsAsyncModule(GenericAsyncModule):
                 timeout=120,
             )
             await raise_for_status_improved(response)
-            return response.json()
+            return [DealStepDTO.parse_obj(data) for data in response.json()]
