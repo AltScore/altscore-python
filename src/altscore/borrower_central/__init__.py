@@ -40,7 +40,10 @@ from altscore.borrower_central.model.conversational_messages import MessageAsync
 from altscore.borrower_central.model.custom_reports import CustomReportsSyncModule, CustomReportsAsyncModule
 from altscore.borrower_central.model.report_templates import ReportTemplateSyncModule, \
     ReportTemplateSyncModule
-
+from altscore.borrower_central.model.deals import DealsAsyncModule, DealsSyncModule
+from altscore.borrower_central.model.deal_fields import DealFieldsAsyncModule, DealFieldsSyncModule
+from altscore.borrower_central.model.deal_steps import DealStepsAsyncModule, DealStepsSyncModule
+from altscore.borrower_central.model.deal_contacts import DealContactsAsyncModule, DealContactsSyncModule
 
 class BorrowerCentralAsync:
     def __init__(self, altscore_client):
@@ -84,6 +87,10 @@ class BorrowerCentralAsync:
         self.conversational_messages = MessageAsyncModule(altscore_client)
         self.custom_reports = CustomReportsSyncModule(altscore_client)
         self.report_templates = ReportTemplateSyncModule(altscore_client)
+        self.deals = DealsAsyncModule(altscore_client)
+        self.deal_fields = DealFieldsAsyncModule(altscore_client)
+        self.deal_steps = DealStepsAsyncModule(altscore_client)
+        self.deal_contacts = DealContactsAsyncModule(altscore_client)
 
 
 class BorrowerCentralSync:
@@ -128,3 +135,7 @@ class BorrowerCentralSync:
         self.conversational_messages = MessageSyncModule(altscore_client)
         self.custom_reports = CustomReportsSyncModule(altscore_client)
         self.report_templates = ReportTemplateSyncModule(altscore_client)
+        self.deals = DealsSyncModule(altscore_client)
+        self.deal_fields = DealFieldsSyncModule(altscore_client)
+        self.deal_steps = DealStepsSyncModule(altscore_client)
+        self.deal_contacts = DealContactsSyncModule(altscore_client)
