@@ -17,7 +17,6 @@ class ReportRequestDTO(BaseModel):
     status: str = Field(alias="status")
     error_message: Optional[str] = Field(alias="errorMessage", default=None)
     file_url: Optional[str] = Field(alias="fileUrl", default=None)
-    requested_by: str = Field(alias="requestedBy")
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt", default=None)
 
