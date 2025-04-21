@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
-
+import datetime as dt
 
 class HistoricValue(BaseModel):
     reference_id: str = Field(alias="referenceId")  # this is the id an identifier for the source of the value
@@ -43,11 +43,18 @@ class CreateBorrowerFieldDTO(BaseModel):
     value: Any = Field(alias="value")
     data_type: Optional[str] = Field(alias="dataType", default=None)
     tags: List[str] = Field(alias="tags", default=[])
+    updated_at: Optional[dt.datetime] = Field(alias="updatedAt", default=None)
 
     class Config:
         populate_by_name = True
         allow_population_by_field_name = True
         allow_population_by_alias = True
+
+    def dict(self, *args, **kwargs):
+        base_dict = super().dict(*args, **kwargs)
+        date_key = 'updatedAt' if kwargs.get("by_alias") else 'updated_at'
+        base_dict[date_key] = self.updated_at.isoformat() if self.updated_at else None
+        return base_dict
 
 
 class UpdateBorrowerFieldDTO(BaseModel):
@@ -57,11 +64,18 @@ class UpdateBorrowerFieldDTO(BaseModel):
     value: Optional[str] = Field(alias="value")
     data_type: Optional[str] = Field(alias="dataType", default=None)
     tags: List[str] = Field(alias="tags", default=[])
+    updated_at: Optional[dt.datetime] = Field(alias="updatedAt", default=None)
 
     class Config:
         populate_by_name = True
         allow_population_by_field_name = True
         allow_population_by_alias = True
+
+    def dict(self, *args, **kwargs):
+        base_dict = super().dict(*args, **kwargs)
+        date_key = 'updatedAt' if kwargs.get("by_alias") else 'updated_at'
+        base_dict[date_key] = self.updated_at.isoformat() if self.updated_at else None
+        return base_dict
 
 
 class BorrowerFieldSync(GenericSyncResource):
