@@ -44,7 +44,7 @@ class CreateDealFieldRequest(BaseModel):
     deal_id: str = Field(alias="dealId")
     key: str = Field(alias="key")
     value: Any = Field(alias="value")
-    data_type: Literal["string", "number", "date", "boolean"] = Field(alias="dataType")
+    data_type: Literal["string", "number", "date", "boolean", "money"] = Field(alias="dataType")
     reference_id: str = Field(alias="referenceId")  # Source of the value
     tags: List[str] = Field(alias="tags", default=[])
 
