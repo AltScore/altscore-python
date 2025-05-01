@@ -17,12 +17,16 @@ class Reservation(BaseModel):
         allow_population_by_field_name = True
         populate_by_alias = True
 
+class Percentages(BaseModel):
+    available: float
+    consumed: float
 
 class CreditLine(BaseModel):
     assigned: Money
     available: Money
     consumed: Money
     reservations: Optional[List[Reservation]] = Field(alias="reservations", default=None)
+    percentages: Optional[Percentages] = Field(alias="percentages", default=None)
 
     class Config:
         populate_by_name = True
@@ -33,7 +37,7 @@ class CreditLine(BaseModel):
 class HistoryItem(BaseModel):
     createdAt: str
     amount: Money
-    reason: str
+    reason: Optional[str] = Field(alias="reason", default=None)
     userId: str
 
     class Config:
