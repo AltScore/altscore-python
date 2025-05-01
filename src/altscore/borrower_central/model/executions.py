@@ -7,6 +7,7 @@ from altscore.borrower_central.model.workflows import WorkflowExecutionResponseA
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 import httpx
 import datetime as dt
+from altscore.borrower_central.model.decisions import CurrentDecisionInExecution, PostDecisionToExecution
 from dateutil.parser import parse
 
 EXECUTION_NOTICE_SEVERITY_INFO = "info"
@@ -69,6 +70,7 @@ class ExecutionAPIDTO(BaseModel):
     billable_id: Optional[str] = Field(alias="billableId")
     borrower_id: Optional[str] = Field(alias="borrowerId")
     deal_id: Optional[str] = Field(alias="dealId", default=None)
+    current_decision: Optional[CurrentDecisionInExecution] = Field(alias="currentDecision", default=None)
     status: Optional[str] = Field(alias="status", default=None)
     tags: Optional[List[str]] = Field(alias="tags", default=[])
     unsuccessful_sources: Optional[bool] = Field(alias="unsuccessfulSources", default=None)
@@ -304,6 +306,28 @@ class ExecutionSync(GenericSyncResource):
             self.get_output()
 
     @retry_on_401
+    def post_decision(self, decision_data: PostDecisionToExecution):
+        with httpx.Client() as client:
+            response = client.post(
+                f"{self.base_url}/v1/{self.resource}/{self.data.id}/decisions",
+                headers=self._header_builder(),
+                json=PostDecisionToExecution.parse_obj(decision_data).dict(by_alias=True, exclude_none=True),
+                timeout=300
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401
+    def delete_decision(self):
+        with httpx.Client() as client:
+            response = client.delete(
+                f"{self.base_url}/v1/{self.resource}/{self.data.id}/decisions",
+                headers=self._header_builder(),
+                timeout=300
+            )
+            raise_for_status_improved(response)
+
+
+    @retry_on_401
     def retry(self, execution_mode: Optional[str] = None):
         headers = self._header_builder()
         if execution_mode is not None:
@@ -412,6 +436,27 @@ class ExecutionAsync(GenericAsyncResource):
             )
             raise_for_status_improved(response)
             await self.get_output()
+
+    @retry_on_401_async
+    async def post_decision(self, decision_data: Dict):
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{self.base_url}/v1/{self.resource}/{self.data.id}/decisions",
+                headers=self._header_builder(),
+                json=PostDecisionToExecution.parse_obj(decision_data).dict(by_alias=True, exclude_none=True),
+                timeout=300
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401_async
+    async def delete_decision(self):
+        async with httpx.AsyncClient() as client:
+            response = await client.delete(
+                f"{self.base_url}/v1/{self.resource}/{self.data.id}/decisions",
+                headers=self._header_builder(),
+                timeout=300
+            )
+            raise_for_status_improved(response)
 
     @retry_on_401_async
     async def retry(self, execution_mode: Optional[str] = None):
