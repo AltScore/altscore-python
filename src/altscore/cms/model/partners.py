@@ -12,6 +12,7 @@ from altscore.cms.helpers import build_headers
 from altscore.cms.model.dpa_products import DPAProductAPIDTO, CreateDPAProductAPIDTO, UpdateDPAProductAPIDTO
 from altscore.borrower_central.utils import clean_dict, convert_to_dash_case
 from altscore.cms.model.disbursement_accounts import  BankAccount, DisbursementAccountBaseModel, CreateDisbursementPartnerAccountDTO
+from altscore.cms.model.credit_accounts import CreditAccountSync, CreditAccountAPIDTO
 
 
 class PartnerAPIDTO(BaseModel):
@@ -624,6 +625,23 @@ class PartnersAsyncModule(GenericAsyncModule):
             )
             raise_for_status_improved(response)
             return DPASettingsAPIDTO.parse_obj(response.json())
+    
+    @retry_on_401
+    async def get_credit_accounts(self, product_family: str, **kwargs) -> CreditAccountSync:
+        query_params = {}
+        for k, v in kwargs.items():
+            if v is not None:
+                query_params[convert_to_dash_case(k)] = v
+
+        async with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
+            response = await client.get(
+                f"/v2/clients/credit-accounts/{product_family}",
+                params=query_params,
+                headers=build_headers(self),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [CreditAccountAPIDTO.parse_obj(item) for item in response.json()]
 
 
 
@@ -681,4 +699,19 @@ class PartnersSyncModule(GenericSyncModule):
             raise_for_status_improved(response)
             return DPASettingsAPIDTO.parse_obj(response.json())
 
+    @retry_on_401
+    def get_credit_accounts(self, product_family: str, **kwargs) -> CreditAccountSync:
+        query_params = {}
+        for k, v in kwargs.items():
+            if v is not None:
+                query_params[convert_to_dash_case(k)] = v
 
+        with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
+            response = client.get(
+                f"/v2/clients/credit-accounts/{product_family}",
+                params=query_params,
+                headers=build_headers(self),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return [CreditAccountAPIDTO.parse_obj(item) for item in response.json()]

@@ -14,6 +14,7 @@ class DisbursementSettings(BaseModel):
 class Money(BaseModel):
     amount: str
     currency: str
+    display: str
 
 
 class ScheduleOriginalAmounts(BaseModel):
