@@ -31,6 +31,7 @@ class ReportConfig(BaseModel):
     include_debts: bool = Field(alias="includeDebts", default=False)
     include_debt_schedules: bool = Field(alias="includeDebtSchedules", default=False)
     include_debt_transactions: bool = Field(alias="includeDebtTransactions", default=False)
+    include_partner_clients: bool = Field(alias="includePartnerClients", default=False)
     filters: Optional[ReportFilter] = Field(alias="filters", default=None)
 
     class Config:
