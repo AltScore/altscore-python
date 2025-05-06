@@ -8,7 +8,7 @@ from altscore.cms.model.generics import GenericAsyncModule, GenericSyncModule
 class AmountInfo(BaseModel):
     amount: str = Field(alias="amount")
     currency: str = Field(alias="currency")
-    display: str = Field(alias="display")
+    display: Optional[str] = Field(None, alias="display")
 
     class Config:
         populate_by_name = True
