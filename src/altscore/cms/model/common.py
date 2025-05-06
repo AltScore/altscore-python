@@ -14,7 +14,12 @@ class DisbursementSettings(BaseModel):
 class Money(BaseModel):
     amount: str
     currency: str
-    display: str
+    display: Optional[str] = Field(None, alias="display")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        populate_by_alias = True
 
 
 class ScheduleOriginalAmounts(BaseModel):
