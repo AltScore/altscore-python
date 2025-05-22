@@ -23,6 +23,7 @@ class MailBody(BaseModel):
     subject: str
     content: str
     attachments: List[Attachment] = []
+    from_name: Optional[str]
 
     def add_attachment(self, filename: str, content: str, file_type = None):
         attachment_type = file_type if file_type is not None else guess_type(filename)[0]
@@ -40,5 +41,6 @@ class MailBody(BaseModel):
             'bcc': [m.dict() for m in self.bcc],
             'subject': self.subject,
             'content': self.content,
-            'attachments': [a.dict(by_alias=True) for a in self.attachments]
+            'attachments': [a.dict(by_alias=True) for a in self.attachments],
+            'from_name': self.from_name,
         }
