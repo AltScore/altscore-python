@@ -49,6 +49,7 @@ class HistoryItem(BaseModel):
 class CreditAccountAPIDTO(BaseModel):
     client_id: str = Field(alias="clientId")
     partner_id: str = Field(alias="partnerId")
+    borrower_id: str = Field(alias="borrowerId", default=None)
     product_family: str = Field(alias="productFamily")
     status: str = Field(alias="status")
     credit_line: CreditLine = Field(alias="creditLine")

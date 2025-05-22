@@ -15,6 +15,7 @@ import datetime as dt
 class ClientAPIDTO(BaseModel):
     id: str = Field(alias="clientId")
     partner_id: str = Field(alias="partnerId")
+    borrower_id: str = Field(alias="borrowerId", default=None)
     status: str = Field(alias="status")
     external_id: str = Field(alias="externalId")
     tax_id: str = Field(alias="taxId")
@@ -34,6 +35,7 @@ class ClientAPIDTO(BaseModel):
 
 class CreateClientDTO(BaseModel):
     partner_id: str = Field(alias="partnerId")
+    borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
     external_id: str = Field(alias="externalId")
     legal_name: str = Field(alias="legalName")
     tax_id: str = Field(alias="taxId")
@@ -54,6 +56,7 @@ class UpdateClientDTO(BaseModel):
     legal_name: Optional[str] = Field(alias="legalName", default=None)
     email_address: Optional[str] = Field(alias="emailAddress", default=None)
     phone_number: Optional[str] = Field(alias="phoneNumber", default=None)
+    borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
 
 
 class ClientBase:
@@ -518,7 +521,7 @@ class ClientsAsyncModule(GenericAsyncModule):
             response = await client.post(
                 "/v2/clients",
                 headers=headers,
-                json=CreateClientDTO.parse_obj(new_entity_data).dict(by_alias=True),
+                json=CreateClientDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -577,7 +580,7 @@ class ClientsSyncModule(GenericSyncModule):
             response = client.post(
                 "/v2/clients",
                 headers=headers,
-                json=CreateClientDTO.parse_obj(new_entity_data).dict(by_alias=True),
+                json=CreateClientDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
