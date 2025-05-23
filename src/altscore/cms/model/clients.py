@@ -66,6 +66,13 @@ class ClientBase:
             client_id: str, product_family: str
     ) -> (str, Optional[dict]):
         return f"/v2/clients/{client_id}/credit-accounts/{product_family}"
+    
+
+    @staticmethod
+    def _reservations(
+            client_id: str, product_family: str
+    ) -> (str, Optional[dict]):
+        return f"/v2/clients/{client_id}/credit-accounts/{product_family}/reservations"
 
     @staticmethod
     def _status(client_id: str):
@@ -133,6 +140,17 @@ class ClientAsync(ClientBase):
                 renew_token=self.renew_token,
                 data=CreditAccountAPIDTO.parse_obj(response.json())
             )
+        
+    @retry_on_401_async
+    async def update_reservations(self, product_family: str, input: dict) -> None:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.post(
+                self._reservations(self.data.id, product_family),
+                json=input,
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                timeout=30
+            )
+            raise_for_status_improved(response)
 
     @retry_on_401_async
     async def enable(self):
@@ -312,6 +330,17 @@ class ClientSync(ClientBase):
                 renew_token=self.renew_token,
                 data=CreditAccountAPIDTO.parse_obj(response.json())
             )
+    
+    @retry_on_401
+    def update_reservations(self, product_family: str, input: dict) -> None:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.post(
+                self._reservations(self.data.id, product_family),
+                json=input,
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                timeout=30
+            )
+            raise_for_status_improved(response)
 
     @retry_on_401
     def enable(self):
