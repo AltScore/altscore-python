@@ -142,7 +142,7 @@ class ClientAsync(ClientBase):
             )
         
     @retry_on_401_async
-    async def update_reservations(self, product_family: str, input: dict) -> None:
+    async def create_reservation(self, product_family: str, input: dict) -> None:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 self._reservations(self.data.id, product_family),
@@ -332,7 +332,7 @@ class ClientSync(ClientBase):
             )
     
     @retry_on_401
-    def update_reservations(self, product_family: str, input: dict) -> None:
+    def create_reservation(self, product_family: str, input: dict) -> None:
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 self._reservations(self.data.id, product_family),
