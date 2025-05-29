@@ -92,7 +92,7 @@ class OperationDTO(BaseModel):
         allow_population_by_alias = True
 
 class RunOperationRequest(BaseModel):
-    context_selector: Dict[str, Any] = Field(alias="contextSelector")
+    context: Dict[str, Any] = Field(alias="context")
     operation: OperationDTO = Field(alias="operation")
     
     class Config:
@@ -153,7 +153,7 @@ class ChangeSetSyncModule(GenericSyncModule):
                         sort_direction: Optional[str] = "desc", page: Optional[int] = 1, 
                         per_page: Optional[int] = 10) -> Dict:
         """Get change items for a specific change set"""
-        with httpx.Client(base_url=self.base_url) as client:
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             params = {
                 "sort-by": sort_by,
                 "sort-direction": sort_direction,
@@ -163,8 +163,8 @@ class ChangeSetSyncModule(GenericSyncModule):
             params = {k: v for k, v in params.items() if v is not None}
             
             response = client.get(
-                f"/{self.resource}/{change_set_id}/change-items",
-                headers=self.header_builder(),
+                f"/v1/{self.resource}/{change_set_id}/change-items",
+                headers=self.build_headers(),
                 params=params,
                 timeout=30
             )
@@ -174,10 +174,10 @@ class ChangeSetSyncModule(GenericSyncModule):
     @retry_on_401
     def create_change_item(self, change_set_id: str, dto: CreateChangeItemDTO) -> Dict:
         """Create a new change item for a specific change set"""
-        with httpx.Client(base_url=self.base_url) as client:
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
-                f"/{self.resource}/{change_set_id}/change-items",
-                headers=self.header_builder(),
+                f"/v1/{self.resource}/{change_set_id}/change-items",
+                headers=self.build_headers(),
                 json=dto.dict(by_alias=True),
                 timeout=30
             )
@@ -187,10 +187,10 @@ class ChangeSetSyncModule(GenericSyncModule):
     @retry_on_401
     def run_operation(self, change_set_id: str, dto: RunOperationRequest) -> RunOperationResponse:
         """Run an operation (set or scale) on change items matching context filters"""
-        with httpx.Client(base_url=self.base_url) as client:
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
-                f"/{self.resource}/{change_set_id}/commands/run-operation",
-                headers=self.header_builder(),
+                f"/v1/{self.resource}/{change_set_id}/commands/run-operation",
+                headers=self.build_headers(),
                 json=dto.dict(by_alias=True),
                 timeout=120
             )
@@ -200,10 +200,10 @@ class ChangeSetSyncModule(GenericSyncModule):
     @retry_on_401
     def get_summary_by_risk_rating(self, change_set_id: str) -> List[ChangeSetSummaryByRiskRatingDTO]:
         """Get summary of preapproval change items grouped by risk rating"""
-        with httpx.Client(base_url=self.base_url) as client:
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
-                f"/{self.resource}/{change_set_id}/summary-by-risk-rating",
-                headers=self.header_builder(),
+                f"/v1/{self.resource}/{change_set_id}/summary-by-risk-rating",
+                headers=self.build_headers(),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -224,7 +224,7 @@ class ChangeSetAsyncModule(GenericAsyncModule):
                               sort_direction: Optional[str] = "desc", page: Optional[int] = 1, 
                               per_page: Optional[int] = 10) -> Dict:
         """Get change items for a specific change set"""
-        async with httpx.AsyncClient(base_url=self.base_url) as client:
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             params = {
                 "sort-by": sort_by,
                 "sort-direction": sort_direction,
@@ -234,8 +234,8 @@ class ChangeSetAsyncModule(GenericAsyncModule):
             params = {k: v for k, v in params.items() if v is not None}
             
             response = await client.get(
-                f"/{self.resource}/{change_set_id}/change-items",
-                headers=self.header_builder(),
+                f"/v1/{self.resource}/{change_set_id}/change-items",
+                headers=self.build_headers(),
                 params=params,
                 timeout=30
             )
@@ -245,10 +245,10 @@ class ChangeSetAsyncModule(GenericAsyncModule):
     @retry_on_401_async
     async def create_change_item(self, change_set_id: str, dto: CreateChangeItemDTO) -> Dict:
         """Create a new change item for a specific change set"""
-        async with httpx.AsyncClient(base_url=self.base_url) as client:
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
-                f"/{self.resource}/{change_set_id}/change-items",
-                headers=self.header_builder(),
+                f"/v1/{self.resource}/{change_set_id}/change-items",
+                headers=self.build_headers(),
                 json=dto.dict(by_alias=True),
                 timeout=30
             )
@@ -258,11 +258,11 @@ class ChangeSetAsyncModule(GenericAsyncModule):
     @retry_on_401_async
     async def run_operation(self, change_set_id: str, dto: RunOperationRequest) -> RunOperationResponse:
         """Run an operation (set or scale) on change items matching context filters"""
-        async with httpx.AsyncClient(base_url=self.base_url) as client:
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
-                f"/{self.resource}/{change_set_id}/commands/run-operation",
-                headers=self.header_builder(),
-                json=dto.dict(by_alias=True),
+                f"/v1/{self.resource}/{change_set_id}/commands/run-operation",
+                headers=self.build_headers(),
+                json=dto.dict(),
                 timeout=120
             )
             raise_for_status_improved(response)
@@ -271,10 +271,10 @@ class ChangeSetAsyncModule(GenericAsyncModule):
     @retry_on_401_async
     async def get_summary_by_risk_rating(self, change_set_id: str) -> List[ChangeSetSummaryByRiskRatingDTO]:
         """Get summary of preapproval change items grouped by risk rating"""
-        async with httpx.AsyncClient(base_url=self.base_url) as client:
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
-                f"/{self.resource}/{change_set_id}/summary-by-risk-rating",
-                headers=self.header_builder(),
+                f"/v1/{self.resource}/{change_set_id}/summary-by-risk-rating",
+                headers=self.build_headers(),
                 timeout=30
             )
             raise_for_status_improved(response)

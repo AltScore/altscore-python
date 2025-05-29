@@ -44,6 +44,7 @@ from altscore.borrower_central.model.deals import DealsAsyncModule, DealsSyncMod
 from altscore.borrower_central.model.deal_fields import DealFieldsAsyncModule, DealFieldsSyncModule
 from altscore.borrower_central.model.deal_steps import DealStepsAsyncModule, DealStepsSyncModule
 from altscore.borrower_central.model.deal_contacts import DealContactsAsyncModule, DealContactsSyncModule
+from altscore.borrower_central.model.change_sets import ChangeSetAsyncModule, ChangeSetSyncModule
 
 class BorrowerCentralAsync:
     def __init__(self, altscore_client):
@@ -91,6 +92,7 @@ class BorrowerCentralAsync:
         self.deal_fields = DealFieldsAsyncModule(altscore_client)
         self.deal_steps = DealStepsAsyncModule(altscore_client)
         self.deal_contacts = DealContactsAsyncModule(altscore_client)
+        self.change_sets = ChangeSetAsyncModule(altscore_client)
 
 
 class BorrowerCentralSync:
@@ -139,3 +141,4 @@ class BorrowerCentralSync:
         self.deal_fields = DealFieldsSyncModule(altscore_client)
         self.deal_steps = DealStepsSyncModule(altscore_client)
         self.deal_contacts = DealContactsSyncModule(altscore_client)
+        self.change_sets = ChangeSetSyncModule(altscore_client)
