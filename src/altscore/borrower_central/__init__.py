@@ -40,7 +40,7 @@ from altscore.borrower_central.model.conversational_conversations import Convers
 from altscore.borrower_central.model.conversational_messages import MessageAsyncModule, MessageSyncModule
 from altscore.borrower_central.model.custom_reports import CustomReportsSyncModule, CustomReportsAsyncModule
 from altscore.borrower_central.model.report_templates import ReportTemplateSyncModule, \
-    ReportTemplateSyncModule
+    ReportTemplateAsyncModule
 from altscore.borrower_central.model.deals import DealsAsyncModule, DealsSyncModule
 from altscore.borrower_central.model.deal_fields import DealFieldsAsyncModule, DealFieldsSyncModule
 from altscore.borrower_central.model.deal_steps import DealStepsAsyncModule, DealStepsSyncModule
@@ -54,7 +54,7 @@ from altscore.borrower_central.model.bank_account_balances import BankAccountBal
     BankAccountBalancesAsyncModule
 from altscore.borrower_central.model.bank_transactions import BankTransactionsSyncModule, \
     BankTransactionsAsyncModule
-
+from altscore.borrower_central.model.change_sets import ChangeSetAsyncModule, ChangeSetSyncModule
 
 class BorrowerCentralAsync:
     def __init__(self, altscore_client):
@@ -108,6 +108,7 @@ class BorrowerCentralAsync:
         self.bank_accounts = BankAccountsAsyncModule(altscore_client)
         self.bank_account_balances = BankAccountBalancesAsyncModule(altscore_client)
         self.bank_transactions = BankTransactionsAsyncModule(altscore_client)
+        self.change_sets = ChangeSetAsyncModule(altscore_client)
 
 
 class BorrowerCentralSync:
@@ -162,3 +163,4 @@ class BorrowerCentralSync:
         self.bank_accounts = BankAccountsSyncModule(altscore_client)
         self.bank_account_balances = BankAccountBalancesSyncModule(altscore_client)
         self.bank_transactions = BankTransactionsSyncModule(altscore_client)
+        self.change_sets = ChangeSetSyncModule(altscore_client)
