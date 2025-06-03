@@ -59,6 +59,7 @@ class InputKeys(BaseModel):
     date_to_analyze: Optional[str] = Field(alias="dateToAnalyze", default=None)
     authorization_reference: Optional[str] = Field(alias="authorizationReference", default=None)
     passport_number: Optional[str] = Field(alias="passportNumber", default=None)
+    items: Optional[List[Dict[str, Optional[str]]]] = Field(alias="items", default=None)
 
     class Config:
         populate_by_name = True
