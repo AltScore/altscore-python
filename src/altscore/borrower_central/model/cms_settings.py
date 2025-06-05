@@ -74,7 +74,7 @@ class CMSSettingsSyncModule(GenericSyncModule):
     @retry_on_401
     def patch(self, patch_data: Dict) -> str:
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
-            response = client.patch(
+            response = client.put(
                 f"/v1/{self.resource}",
                 headers=self.build_headers(),
                 json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True),
@@ -119,7 +119,7 @@ class CMSSettingsAsyncModule(GenericAsyncModule):
     @retry_on_401_async
     async def patch(self, patch_data: Dict) -> str:
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
-            response = await client.patch(
+            response = await client.put(
                 f"/v1/{self.resource}",
                 headers=self.build_headers(),
                 json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True),
