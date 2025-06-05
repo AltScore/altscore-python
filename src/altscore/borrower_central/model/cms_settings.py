@@ -72,7 +72,7 @@ class CMSSettingsSyncModule(GenericSyncModule):
             raise_for_status_improved(response)
 
     @retry_on_401
-    def patch(self, patch_data: Dict) -> str:
+    def put(self, patch_data: Dict) -> str:
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.put(
                 f"/v1/{self.resource}",
@@ -116,8 +116,9 @@ class CMSSettingsAsyncModule(GenericAsyncModule):
 
             raise_for_status_improved(response)
 
+
     @retry_on_401_async
-    async def patch(self, patch_data: Dict) -> str:
+    async def put(self, patch_data: Dict) -> str:
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.put(
                 f"/v1/{self.resource}",
