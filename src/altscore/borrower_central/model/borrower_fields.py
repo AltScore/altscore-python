@@ -149,6 +149,26 @@ class BorrowerFieldsSyncModule(GenericSyncModule):
             raise_for_status_improved(response)
             return
 
+    @retry_on_401
+    def bulk_update_by_borrower_ids(self, borrower_ids: List[str], key: str, new_value: Any, reference_id: Optional[str] = None):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            payload = {
+                "borrowerIds": borrower_ids,
+                "key": key,
+                "newValue": new_value
+            }
+            if reference_id is not None:
+                payload["referenceId"] = reference_id
+                
+            response = client.post(
+                f"/v1/borrower-fields/commands/bulk-update-by-borrower-ids",
+                json=payload,
+                headers=self.build_headers(),
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return
+
 class BorrowerFieldsAsyncModule(GenericAsyncModule):
 
     def __init__(self, altscore_client):
@@ -204,6 +224,26 @@ class BorrowerFieldsAsyncModule(GenericAsyncModule):
                     "currentValue": current_value,
                     "targetValue": target_value
                 },
+                headers=self.build_headers(),
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return
+
+    @retry_on_401_async
+    async def bulk_update_by_borrower_ids(self, borrower_ids: List[str], key: str, new_value: Any, reference_id: Optional[str] = None):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            payload = {
+                "borrowerIds": borrower_ids,
+                "key": key,
+                "newValue": new_value
+            }
+            if reference_id is not None:
+                payload["referenceId"] = reference_id
+                
+            response = await client.post(
+                f"/v1/borrower-fields/commands/bulk-update-by-borrower-ids",
+                json=payload,
                 headers=self.build_headers(),
                 timeout=120
             )
