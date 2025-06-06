@@ -37,7 +37,7 @@ class LineItemAPIDTO(BaseModel):
         default=None, alias="referenceUnitPrice",
         description="Price from PO / contract (for PRICE variance)"
     )
-    reference_amount: Optional[Dict[str, Any]] = Field(
+    reference_amount: Optional[Amount] = Field(
         default=None, alias="referenceAmount",
         description="Reference amount from PO or internal"
     )
