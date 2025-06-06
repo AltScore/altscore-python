@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field
 #  • Snake-case attribute names for Pythonic access.
 #  • camelCase JSON aliases so front-end / API payloads remain idiomatic.
 #  • Every numeric value is a STRING to keep original precision and formatting.
-#    Convert to Decimal when you need to do maths.
 # ---------------------------------------------------------------------------
 
 

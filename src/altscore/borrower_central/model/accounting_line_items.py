@@ -1,6 +1,5 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
-from decimal import Decimal
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 from altscore.borrower_central.model.accounting_amount import Amount
@@ -16,7 +15,7 @@ class LineItemAPIDTO(BaseModel):
     sku: Optional[str] = Field(default=None, alias="sku", description="Product / material code")
     description: Optional[str] = Field(default=None, alias="description")
     qty_raw: Optional[str] = Field(default=None, alias="qtyRaw", description="Quantity involved")
-    qty_normalized: Optional[Decimal] = Field(default=None, alias="qtyNormalized", description="Quantity involved")
+    qty_normalized: Optional[float] = Field(default=None, alias="qtyNormalized", description="Quantity involved")
     qty_unit: Optional[str] = Field(default=None, alias="qtyUnit", description="Unit of measure for quantity")
     unit_price: Optional[str] = Field(default=None, alias="unitPrice")
     unit_price_currency: Optional[str] = Field(default=None, alias="unitPriceCurrency")
@@ -46,7 +45,7 @@ class LineItemAPIDTO(BaseModel):
         default=None, alias="referenceQtyRaw",
         description="Expected quantity (for QUANTITY variance)"
     )
-    reference_qty_normalized: Optional[Decimal] = Field(
+    reference_qty_normalized: Optional[float] = Field(
         default=None, alias="referenceQtyNormalized",
         description="Expected quantity (for QUANTITY variance)"
     )
@@ -90,7 +89,7 @@ class CreateLineItemDTO(BaseModel):
     line_number_in_source: Optional[int] = Field(default=None, alias="lineNumberInSource")
     description: Optional[str] = Field(default=None, alias="description")
     qty_raw: Optional[str] = Field(default=None, alias="qtyRaw")
-    qty_normalized: Optional[Decimal] = Field(default=None, alias="qtyNormalized")
+    qty_normalized: Optional[float] = Field(default=None, alias="qtyNormalized")
     qty_unit: Optional[str] = Field(default=None, alias="qtyUnit")
     unit_price: Optional[str] = Field(default=None, alias="unitPrice")
     unit_price_currency: Optional[str] = Field(default=None, alias="unitPriceCurrency")
@@ -106,7 +105,7 @@ class CreateLineItemDTO(BaseModel):
     reference_unit_price: Optional[str] = Field(default=None, alias="referenceUnitPrice")
     reference_amount: Optional[Amount] = Field(default=None, alias="referenceAmount")
     reference_qty_raw: Optional[str] = Field(default=None, alias="referenceQtyRaw")
-    reference_qty_normalized: Optional[Decimal] = Field(default=None, alias="referenceQtyNormalized")
+    reference_qty_normalized: Optional[float] = Field(default=None, alias="referenceQtyNormalized")
     # Return fields
     is_return: Optional[bool] = Field(default=None, alias="isReturn")
     reason_code: Optional[str] = Field(default=None, alias="reasonCode")
@@ -127,7 +126,7 @@ class UpdateLineItemDTO(BaseModel):
     line_number_in_source: Optional[int] = Field(default=None, alias="lineNumberInSource")
     description: Optional[str] = Field(default=None, alias="description")
     qty_raw: Optional[str] = Field(default=None, alias="qtyRaw")
-    qty_normalized: Optional[Decimal] = Field(default=None, alias="qtyNormalized")
+    qty_normalized: Optional[float] = Field(default=None, alias="qtyNormalized")
     qty_unit: Optional[str] = Field(default=None, alias="qtyUnit")
     unit_price: Optional[str] = Field(default=None, alias="unitPrice")
     unit_price_currency: Optional[str] = Field(default=None, alias="unitPriceCurrency")
@@ -143,7 +142,7 @@ class UpdateLineItemDTO(BaseModel):
     reference_unit_price: Optional[str] = Field(default=None, alias="referenceUnitPrice")
     reference_amount: Optional[Amount] = Field(default=None, alias="referenceAmount")
     reference_qty_raw: Optional[str] = Field(default=None, alias="referenceQtyRaw")
-    reference_qty_normalized: Optional[Decimal] = Field(default=None, alias="referenceQtyNormalized")
+    reference_qty_normalized: Optional[float] = Field(default=None, alias="referenceQtyNormalized")
     # Return fields
     is_return: Optional[bool] = Field(default=None, alias="isReturn")
     reason_code: Optional[str] = Field(default=None, alias="reasonCode")
