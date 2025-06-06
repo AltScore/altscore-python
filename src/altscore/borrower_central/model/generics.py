@@ -165,7 +165,7 @@ class GenericAsyncResource(GenericBase):
             )
             raise_for_status_improved(response)
 
-    @retry_on_401
+    @retry_on_401_async
     async def upload_attachment(self, file_path: str, label: str = None, metadata: Dict = None):
         file_name = os.path.basename(file_path)
         content_type = mimetypes.guess_type(file_path)[0] or 'application/octet-stream'
