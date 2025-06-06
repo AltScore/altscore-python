@@ -19,7 +19,7 @@ class LineItemAPIDTO(BaseModel):
     qty_unit: Optional[str] = Field(default=None, alias="qtyUnit", description="Unit of measure for quantity")
     unit_price: Optional[str] = Field(default=None, alias="unitPrice")
     unit_price_currency: Optional[str] = Field(default=None, alias="unitPriceCurrency")
-    amount: Optional[Dict[str, Any]] = Field(default=None, alias="amount", description="amount")
+    amount: Optional[Amount] = Field(default=None, alias="amount", description="amount")
     parsed_raw: Optional[Dict[str, Any]] = Field(default=None, alias="parsedRaw")
     metadata: Optional[Dict[str, Any]] = Field(default=None, alias="metadata")
     # Variance
