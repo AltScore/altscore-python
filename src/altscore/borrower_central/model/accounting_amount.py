@@ -1,6 +1,7 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
+
 # ---------------------------------------------------------------------------
 #  Detailed split-bucket money model
 #  • Snake-case attribute names for Pythonic access.

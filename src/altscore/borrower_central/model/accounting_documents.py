@@ -88,20 +88,23 @@ class DocumentDates(BaseModel):
 
 class AccountingDocumentAPIDTO(BaseModel):
     id: str = Field(alias="id")
-    label: str = Field(alias="label")
+    parent_document_id: Optional[str] = Field(alias="parentAccountingDocumentId", default=None)
+    label: Optional[str] = Field(alias="label")
     key: str = Field(alias="key")
     borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
     deal_id: Optional[str] = Field(alias="dealId", default=None)
     voucher: Optional[str] = Field(alias="voucher", default=None)
     reference_voucher: Optional[str] = Field(alias="referenceVoucher", default=None)
-    parent_voucher: Optional[str] = Field(alias="parentVoucher", default=None)
-    document_number: Optional[str] = Field(alias="documentNumber", default=None)
+    producer_document_reference: Optional[str] = Field(alias="producerDocumentReference", default=None)
+    receiver_document_reference: Optional[str] = Field(alias="receiverDocumentReference", default=None)
+    is_outbound: bool = Field(alias="isOutbound")
     document_dates: Optional[DocumentDates] = Field(alias="documentDates", default=None)
     tags: List[str] = Field(alias="tags", default=[])
     raw_content: Optional[str] = Field(alias="rawContent", default=None)
     content: Optional[Dict[str, Any]] = Field(alias="content", default=None)
     metadata: Optional[Dict[str, Any]] = Field(alias="metadata", default=None)
     amount: Optional[Amount] = Field(alias="amount", default=None)
+    confidence_score: Optional[float] = Field(alias="confidenceScore", default=None)
     has_attachments: bool = Field(alias="hasAttachments")
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
@@ -114,21 +117,22 @@ class AccountingDocumentAPIDTO(BaseModel):
 
 class CreateAccountingDocumentDTO(BaseModel):
     key: str = Field(alias="key")
+    is_outbound: bool = Field(alias="isOutbound")
+    parent_document_id: Optional[str] = Field(alias="parentAccountingDocumentId", default=None)
     borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
     deal_id: Optional[str] = Field(alias="dealId", default=None)
-    parent_accounting_document_id: Optional[str] = Field(alias="parentAccountingDocumentId", default=None)
-    voucher: Optional[str] = Field(alias="voucher", default=None) # comprobante
+    label: Optional[str] = Field(alias="label", default=None)
+    voucher: Optional[str] = Field(alias="voucher", default=None)
     reference_voucher: Optional[str] = Field(alias="referenceVoucher", default=None)
     producer_document_reference: Optional[str] = Field(alias="producerDocumentReference", default=None)
     receiver_document_reference: Optional[str] = Field(alias="receiverDocumentReference", default=None)
-    is_outbound: bool = Field(alias="isOutbound")
-    document_number: Optional[str] = Field(alias="documentNumber", default=None)
     document_dates: Union[Dict, DocumentDates, None] = Field(alias="documentDates", default=None)
-    tags: List[str] = Field(alias="tags", default=[])
+    tags: Optional[List[str]] = Field(alias="tags", default=None)
     raw_content: Optional[str] = Field(alias="rawContent", default=None)
     content: Optional[Dict[str, Any]] = Field(alias="content", default=None)
     metadata: Optional[Dict[str, Any]] = Field(alias="metadata", default=None)
     amount: Optional[Amount] = Field(alias="amount", default=None)
+    confidence_score: Optional[float] = Field(alias="confidenceScore", default=None)
 
     class Config:
         populate_by_name = True
@@ -137,21 +141,22 @@ class CreateAccountingDocumentDTO(BaseModel):
 
 
 class UpdateAccountingDocumentDTO(BaseModel):
+    is_outbound: Optional[bool] = Field(alias="isOutbound", default=None)
+    parent_document_id: Optional[str] = Field(alias="parentAccountingDocumentId", default=None)
     borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
     deal_id: Optional[str] = Field(alias="dealId", default=None)
-    parent_accounting_document_id: Optional[str] = Field(alias="parentAccountingDocumentId", default=None)
-    voucher: Optional[str] = Field(alias="voucher", default=None) # comprobante
+    label: Optional[str] = Field(alias="label", default=None)
+    voucher: Optional[str] = Field(alias="voucher", default=None)
     reference_voucher: Optional[str] = Field(alias="referenceVoucher", default=None)
     producer_document_reference: Optional[str] = Field(alias="producerDocumentReference", default=None)
     receiver_document_reference: Optional[str] = Field(alias="receiverDocumentReference", default=None)
-    is_outbound: bool = Field(alias="isOutbound")
-    document_number: Optional[str] = Field(alias="documentNumber", default=None)
     document_dates: Union[Dict, DocumentDates, None] = Field(alias="documentDates", default=None)
-    tags: List[str] = Field(alias="tags", default=[])
+    tags: Optional[List[str]] = Field(alias="tags", default=None)
     raw_content: Optional[str] = Field(alias="rawContent", default=None)
     content: Optional[Dict[str, Any]] = Field(alias="content", default=None)
     metadata: Optional[Dict[str, Any]] = Field(alias="metadata", default=None)
     amount: Optional[Amount] = Field(alias="amount", default=None)
+    confidence_score: Optional[float] = Field(alias="confidenceScore", default=None)
 
     class Config:
         populate_by_name = True
