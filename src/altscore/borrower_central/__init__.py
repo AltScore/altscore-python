@@ -47,6 +47,12 @@ from altscore.borrower_central.model.deal_contacts import DealContactsAsyncModul
 from altscore.borrower_central.model.accounting_documents import AccountingDocumentsAsyncModule, \
     AccountingDocumentsSyncModule
 from altscore.borrower_central.model.accounting_line_items import LineItemsAsyncModule, LineItemsSyncModule
+from altscore.borrower_central.model.bank_accounts import BankAccountsSyncModule, \
+    BankAccountsAsyncModule
+from altscore.borrower_central.model.bank_account_balances import BankAccountBalancesSyncModule, \
+    BankAccountBalancesAsyncModule
+from altscore.borrower_central.model.bank_transactions import BankTransactionsSyncModule, \
+    BankTransactionsAsyncModule
 
 
 class BorrowerCentralAsync:
@@ -97,6 +103,9 @@ class BorrowerCentralAsync:
         self.deal_contacts = DealContactsAsyncModule(altscore_client)
         self.accounting_documents = AccountingDocumentsAsyncModule(altscore_client)
         self.accounting_line_items = LineItemsAsyncModule(altscore_client)
+        self.bank_accounts = BankAccountsAsyncModule(altscore_client)
+        self.bank_account_balances = BankAccountBalancesAsyncModule(altscore_client)
+        self.bank_transactions = BankTransactionsAsyncModule(altscore_client)
 
 
 class BorrowerCentralSync:
@@ -147,3 +156,6 @@ class BorrowerCentralSync:
         self.deal_contacts = DealContactsSyncModule(altscore_client)
         self.accounting_documents = AccountingDocumentsSyncModule(altscore_client)
         self.accounting_line_items = LineItemsSyncModule(altscore_client)
+        self.bank_accounts = BankAccountsSyncModule(altscore_client)
+        self.bank_account_balances = BankAccountBalancesSyncModule(altscore_client)
+        self.bank_transactions = BankTransactionsSyncModule(altscore_client)
