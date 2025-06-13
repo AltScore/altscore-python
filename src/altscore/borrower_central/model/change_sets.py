@@ -218,11 +218,11 @@ class ChangeSetSyncModule(GenericSyncModule):
           return response.json()
 
   @retry_on_401
-  def update_change_item(self, change_item_id: str, dto: UpdateChangeItemDTO) -> Dict:
+  def update_change_item(self, change_set_id: str, change_item_id: str, dto: UpdateChangeItemDTO) -> Dict:
       """Update a change item"""
       with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
           response = client.patch(
-              f"/v1/change-sets/change-items/{change_item_id}",
+              f"/v1/change-sets/{change_set_id}/change-items/{change_item_id}",
               headers=self.build_headers(),
               json=dto.dict(by_alias=True),
               timeout=30
@@ -302,11 +302,11 @@ class ChangeSetAsyncModule(GenericAsyncModule):
           return response.json()
 
   @retry_on_401_async
-  async def update_change_item(self, change_item_id: str, dto: UpdateChangeItemDTO) -> Dict:
+  async def update_change_item(self, change_set_id: str, change_item_id: str, dto: UpdateChangeItemDTO) -> Dict:
       """Update a change item"""
       async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
           response = await client.patch(
-              f"/v1/change-sets/change-items/{change_item_id}",
+              f"/v1/change-sets/{change_set_id}/change-items/{change_item_id}",
               headers=self.build_headers(),
               json=dto.dict(by_alias=True),
               timeout=30
