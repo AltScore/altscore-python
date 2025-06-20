@@ -1357,7 +1357,7 @@ class BorrowerAsync(BorrowerBase):
 
     @retry_on_401
     async def delete_category_value(self, category_value_id: str):
-        async with httpx.Client(base_url=self.base_url) as client:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 f"{self.base_url}/v1/category/commands/delete-entity-category",
                 headers=self._header_builder(),
