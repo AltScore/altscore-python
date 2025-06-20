@@ -1355,7 +1355,7 @@ class BorrowerAsync(BorrowerBase):
             raise_for_status_improved(response)
             return None
 
-    @retry_on_401
+    @retry_on_401_async
     async def delete_category_value(self, category_value_id: str):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
