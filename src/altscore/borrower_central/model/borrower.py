@@ -61,6 +61,20 @@ class BorrowerAPIDTO(BaseModel):
         allow_population_by_field_name = True
         allow_population_by_alias = True
 
+class EntityCategoryValueDTO(BaseModel):
+    category_id: str = Field(alias="categoryId")
+    category_key: str = Field(alias="categoryKey")
+    category_value_id: str = Field(alias="categoryValueId")
+    entity_type: str = Field(alias="entityType")
+    entity_id: str = Field(alias="entityId")
+    created_at: str = Field(alias="createdAt")
+    updated_at: str = Field(alias="updatedAt")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
 
 class SimplifiedIdentity(BaseModel):
     id: str = Field(alias="id")
@@ -1326,6 +1340,49 @@ class BorrowerAsync(BorrowerBase):
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401_async
+    async def set_category_value(self, category_value_id: str):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.post(
+                f"{self.base_url}/v1/category/commands/categorize-entity",
+                headers=self._header_builder(),
+                json={
+                    "categoryValueId": category_value_id,
+                    "entityType": self.resource,
+                    "entityId": self.data.id
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    @retry_on_401
+    async def delete_category_value(self, category_value_id: str):
+        async with httpx.Client(base_url=self.base_url) as client:
+            response = await client.post(
+                f"{self.base_url}/v1/category/commands/delete-entity-category",
+                headers=self._header_builder(),
+                json={
+                    "categoryValueId": category_value_id,
+                    "entityType": self.resource,
+                    "entityId": self.data.id
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    @retry_on_401_async
+    async def get_entity_categories(self):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
+                f"{self.base_url}/v1/category/queries/entity/{self.resource}/{self.data.id}",
+                headers=self._header_builder(),
+            )
+            raise_for_status_improved(response)
+            return [
+                EntityCategoryValueDTO.parse_obj(data)
+                for data in response.json()
+            ]
+
     def __str__(self):
         return str(self.data)
 
@@ -1846,6 +1903,49 @@ class BorrowerSync(BorrowerBase):
             )
             raise_for_status_improved(response)
             return None
+
+    @retry_on_401
+    def set_category_value(self, category_value_id: str):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.post(
+                f"{self.base_url}/v1/category/commands/categorize-entity",
+                headers=self._header_builder(),
+                json={
+                    "categoryValueId": category_value_id,
+                    "entityType": self.resource,
+                    "entityId": self.data.id
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    @retry_on_401
+    def delete_category_value(self, category_value_id: str):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.post(
+                f"{self.base_url}/v1/category/commands/delete-entity-category",
+                headers=self._header_builder(),
+                json={
+                    "categoryValueId": category_value_id,
+                    "entityType": self.resource,
+                    "entityId": self.data.id
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    @retry_on_401
+    def get_entity_categories(self):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.get(
+                f"{self.base_url}/v1/category/queries/entity/{self.resource}/{self.data.id}",
+                headers=self._header_builder(),
+            )
+            raise_for_status_improved(response)
+            return [
+                EntityCategoryValueDTO.parse_obj(data)
+                for data in response.json()
+            ]
 
     def __str__(self):
         return str(self.data)
