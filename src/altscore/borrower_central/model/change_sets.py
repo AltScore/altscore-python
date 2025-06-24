@@ -182,55 +182,6 @@ class ChangeSetSyncModule(GenericSyncModule):
                        resource="change-sets")
 
   @retry_on_401
-  def get_change_items(self, change_set_id: str, sort_by: Optional[str] = "_id",
-                      sort_direction: Optional[str] = "desc", page: Optional[int] = 1,
-                      per_page: Optional[int] = 10) -> Dict:
-      """Get change items for a specific change set"""
-      with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
-          params = {
-              "sort-by": sort_by,
-              "sort-direction": sort_direction,
-              "page": page,
-              "per-page": per_page
-          }
-          params = {k: v for k, v in params.items() if v is not None}
-
-          response = client.get(
-              f"/v1/{self.resource}/{change_set_id}/change-items",
-              headers=self.build_headers(),
-              params=params,
-              timeout=30
-          )
-          raise_for_status_improved(response)
-          return response.json()
-
-  @retry_on_401
-  def create_change_item(self, change_set_id: str, dto: CreateChangeItemDTO) -> Dict:
-      """Create a new change item for a specific change set"""
-      with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
-          response = client.post(
-              f"/v1/{self.resource}/{change_set_id}/change-items",
-              headers=self.build_headers(),
-              json=dto.dict(by_alias=True),
-              timeout=30
-          )
-          raise_for_status_improved(response)
-          return response.json()
-
-  @retry_on_401
-  def update_change_item(self, change_set_id: str, change_item_id: str, dto: UpdateChangeItemDTO) -> Dict:
-      """Update a change item"""
-      with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
-          response = client.patch(
-              f"/v1/change-sets/{change_set_id}/change-items/{change_item_id}",
-              headers=self.build_headers(),
-              json=dto.dict(by_alias=True),
-              timeout=30
-          )
-          raise_for_status_improved(response)
-          return response.json()
-
-  @retry_on_401
   def run_operation(self, change_set_id: str, dto: RunOperationRequest) -> RunOperationResponse:
       """Run an operation (set, scale, or reset) on change items using scope-based targeting"""
       with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
@@ -266,55 +217,6 @@ class ChangeSetAsyncModule(GenericAsyncModule):
                        resource="change-sets")
 
   @retry_on_401_async
-  async def get_change_items(self, change_set_id: str, sort_by: Optional[str] = "_id",
-                            sort_direction: Optional[str] = "desc", page: Optional[int] = 1,
-                            per_page: Optional[int] = 10) -> Dict:
-      """Get change items for a specific change set"""
-      async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
-          params = {
-              "sort-by": sort_by,
-              "sort-direction": sort_direction,
-              "page": page,
-              "per-page": per_page
-          }
-          params = {k: v for k, v in params.items() if v is not None}
-
-          response = await client.get(
-              f"/v1/{self.resource}/{change_set_id}/change-items",
-              headers=self.build_headers(),
-              params=params,
-              timeout=30
-          )
-          raise_for_status_improved(response)
-          return response.json()
-
-  @retry_on_401_async
-  async def create_change_item(self, change_set_id: str, dto: CreateChangeItemDTO) -> Dict:
-      """Create a new change item for a specific change set"""
-      async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
-          response = await client.post(
-              f"/v1/{self.resource}/{change_set_id}/change-items",
-              headers=self.build_headers(),
-              json=dto.dict(by_alias=True),
-              timeout=30
-          )
-          raise_for_status_improved(response)
-          return response.json()
-
-  @retry_on_401_async
-  async def update_change_item(self, change_set_id: str, change_item_id: str, dto: UpdateChangeItemDTO) -> Dict:
-      """Update a change item"""
-      async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
-          response = await client.patch(
-              f"/v1/change-sets/{change_set_id}/change-items/{change_item_id}",
-              headers=self.build_headers(),
-              json=dto.dict(by_alias=True),
-              timeout=30
-          )
-          raise_for_status_improved(response)
-          return response.json()
-
-  @retry_on_401_async
   async def run_operation(self, change_set_id: str, dto: RunOperationRequest) -> RunOperationResponse:
       """Run an operation (set, scale, or reset) on change items using scope-based targeting"""
       async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
@@ -338,3 +240,21 @@ class ChangeSetAsyncModule(GenericAsyncModule):
           )
           raise_for_status_improved(response)
           return [ChangeSetSummaryByRiskRatingDTO.parse_obj(item) for item in response.json()]
+
+class ChangeItemsSyncModule(GenericSyncModule):
+  def __init__(self, altscore_client):
+      super().__init__(altscore_client,
+                       sync_resource=ChangeItemSync,
+                       retrieve_data_model=ChangeItemDTO,
+                       create_data_model=CreateChangeItemDTO,
+                       update_data_model=UpdateChangeItemDTO,
+                       resource="change-items")
+
+class ChangeItemsAsyncModule(GenericAsyncModule):
+  def __init__(self, altscore_client):
+      super().__init__(altscore_client,
+                       sync_resource=ChangeItemAsync,
+                       retrieve_data_model=ChangeItemDTO,
+                       create_data_model=CreateChangeItemDTO,
+                       update_data_model=UpdateChangeItemDTO,
+                       resource="change-items")
