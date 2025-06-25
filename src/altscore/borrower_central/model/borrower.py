@@ -1341,12 +1341,13 @@ class BorrowerAsync(BorrowerBase):
             return None
 
     @retry_on_401_async
-    async def set_category_value(self, category_value_id: str):
+    async def set_category_value(self, category_key: str, category_value_id: str):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 f"{self.base_url}/v1/category/commands/categorize-entity",
                 headers=self._header_builder(),
                 json={
+                    "categoryKey": category_key,
                     "categoryValueId": category_value_id,
                     "entityType": self.resource,
                     "entityId": self.data.id
@@ -1356,12 +1357,13 @@ class BorrowerAsync(BorrowerBase):
             return None
 
     @retry_on_401_async
-    async def delete_category_value(self, category_value_id: str):
+    async def delete_category_value(self, category_key: str, category_value_id: str):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 f"{self.base_url}/v1/category/commands/delete-entity-category",
                 headers=self._header_builder(),
                 json={
+                    "categoryKey": category_key,
                     "categoryValueId": category_value_id,
                     "entityType": self.resource,
                     "entityId": self.data.id
@@ -1905,12 +1907,13 @@ class BorrowerSync(BorrowerBase):
             return None
 
     @retry_on_401
-    def set_category_value(self, category_value_id: str):
+    def set_category_value(self, category_key: str, category_value_id: str):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 f"{self.base_url}/v1/category/commands/categorize-entity",
                 headers=self._header_builder(),
                 json={
+                    "categoryKey": category_key,
                     "categoryValueId": category_value_id,
                     "entityType": self.resource,
                     "entityId": self.data.id
@@ -1920,12 +1923,13 @@ class BorrowerSync(BorrowerBase):
             return None
 
     @retry_on_401
-    def delete_category_value(self, category_value_id: str):
+    def delete_category_value(self, category_key: str, category_value_id: str):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 f"{self.base_url}/v1/category/commands/delete-entity-category",
                 headers=self._header_builder(),
                 json={
+                    "categoryKey": category_key,
                     "categoryValueId": category_value_id,
                     "entityType": self.resource,
                     "entityId": self.data.id

@@ -1,3 +1,5 @@
+from typing import List, Optional
+
 import httpx
 from pydantic import BaseModel, Field
 
@@ -50,6 +52,20 @@ class NewCategoryDTO(BaseModel):
         allow_population_by_field_name = True
         allow_population_by_alias = True
 
+class NewCategoryValueDTO(BaseModel):
+    id: Optional[str] = Field(alias="id", default=None)
+    value: str = Field(alias="value")
+
+class EntityWrapper(BaseModel):
+    entity_type: str = Field(alias="entityType")
+    entity_id: str = Field(alias="entityId")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
 class CategoryBase:
     def __init__(self, base_url: str):
         self.base_url = base_url
@@ -75,7 +91,7 @@ class CategoryAsyncModule:
         return build_headers(self)
 
     @retry_on_401_async
-    async def create(self, new_category: dict):
+    async def create(self, new_category: dict, values: List[NewCategoryValueDTO] = []):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
                 "/v1/category",
@@ -84,7 +100,13 @@ class CategoryAsyncModule:
                 timeout=120
             )
             raise_for_status_improved(response)
-            return response.json()["id"]
+            cat_id = response.json()["id"]
+            if len(values) > 0:
+                category = await self.retrieve(cat_id)
+                for value in values:
+                    await category.create_category_value(value)
+
+            return cat_id
 
     @retry_on_401_async
     async def retrieve(self, category_id):
@@ -116,6 +138,51 @@ class CategoryAsyncModule:
             )
             raise_for_status_improved(response)
 
+    @retry_on_401_async
+    async def set_category_value_to_entity(self, entity: EntityWrapper, category_id: str, category_value_id: str):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.post(
+                f"/v1/category/commands/categorize-entity",
+                headers=self.build_headers(),
+                json={
+                    "categoryId": category_id,
+                    "categoryValueId": category_value_id,
+                    "entityType": entity.entity_type,
+                    "entityId": entity.entity_id,
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    @retry_on_401_async
+    async def delete_category_value_from_entity(self, entity: EntityWrapper, category_id: str, category_value_id: str):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.post(
+                f"/v1/category/commands/delete-entity-category",
+                headers=self.build_headers(),
+                json={
+                    "categoryId": category_id,
+                    "categoryValueId": category_value_id,
+                    "entityType": entity.entity_type,
+                    "entityId": entity.entity_id,
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    @retry_on_401_async
+    async def get_category_values_by_entity(self, entity: EntityWrapper):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                f"/v1/category/queries/entity/{entity.entity_type}/{entity.entity_id}",
+                headers=self.build_headers(),
+            )
+            raise_for_status_improved(response)
+            return [
+                EntityCategoryValueDTO.parse_obj(data)
+                for data in response.json()
+            ]
+
 class CategorySyncModule:
     def __init__(self, altscore_client):
         self.altscore_client = altscore_client
@@ -127,7 +194,7 @@ class CategorySyncModule:
         return build_headers(self)
 
     @retry_on_401
-    def create(self, new_category: dict):
+    def create(self, new_category: dict, values: List[NewCategoryValueDTO] = []):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
                 "/v1/category",
@@ -136,7 +203,14 @@ class CategorySyncModule:
                 timeout=120
             )
             raise_for_status_improved(response)
-            return response.json()["id"]
+
+            cat_id = response.json()["id"]
+            if len(values) > 0:
+                category = self.retrieve(cat_id)
+                for value in values:
+                    category.create_category_value(value)
+
+            return cat_id
 
     @retry_on_401
     def retrieve(self, category_id):
@@ -168,6 +242,51 @@ class CategorySyncModule:
             )
             raise_for_status_improved(response)
 
+    @retry_on_401
+    def set_category_value_to_entity(self, entity: EntityWrapper, category_key: str, category_value_id: str):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.post(
+                f"/v1/category/commands/categorize-entity",
+                headers=self.build_headers(),
+                json={
+                    "categoryKey": category_key,
+                    "categoryValueId": category_value_id,
+                    "entityType": entity.entity_type,
+                    "entityId": entity.entity_id,
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    @retry_on_401
+    def delete_category_value_from_entity(self, entity: EntityWrapper, category_key: str, category_value_id: str):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.post(
+                f"/v1/category/commands/delete-entity-category",
+                headers=self.build_headers(),
+                json={
+                    "categoryKey": category_key,
+                    "categoryValueId": category_value_id,
+                    "entityType": entity.entity_type,
+                    "entityId": entity.entity_id,
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    @retry_on_401
+    def get_category_values_by_entity(self, entity: EntityWrapper):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                f"/v1/category/queries/entity/{entity.entity_type}/{entity.entity_id}",
+                headers=self.build_headers(),
+            )
+            raise_for_status_improved(response)
+            return [
+                EntityCategoryValueDTO.parse_obj(data)
+                for data in response.json()
+            ]
+
 class CategoryAsync(CategoryBase):
     data: CategoryDTO
 
@@ -178,14 +297,12 @@ class CategoryAsync(CategoryBase):
         self.data = category_data
 
     @retry_on_401_async
-    async def create_category_value(self, value: str):
+    async def create_category_value(self, value: NewCategoryValueDTO):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 self._add_category_value_url(self.data.id),
                 headers=self._header_builder(),
-                json={
-                    "value": value
-                }
+                json=value.dict(by_alias=True),
             )
             raise_for_status_improved(response)
 
@@ -211,6 +328,8 @@ class CategoryAsync(CategoryBase):
             )
             raise_for_status_improved(response)
 
+
+
 class CategorySync(CategoryBase):
     data: CategoryDTO
 
@@ -221,14 +340,12 @@ class CategorySync(CategoryBase):
         self.data = category_data
 
     @retry_on_401
-    def create_category_value(self, value: str):
+    def create_category_value(self, value: NewCategoryValueDTO):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 self._add_category_value_url(self.data.id),
                 headers=self._header_builder(),
-                json={
-                    "value": value
-                }
+                json=value.dict(by_alias=True),
             )
             raise_for_status_improved(response)
 
