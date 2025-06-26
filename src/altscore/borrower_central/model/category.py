@@ -91,7 +91,9 @@ class CategoryAsyncModule:
         return build_headers(self)
 
     @retry_on_401_async
-    async def create(self, new_category: dict, values: List[NewCategoryValueDTO] = []):
+    async def create(self, new_category: dict, values: Optional[List[NewCategoryValueDTO]] = None):
+        if values is None:
+            values = []
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
                 "/v1/category",
@@ -194,7 +196,9 @@ class CategorySyncModule:
         return build_headers(self)
 
     @retry_on_401
-    def create(self, new_category: dict, values: List[NewCategoryValueDTO] = []):
+    def create(self, new_category: dict, values: Optional[List[NewCategoryValueDTO]] = None):
+        if values is None:
+            values = []
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
                 "/v1/category",
