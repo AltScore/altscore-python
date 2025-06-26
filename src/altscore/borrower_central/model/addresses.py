@@ -2,20 +2,22 @@ from pydantic import BaseModel, Field
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 from typing import Optional, Dict
+import httpx
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 
 
 class AddressAPIDTO(BaseModel):
     id: str = Field(alias="id")
     borrower_id: str = Field(alias="borrowerId")
-    label: Optional[str] = Field(alias="label", default=None)
-    street1: str = Field(alias="street1")
+    label: Optional[str] = Field(alias="label")
+    street1: Optional[str] = Field(alias="street1", default=None)
     street2: Optional[str] = Field(alias="street2", default=None)
     neighborhood: Optional[str] = Field(alias="neighborhood", default=None)
     city: Optional[str] = Field(alias="city", default=None)
     state: Optional[str] = Field(alias="state", default=None)
     zip_code: Optional[str] = Field(alias="zipCode", default=None)
     reference: Optional[str] = Field(alias="reference", default=None)
-    country: str = Field(alias="country")
+    country: Optional[str] = Field(alias="country", default=None)
     province: Optional[str] = Field(alias="province", default=None)
     lat: Optional[float] = Field(alias="lat", default=None)
     lon: Optional[float] = Field(alias="lon", default=None)
@@ -74,15 +76,15 @@ class AddressAPIDTO(BaseModel):
 
 class CreateAddressDTO(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
-    label: Optional[str] = Field(alias="label", default=None)
-    street1: str = Field(alias="street1")
+    label: Optional[str] = Field(alias="label")
+    street1: Optional[str] = Field(alias="street1", default=None)
     street2: Optional[str] = Field(alias="street2", default=None)
     neighborhood: Optional[str] = Field(alias="neighborhood", default=None)
     city: Optional[str] = Field(alias="city", default=None)
     state: Optional[str] = Field(alias="state", default=None)
     zip_code: Optional[str] = Field(alias="zipCode", default=None)
     reference: Optional[str] = Field(alias="reference", default=None)
-    country: str = Field(alias="country")
+    country: Optional[str] = Field(alias="country", default=None)
     province: Optional[str] = Field(alias="province", default=None)
     lat: Optional[float] = Field(alias="lat", default=None)
     lon: Optional[float] = Field(alias="lon", default=None)
@@ -119,6 +121,17 @@ class UpdateAddressDTO(BaseModel):
         allow_population_by_alias = True
 
 
+class GeocodingAPIDTO(BaseModel):
+    id: str = Field(alias="id")
+    not_found: Optional[bool] = Field(alias="notFound", default=None)
+    is_success: bool = Field(alias="isSuccess")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
 class AddressSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
@@ -142,6 +155,33 @@ class AddressesSyncModule(GenericSyncModule):
                          resource="addresses")
 
 
+    @retry_on_401
+    def geocode(self, address_id: str):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.post(
+                f"/v1/addresses/commands/geocode",
+                headers=self.build_headers(),
+                json={
+                    "id": address_id
+                }
+            )
+            raise_for_status_improved(response)
+            return GeocodingAPIDTO.parse_obj(response.json())
+
+    @retry_on_401
+    def reverse_geocode(self, address_id: str):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.post(
+                f"/v1/addresses/commands/reverse-geocode",
+                headers=self.build_headers(),
+                json={
+                    "id": address_id
+                }
+            )
+            raise_for_status_improved(response)
+            return GeocodingAPIDTO.parse_obj(response.json())
+
+
 class AddressesAsyncModule(GenericAsyncModule):
 
     def __init__(self, altscore_client):
@@ -151,3 +191,30 @@ class AddressesAsyncModule(GenericAsyncModule):
                          create_data_model=CreateAddressDTO,
                          update_data_model=UpdateAddressDTO,
                          resource="addresses")
+
+
+    @retry_on_401_async
+    async def geocode(self, address_id: str):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.post(
+                f"/v1/addresses/commands/geocode",
+                headers=self.build_headers(),
+                json={
+                    "id": address_id
+                }
+            )
+            raise_for_status_improved(response)
+            return GeocodingAPIDTO.parse_obj(response.json())
+
+    @retry_on_401_async
+    async def reverse_geocode(self, address_id: str):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.post(
+                f"/v1/addresses/commands/reverse-geocode",
+                headers=self.build_headers(),
+                json={
+                    "id": address_id
+                }
+            )
+            raise_for_status_improved(response)
+            return GeocodingAPIDTO.parse_obj(response.json())
