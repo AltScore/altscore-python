@@ -157,13 +157,13 @@ class CategoryAsyncModule:
             return None
 
     @retry_on_401_async
-    async def delete_category_value_from_entity(self, entity: EntityWrapper, category_id: str, category_value_id: str):
+    async def delete_category_value_from_entity(self, entity: EntityWrapper, category_key: str, category_value_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
                 "/v1/category/commands/delete-entity-category",
                 headers=self.build_headers(),
                 json={
-                    "categoryId": category_id,
+                    "categoryKey": category_key,
                     "categoryValueId": category_value_id,
                     "entityType": entity.entity_type,
                     "entityId": entity.entity_id,
