@@ -144,7 +144,7 @@ class CategoryAsyncModule:
     async def set_category_value_to_entity(self, entity: EntityWrapper, category_key: str, category_value_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
-                f"/v1/category/commands/categorize-entity",
+                "/v1/category/commands/categorize-entity",
                 headers=self.build_headers(),
                 json={
                     "categoryKey": category_key,
@@ -160,7 +160,7 @@ class CategoryAsyncModule:
     async def delete_category_value_from_entity(self, entity: EntityWrapper, category_id: str, category_value_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
-                f"/v1/category/commands/delete-entity-category",
+                "/v1/category/commands/delete-entity-category",
                 headers=self.build_headers(),
                 json={
                     "categoryId": category_id,
@@ -250,7 +250,7 @@ class CategorySyncModule:
     def set_category_value_to_entity(self, entity: EntityWrapper, category_key: str, category_value_id: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
-                f"/v1/category/commands/categorize-entity",
+                "/v1/category/commands/categorize-entity",
                 headers=self.build_headers(),
                 json={
                     "categoryKey": category_key,
@@ -266,7 +266,7 @@ class CategorySyncModule:
     def delete_category_value_from_entity(self, entity: EntityWrapper, category_key: str, category_value_id: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
-                f"/v1/category/commands/delete-entity-category",
+                "/v1/category/commands/delete-entity-category",
                 headers=self.build_headers(),
                 json={
                     "categoryKey": category_key,
