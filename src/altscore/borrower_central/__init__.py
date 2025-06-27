@@ -1,4 +1,5 @@
 from altscore.borrower_central.model.borrower import BorrowersAsyncModule, BorrowersSyncModule
+from altscore.borrower_central.model.category import CategoryAsyncModule, CategorySyncModule
 from altscore.borrower_central.model.data_models import DataModelAsyncModule, DataModelSyncModule
 from altscore.borrower_central.model.executions import ExecutionAsyncModule, ExecutionSyncModule
 from altscore.borrower_central.model.tools import ReportGeneratorAsyncModule, ReportGeneratorSyncModule, \
@@ -90,6 +91,7 @@ class BorrowerCentralAsync:
         self.steps = StepsAsyncModule(altscore_client)
         self.list_of_similar = ListOfSimilarAsyncModule(altscore_client)
         self.execution_batches = ExecutionBatchAsyncModule(altscore_client)
+        self.categories = CategoryAsyncModule(altscore_client)
         self.cms_settings = CMSSettingsAsyncModule(altscore_client)
         self.communications = CommunicationsAsyncModule(altscore_client)
         self.conversational_channel_connectors = ChannelConnectorAsyncModule(altscore_client)
@@ -143,6 +145,7 @@ class BorrowerCentralSync:
         self.steps = StepsSyncModule(altscore_client)
         self.list_of_similar = ListOfSimilarSyncModule(altscore_client)
         self.execution_batches = ExecutionBatchSyncModule(altscore_client)
+        self.categories = CategorySyncModule(altscore_client)
         self.cms_settings = CMSSettingsSyncModule(altscore_client)
         self.communications = CommunicationsSyncModule(altscore_client)
         self.conversational_channel_connectors = ChannelConnectorSyncModule(altscore_client)
