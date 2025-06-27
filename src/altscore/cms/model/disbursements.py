@@ -44,6 +44,7 @@ class PayerInfo(BaseModel):
     institution: int = Field(alias="institution")
     institution_name: str = Field(alias="institutionName")
     name: str = Field(alias="name")
+    tax_id: Optional[str] = Field(alias="rfcCurp", default=None)
 
     class Config:
         populate_by_name = True
@@ -63,6 +64,7 @@ class DisbursementAPIDTO(BaseModel):
     notes: Optional[str] = Field(alias="notes", default=None)
     partner: PartnerInfo = Field(alias="partner")
     payer: Optional[PayerInfo] = Field(alias="payer", default=None)
+    beneficiary: Optional[PayerInfo] = Field(alias="beneficiary", default=None)
     payment_date: Optional[str] = Field(alias="paymentDate", default=None)
     reference_id: str = Field(alias="referenceId")
     reference_number: int = Field(alias="referenceNumber")
