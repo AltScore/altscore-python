@@ -339,7 +339,7 @@ class ChangeItemsAsyncModule(GenericAsyncModule):
     def __init__(self, altscore_client):
         super().__init__(
             altscore_client,
-            sync_resource=ChangeItemAsync,
+            async_resource=ChangeItemAsync,
             retrieve_data_model=ChangeItemDTO,
             create_data_model=CreateChangeItemDTO,
             update_data_model=UpdateChangeItemDTO,
