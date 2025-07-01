@@ -211,7 +211,7 @@ class GenericAsyncModule:
         clean_kwargs = {k: v for k, v in query_params.items() if v is not None and v not in {"page", "per_page"}}
         async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
             response = await client.get(
-                f"/v1/{self.resource}",
+                f"/{self.resource_version}/{self.resource}",
                 params=query_params,
                 headers=self.build_headers(),
                 timeout=timeout
@@ -250,7 +250,7 @@ class GenericAsyncModule:
         query_params["per-page"] = per_page
         async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
             response = await client.get(
-                f"/v1/{self.resource}",
+                f"/{self.resource_version}/{self.resource}",
                 headers=self.build_headers(),
                 params=query_params,
                 timeout=timeout
