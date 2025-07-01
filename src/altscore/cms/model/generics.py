@@ -3,6 +3,8 @@ from altscore.cms.helpers import build_headers
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from typing import Dict
 import stringcase
+from loguru import logger
+import asyncio
 
 
 class GenericSyncModule:
@@ -200,21 +202,37 @@ class GenericAsyncModule:
         for k, v in kwargs.items():
             if v is not None:
                 query_params[convert_to_dash_case(k)] = v
-        query_params["limit"] = 10
-        query_params["offset"] = 0
-        async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
+        per_page = kwargs.get("per_page", 100)
+        timeout = kwargs.get("timeout", 30)
+        if per_page > 100:
+            logger.warning("per_page is greater than 100, setting it to 100")
+            per_page = 100
+        query_params["per-page"] = per_page
+        clean_kwargs = {k: v for k, v in query_params.items() if v is not None and v not in {"page", "per_page"}}
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
-                f"/{self.resource_version}/{self.resource}",
+                f"/v1/{self.resource}",
                 params=query_params,
                 headers=self.build_headers(),
-                timeout=30
+                timeout=timeout
             )
             raise_for_status_improved(response)
             total_count = int(response.headers["x-total-count"])
+
+        total_pages = (total_count // per_page) + 1
+        if total_pages > 1:
+            pages = list(range(1, total_pages + 1))
+        else:
+            pages = [1]
+
         resources = []
-        # TODO: this is not optimal, we should use asyncio.gather and a batch size
-        for offset in range(0, total_count, 100):
-            resources.append(await self.query(limit=100, offset=offset, **kwargs))
+        page_chunks = [pages[i:i + 10] for i in range(0, len(pages), 10)]
+
+        for page_chunk in page_chunks:
+            tasks = [self.query(page=page, per_page=per_page, **clean_kwargs) for page in page_chunk]
+            chunk_results = await asyncio.gather(*tasks)
+            resources.extend(chunk_results)
+
         resources = [item for sublist in resources for item in sublist]
         return resources
 
@@ -222,19 +240,24 @@ class GenericAsyncModule:
     async def query(self, **kwargs):
         query_params = {}
         for k, v in kwargs.items():
-            if v is not None:
+            if v is not None and k not in ["timeout", "per_page"]:
                 query_params[convert_to_dash_case(k)] = v
-
-        async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
+        timeout = kwargs.get("timeout", 30)
+        per_page = kwargs.get("per_page", 100)
+        if per_page > 100:
+            logger.warning("per_page is greater than 100, setting it to 100")
+            per_page = 100
+        query_params["per-page"] = per_page
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
-                f"/{self.resource_version}/{self.resource}",
+                f"/v1/{self.resource}",
                 headers=self.build_headers(),
                 params=query_params,
-                timeout=30
+                timeout=timeout
             )
             raise_for_status_improved(response)
             return [self.async_resource(
-                base_url=self.altscore_client._cms_base_url,
+                base_url=self.altscore_client._borrower_central_base_url,
                 header_builder=self.build_headers,
                 renew_token=self.renew_token,
                 data=self.retrieve_data_model.parse_obj(e)
