@@ -79,26 +79,61 @@ class GenericSyncModule:
 
     @retry_on_401
     def retrieve_all(self, **kwargs):
-        query_params = {}
-        for k, v in kwargs.items():
-            if v is not None:
-                query_params[convert_to_dash_case(k)] = v
-        query_params["limit"] = 10
-        query_params["offset"] = 0
+        query_params = {
+            convert_to_dash_case(k): v
+            for k, v in kwargs.items()
+            if v is not None
+        }
+
+        per_page = kwargs.get("per_page", 100)
+        timeout = kwargs.get("timeout", 30)
+
+        if per_page > 100:
+            logger.warning("per_page is greater than 100, setting it to 100")
+            per_page = 100
+
+        query_params["per-page"] = per_page
+
+        clean_kwargs = {
+            k: v for k, v in query_params.items()
+            if k not in {"page", "per-page"}
+        }
+
         with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
             response = client.get(
                 f"/{self.resource_version}/{self.resource}",
                 params=query_params,
                 headers=self.build_headers(),
-                timeout=30
+                timeout=timeout,
             )
             raise_for_status_improved(response)
-            # If no header then total_count is 0
+
             total_count = int(response.headers.get("x-total-count", 0))
-        resources = []
-        for offset in range(0, total_count, 100):
-            resources.append(self.query(limit=100, offset=offset, **kwargs))
-        resources = [item for sublist in resources for item in sublist]
+            first_page_items = response.json()
+
+        resources = [
+            self.sync_resource(
+                base_url=self.altscore_client._cms_base_url,
+                header_builder=self.build_headers,
+                renew_token=self.renew_token,
+                data=self.retrieve_data_model.parse_obj(obj),
+            )
+            for obj in first_page_items
+        ]
+
+        if total_count and per_page:
+            total_pages = (total_count // per_page) + 1
+        else:
+            total_pages = 1
+
+        for page in range(2, total_pages + 1):
+            page_resources = self.query(
+                page=page,
+                per_page=per_page,
+                **clean_kwargs,
+            )
+            resources.extend(page_resources)
+
         return resources
 
     @retry_on_401
