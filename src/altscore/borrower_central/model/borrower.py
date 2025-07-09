@@ -1332,14 +1332,15 @@ class BorrowerAsync(BorrowerBase):
         return mapped_dict
 
     @retry_on_401_async
-    async def send_sms(self, message: str, point_of_contact_id: Optional[str] = None):
+    async def send_sms(self, message: str, point_of_contact_id: Optional[str] = None, skip_verification_check: Optional[bool] = False):
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 f"{self.base_url}/v1/borrowers/{self.data.id}/communications/sms",
                 headers=self._header_builder(),
                 json={
                     "message": message,
-                    "pointOfContactId": point_of_contact_id
+                    "pointOfContactId": point_of_contact_id,
+                    "skipVerificationCheck": skip_verification_check
                 }
             )
             raise_for_status_improved(response)
@@ -1898,14 +1899,15 @@ class BorrowerSync(BorrowerBase):
         return mapped_dict
 
     @retry_on_401
-    def send_sms(self, message: str, point_of_contact_id: Optional[str] = None):
+    def send_sms(self, message: str, point_of_contact_id: Optional[str] = None, skip_verification_check: Optional[bool] = False ):
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 f"{self.base_url}/v1/borrowers/{self.data.id}/communications/sms",
                 headers=self._header_builder(),
                 json={
                     "message": message,
-                    "pointOfContactId": point_of_contact_id
+                    "pointOfContactId": point_of_contact_id,
+                    "skipVerificationCheck": skip_verification_check
                 }
             )
             raise_for_status_improved(response)
