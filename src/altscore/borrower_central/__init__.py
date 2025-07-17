@@ -39,7 +39,7 @@ from altscore.borrower_central.model.conversational_channel_connectors import Ch
 from altscore.borrower_central.model.conversational_conversations import ConversationAsyncModule, ConversationSyncModule
 from altscore.borrower_central.model.conversational_messages import MessageAsyncModule, MessageSyncModule
 from altscore.borrower_central.model.custom_reports import CustomReportsSyncModule, CustomReportsAsyncModule
-from altscore.borrower_central.model.report_templates import ReportTemplateSyncModule, \
+from altscore.borrower_central.model.report_templates import ReportTemplateAsyncModule, \
     ReportTemplateSyncModule
 from altscore.borrower_central.model.deals import DealsAsyncModule, DealsSyncModule
 from altscore.borrower_central.model.deal_fields import DealFieldsAsyncModule, DealFieldsSyncModule
@@ -97,8 +97,8 @@ class BorrowerCentralAsync:
         self.conversational_channel_connectors = ChannelConnectorAsyncModule(altscore_client)
         self.conversational_conversations = ConversationAsyncModule(altscore_client)
         self.conversational_messages = MessageAsyncModule(altscore_client)
-        self.custom_reports = CustomReportsSyncModule(altscore_client)
-        self.report_templates = ReportTemplateSyncModule(altscore_client)
+        self.custom_reports = ReportTemplateAsyncModule(altscore_client)
+        self.report_templates = ReportTemplateAsyncModule(altscore_client)
         self.deals = DealsAsyncModule(altscore_client)
         self.deal_fields = DealFieldsAsyncModule(altscore_client)
         self.deal_steps = DealStepsAsyncModule(altscore_client)
