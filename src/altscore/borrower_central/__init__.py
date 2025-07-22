@@ -1,5 +1,7 @@
 from altscore.borrower_central.model.borrower import BorrowersAsyncModule, BorrowersSyncModule
 from altscore.borrower_central.model.category import CategoryAsyncModule, CategorySyncModule
+from altscore.borrower_central.model.conversational_templates import WhatsAppTemplateSync, WhatsAppTemplateSyncModule, \
+    WhatsAppTemplateAsyncModule
 from altscore.borrower_central.model.data_models import DataModelAsyncModule, DataModelSyncModule
 from altscore.borrower_central.model.executions import ExecutionAsyncModule, ExecutionSyncModule
 from altscore.borrower_central.model.tools import ReportGeneratorAsyncModule, ReportGeneratorSyncModule, \
@@ -108,6 +110,7 @@ class BorrowerCentralAsync:
         self.bank_accounts = BankAccountsAsyncModule(altscore_client)
         self.bank_account_balances = BankAccountBalancesAsyncModule(altscore_client)
         self.bank_transactions = BankTransactionsAsyncModule(altscore_client)
+        self.conversational_templates = WhatsAppTemplateAsyncModule(altscore_client)
 
 
 class BorrowerCentralSync:
@@ -162,3 +165,4 @@ class BorrowerCentralSync:
         self.bank_accounts = BankAccountsSyncModule(altscore_client)
         self.bank_account_balances = BankAccountBalancesSyncModule(altscore_client)
         self.bank_transactions = BankTransactionsSyncModule(altscore_client)
+        self.conversational_templates = WhatsAppTemplateSyncModule(altscore_client)
