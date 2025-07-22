@@ -20,7 +20,7 @@ class WhatsAppTemplateRequest(BaseModel):
     name: str = Field(alias="name")
     label: str = Field(alias="label")
     description: str = Field(alias="description")
-    category: Literal['AUTHENTICATION', 'MARKETING', 'UTILITY'] = Field(alias="category")
+    category: str = Field(alias="category")
     segment: str = Field(alias="segment")
     periodicity: str = Field(alias="periodicity")
     client_id: str = Field(alias="clientId")
@@ -134,27 +134,33 @@ class WhatsAppTemplateSyncModule(GenericSyncModule):
                          resource="/conversational/templates")
 
     @retry_on_401
-    def publish_template(self, template_id: str, request_body: PublishRequest):
+    def publish_template(self, template_id: str, request_body: Dict[str, Any]):
+        request_data = PublishRequest(
+            **request_body
+        )
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             request = client.post(
                 f"/v1/conversational/templates/{template_id}/publish",
-                json=request_body,
+                json=request_data.dict(by_alias=True),
                 headers=self.build_headers(),
                 timeout=120,
             )
-            request.raise_for_status()
+            raise_for_status_improved(request)
             return request.json()
 
     @retry_on_401
-    def send_template(self, template_id: str, request_body: SendRequest):
+    def send_template(self, template_id: str, request_body: Dict[str, Any]):
+        request_data = SendRequest(
+            **request_body
+        )
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             request = client.post(
                 f"/v1/conversational/templates/{template_id}/send",
-                json=request_body,
+                json=request_data.dict(by_alias=True),
                 headers=self.build_headers(),
                 timeout=120,
             )
-            request.raise_for_status()
+            raise_for_status_improved(request)
             return request.json()
 
 
@@ -168,11 +174,14 @@ class WhatsAppTemplateAsyncModule(GenericAsyncModule):
                          resource="/conversational/templates")
 
     @retry_on_401_async
-    async def publish_template(self, template_id: str, request_body: PublishRequest):
+    async def publish_template(self, template_id: str, request_body: Dict[str, Any]):
+        request_data = PublishRequest(
+            **request_body
+        )
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
                 f"/v1/conversational/templates/{template_id}/publish",
-                json=request_body,
+                json=request_data.dict(by_alias=True),
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -180,11 +189,14 @@ class WhatsAppTemplateAsyncModule(GenericAsyncModule):
             return response.json()
 
     @retry_on_401_async
-    async def send_template(self, template_id: str, request_body: SendRequest):
+    async def send_template(self, template_id: str, request_body: Dict[str, Any]):
+        request_data = SendRequest(
+            **request_body
+        )
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
                 f"/v1/conversational/templates/{template_id}/send",
-                json=request_body,
+                json=request_data.dict(by_alias=True),
                 headers=self.build_headers(),
                 timeout=120,
             )
