@@ -185,6 +185,19 @@ class CategoryAsyncModule:
                 for data in response.json()
             ]
 
+    @retry_on_401_async
+    async def get_category_values_by_entity_type(self, entity_type: str):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                f"/v1/category/queries/entity/{entity_type}",
+                headers=self.build_headers(),
+            )
+            raise_for_status_improved(response)
+            return [
+                EntityCategoryValueDTO.parse_obj(data)
+                for data in response.json()
+            ]
+
 class CategorySyncModule:
     def __init__(self, altscore_client):
         self.altscore_client = altscore_client
@@ -283,6 +296,19 @@ class CategorySyncModule:
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
                 f"/v1/category/queries/entity/{entity.entity_type}/{entity.entity_id}",
+                headers=self.build_headers(),
+            )
+            raise_for_status_improved(response)
+            return [
+                EntityCategoryValueDTO.parse_obj(data)
+                for data in response.json()
+            ]
+
+    @retry_on_401
+    def get_category_values_by_entity_type(self, entity_type: str):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                f"/v1/category/queries/entity/{entity_type}",
                 headers=self.build_headers(),
             )
             raise_for_status_improved(response)
