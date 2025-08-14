@@ -12,6 +12,8 @@ class AddressAPIDTO(BaseModel):
     label: Optional[str] = Field(alias="label")
     street1: Optional[str] = Field(alias="street1", default=None)
     street2: Optional[str] = Field(alias="street2", default=None)
+    external_number: Optional[str] = Field(alias="externalNumber", default=None)
+    internal_number: Optional[str] = Field(alias="internalNumber", default=None)
     neighborhood: Optional[str] = Field(alias="neighborhood", default=None)
     city: Optional[str] = Field(alias="city", default=None)
     state: Optional[str] = Field(alias="state", default=None)
@@ -57,6 +59,8 @@ class AddressAPIDTO(BaseModel):
         str = ""
         if self.street1 is not None:
             str += self.street1
+            if self.external_number is not None:
+                str += " " + self.external_number
         if self.street2 is not None:
             str += " " + self.street2
         if self.neighborhood is not None:
@@ -79,6 +83,8 @@ class CreateAddressDTO(BaseModel):
     label: Optional[str] = Field(alias="label")
     street1: Optional[str] = Field(alias="street1", default=None)
     street2: Optional[str] = Field(alias="street2", default=None)
+    external_number: Optional[str] = Field(alias="externalNumber", default=None)
+    internal_number: Optional[str] = Field(alias="internalNumber", default=None)
     neighborhood: Optional[str] = Field(alias="neighborhood", default=None)
     city: Optional[str] = Field(alias="city", default=None)
     state: Optional[str] = Field(alias="state", default=None)
@@ -103,6 +109,8 @@ class UpdateAddressDTO(BaseModel):
     label: Optional[str] = Field(alias="label", default=None)
     street1: Optional[str] = Field(alias="street1", default=None)
     street2: Optional[str] = Field(alias="street2", default=None)
+    external_number: Optional[str] = Field(alias="externalNumber", default=None)
+    internal_number: Optional[str] = Field(alias="internalNumber", default=None)
     neighborhood: Optional[str] = Field(alias="neighborhood", default=None)
     city: Optional[str] = Field(alias="city", default=None)
     state: Optional[str] = Field(alias="state", default=None)
@@ -125,6 +133,21 @@ class GeocodingAPIDTO(BaseModel):
     id: str = Field(alias="id")
     not_found: Optional[bool] = Field(alias="notFound", default=None)
     is_success: bool = Field(alias="isSuccess")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class NewAddressFromAddressStrDTO(BaseModel):
+    borrower_id: str = Field(alias="borrowerId")
+    address_str: str = Field(alias="addressStr")
+    country: Optional[str] = Field(alias="country", default=None)
+    label: Optional[str] = Field(alias="label", default=None)
+    priority: Optional[int] = Field(alias="priority", default=None)
+    is_home: Optional[bool] = Field(alias="isHome", default=None)
+    is_work: Optional[bool] = Field(alias="isWork", default=None)
 
     class Config:
         populate_by_name = True
@@ -181,6 +204,17 @@ class AddressesSyncModule(GenericSyncModule):
             raise_for_status_improved(response)
             return GeocodingAPIDTO.parse_obj(response.json())
 
+    @retry_on_401
+    def new_address_from_address_str(self, new_address_data: dict):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.post(
+                f"/v1/addresses/commands/new-address-from-address-str",
+                headers=self.build_headers(),
+                json=NewAddressFromAddressStrDTO.parse_obj(new_address_data).dict(by_alias=True),
+            )
+            raise_for_status_improved(response)
+            return response.json()["id"]
+
 
 class AddressesAsyncModule(GenericAsyncModule):
 
@@ -218,3 +252,14 @@ class AddressesAsyncModule(GenericAsyncModule):
             )
             raise_for_status_improved(response)
             return GeocodingAPIDTO.parse_obj(response.json())
+
+    @retry_on_401_async
+    async def new_address_from_address_str(self, new_address_data: dict):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.post(
+                f"/v1/addresses/commands/new-address-from-address-str",
+                headers=self.build_headers(),
+                json=NewAddressFromAddressStrDTO.parse_obj(new_address_data).dict(by_alias=True),
+            )
+            raise_for_status_improved(response)
+            return response.json()["id"]

@@ -1360,7 +1360,10 @@ class BorrowerAsync(BorrowerBase):
             return None
 
     @retry_on_401_async
-    async def set_category_value(self, category_key: str, category_value_id: str):
+    async def set_category_value(self, category_key: str, category_value_id: str, inherit_value = False):
+        resource = self.resource
+        if inherit_value:
+            resource += "_ds"
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 f"{self.base_url}/v1/category/commands/categorize-entity",
@@ -1368,7 +1371,7 @@ class BorrowerAsync(BorrowerBase):
                 json={
                     "categoryKey": category_key,
                     "categoryValueId": category_value_id,
-                    "entityType": self.resource,
+                    "entityType": resource,
                     "entityId": self.data.id
                 }
             )
@@ -1927,7 +1930,10 @@ class BorrowerSync(BorrowerBase):
             return None
 
     @retry_on_401
-    def set_category_value(self, category_key: str, category_value_id: str):
+    def set_category_value(self, category_key: str, category_value_id: str, inherit_value = False):
+        resource = self.resource
+        if inherit_value:
+            resource += "_ds"
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 f"{self.base_url}/v1/category/commands/categorize-entity",
@@ -1935,7 +1941,7 @@ class BorrowerSync(BorrowerBase):
                 json={
                     "categoryKey": category_key,
                     "categoryValueId": category_value_id,
-                    "entityType": self.resource,
+                    "entityType": resource,
                     "entityId": self.data.id
                 }
             )
