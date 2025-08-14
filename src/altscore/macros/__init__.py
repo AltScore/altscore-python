@@ -176,7 +176,8 @@ class MacrosSync:
             phone = phone.data.value
 
         client_data = {"externalId": external_id, "legalName": legal_name, "taxId": tax_id, "dba": dba,
-                       "address": address, "emailAddress": email, "phoneNumber": phone, "partnerId": partner_id}
+                       "address": address, "emailAddress": email, "phoneNumber": phone, "partnerId": partner_id,
+                       "borrowerId": borrower_id}
 
         # see if there is already a cms client with the given external id
         cms_client = self.altscore_client.cms.clients.retrieve_by_external_id(external_id=external_id)
@@ -189,7 +190,8 @@ class MacrosSync:
                 patch_data={
                     "legalName": legal_name,
                     "taxId": tax_id,
-                    "emailAddress": email
+                    "emailAddress": email,
+                    "borrowerId": borrower_id
                 }
             )
             return cms_client.data.id
