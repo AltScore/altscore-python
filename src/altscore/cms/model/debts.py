@@ -24,7 +24,7 @@ class Balance(BaseModel):
 
 class Client(BaseModel):
     id: str = Field(alias="clientId")
-    borrower_id: str = Field(alias="borrowerId")
+    borrower_id: str = Field(alias="borrowerId", default=None)
     partner_id: str = Field(alias="partnerId")
     external_id: str = Field(alias="externalId")
     email: str = Field(alias="email")
