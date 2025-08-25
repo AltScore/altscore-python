@@ -1,15 +1,13 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
-import httpx
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 
 
 class ActionableAPIDTO(BaseModel):
     id: str = Field(alias="id")
-    workflow_id: str = Field(alias="workflowId")
-    from_execution_id: str = Field(alias="fromExecutionId")
+    execution_id: Optional[str] = Field(alias="executionId", default=None)
+    borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
     
     assigned_to: Optional[str] = Field(alias="assignedTo", default=None)
     status: str = Field(alias="status")
@@ -30,8 +28,8 @@ class ActionableAPIDTO(BaseModel):
 
 
 class CreateActionableRequest(BaseModel):
-    workflow_id: str = Field(alias="workflowId")
-    from_execution_id: str = Field(alias="fromExecutionId")
+    execution_id: Optional[str] = Field(alias="executionId", default=None)
+    borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
     
     assigned_to: Optional[str] = Field(alias="assignedTo", default=None)
     status: Optional[str] = Field(alias="status", default="pending")
@@ -49,6 +47,7 @@ class CreateActionableRequest(BaseModel):
 
 
 class UpdateActionableRequest(BaseModel):
+    borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
     assigned_to: Optional[str] = Field(alias="assignedTo", default=None)
     status: Optional[str] = Field(alias="status", default=None)
     priority: Optional[int] = Field(alias="priority", default=None)
