@@ -1,8 +1,35 @@
+import httpx
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
+
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 
+class DocumentRequest(BaseModel):
+    filename: str = Field(alias="filename")
+    media_type: str = Field(alias="mediaType")
+    url: Optional[str] = Field(alias="url", default=None)
+    base64: Optional[str] = Field(alias="base64", default=None)
+    page: Optional[int] = Field(alias="page", default=0)
+    posX: Optional[float] = Field(alias="posX", default=50)
+    posY: Optional[float] = Field(alias="posY", default=50)
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class VerificationRequest(BaseModel):
+    verification_id: str = Field(alias="verificationId")
+    provider: str = Field(alias="provider")
+    documents: List[DocumentRequest] = Field(alias="documents")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
 
 class AuthorizationAPIDTO(BaseModel):
     id: str = Field(alias="id")
@@ -72,6 +99,21 @@ class AuthorizationsSyncModule(GenericSyncModule):
                          update_data_model=None,
                          resource="authorizations")
 
+    @retry_on_401
+    def sign_with_verification(self, authorization_id: str, request_body: Dict[str, Any]):
+        request_data = VerificationRequest(
+            **request_body
+        )
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            request = client.post(
+                f"/v1/authorizations/{authorization_id}/sign-with-verification",
+                json=request_data.dict(by_alias=True),
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            raise_for_status_improved(request)
+            return request.json()
+
 
 class AuthorizationsAsyncModule(GenericAsyncModule):
 
@@ -82,3 +124,19 @@ class AuthorizationsAsyncModule(GenericAsyncModule):
                          create_data_model=CreateAuthorizationDTO,
                          update_data_model=None,
                          resource="authorizations")
+
+
+    @retry_on_401
+    async def sign_with_verification(self, authorization_id: str, request_body: Dict[str, Any]):
+        request_data = VerificationRequest(
+            **request_body
+        )
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            request = client.post(
+                f"/v1/authorizations/{authorization_id}/sign-with-verification",
+                json=request_data.dict(by_alias=True),
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            raise_for_status_improved(request)
+            return request.json()
