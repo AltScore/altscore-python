@@ -157,7 +157,7 @@ class ReportTemplateAsyncModule(GenericAsyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            await raise_for_status_improved(request)
+            raise_for_status_improved(request)
             data = request.json()
             if len(data) == 0:
                 return None

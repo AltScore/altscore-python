@@ -1,3 +1,4 @@
+from altscore.borrower_central.model.analytics import AnalyticsAsyncModule, AnalyticsSyncModule
 from altscore.borrower_central.model.borrower import BorrowersAsyncModule, BorrowersSyncModule
 from altscore.borrower_central.model.category import CategoryAsyncModule, CategorySyncModule
 from altscore.borrower_central.model.conversational_templates import WhatsAppTemplateSync, WhatsAppTemplateSyncModule, \
@@ -42,7 +43,7 @@ from altscore.borrower_central.model.conversational_channel_connectors import Ch
 from altscore.borrower_central.model.conversational_conversations import ConversationAsyncModule, ConversationSyncModule
 from altscore.borrower_central.model.conversational_messages import MessageAsyncModule, MessageSyncModule
 from altscore.borrower_central.model.custom_reports import CustomReportsSyncModule, CustomReportsAsyncModule
-from altscore.borrower_central.model.report_templates import ReportTemplateSyncModule, \
+from altscore.borrower_central.model.report_templates import ReportTemplateAsyncModule, \
     ReportTemplateSyncModule
 from altscore.borrower_central.model.deals import DealsAsyncModule, DealsSyncModule
 from altscore.borrower_central.model.deal_fields import DealFieldsAsyncModule, DealFieldsSyncModule
@@ -57,6 +58,7 @@ from altscore.borrower_central.model.bank_account_balances import BankAccountBal
     BankAccountBalancesAsyncModule
 from altscore.borrower_central.model.bank_transactions import BankTransactionsSyncModule, \
     BankTransactionsAsyncModule
+from altscore.borrower_central.model.actionables import ActionablesSyncModule, ActionablesAsyncModule
 
 
 class BorrowerCentralAsync:
@@ -64,6 +66,7 @@ class BorrowerCentralAsync:
         self.addresses = AddressesAsyncModule(altscore_client)
         self.authorizations = AuthorizationsAsyncModule(altscore_client)
         self.automations = AutomationsAsyncModule(altscore_client)
+        self.analytics = AnalyticsAsyncModule(altscore_client)
         self.borrowers = BorrowersAsyncModule(altscore_client)
         self.borrower_fields = BorrowerFieldsAsyncModule(altscore_client)
         self.metrics = MetricsAsyncModule(altscore_client)
@@ -100,8 +103,8 @@ class BorrowerCentralAsync:
         self.conversational_channel_connectors = ChannelConnectorAsyncModule(altscore_client)
         self.conversational_conversations = ConversationAsyncModule(altscore_client)
         self.conversational_messages = MessageAsyncModule(altscore_client)
-        self.custom_reports = CustomReportsSyncModule(altscore_client)
-        self.report_templates = ReportTemplateSyncModule(altscore_client)
+        self.custom_reports = ReportTemplateAsyncModule(altscore_client)
+        self.report_templates = ReportTemplateAsyncModule(altscore_client)
         self.deals = DealsAsyncModule(altscore_client)
         self.deal_fields = DealFieldsAsyncModule(altscore_client)
         self.deal_steps = DealStepsAsyncModule(altscore_client)
@@ -113,6 +116,7 @@ class BorrowerCentralAsync:
         self.bank_transactions = BankTransactionsAsyncModule(altscore_client)
         self.conversational_templates = WhatsAppTemplateAsyncModule(altscore_client)
         self.verifications = VerificationsSyncModule(altscore_client)
+        self.actionables = ActionablesAsyncModule(altscore_client)
 
 
 class BorrowerCentralSync:
@@ -120,6 +124,7 @@ class BorrowerCentralSync:
         self.addresses = AddressesSyncModule(altscore_client)
         self.authorizations = AuthorizationsSyncModule(altscore_client)
         self.automations = AutomationsSyncModule(altscore_client)
+        self.analytics = AnalyticsSyncModule(altscore_client)
         self.borrowers = BorrowersSyncModule(altscore_client)
         self.borrower_fields = BorrowerFieldsSyncModule(altscore_client)
         self.metrics = MetricsSyncModule(altscore_client)
@@ -169,3 +174,4 @@ class BorrowerCentralSync:
         self.bank_transactions = BankTransactionsSyncModule(altscore_client)
         self.conversational_templates = WhatsAppTemplateSyncModule(altscore_client)
         self.verifications = VerificationsSyncModule(altscore_client)
+        self.actionables = ActionablesSyncModule(altscore_client)

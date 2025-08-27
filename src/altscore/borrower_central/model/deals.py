@@ -32,6 +32,7 @@ class DealDTO(BaseModel):
     status: Optional[str] = Field(alias="status", default=None)
     current_step: Optional[StepDataDTO] = Field(alias="currentStep", default=None)
     tags: List[str] = Field(alias="tags", default=[])
+    risk_rating: Optional[str] = Field(alias="riskRating", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt", default=None)
 
@@ -48,6 +49,7 @@ class CreateDealRequest(BaseModel):
     status: Optional[str] = Field(alias="status", default=None)
     external_id: Optional[str] = Field(alias="externalId", default=None)
     tags: List[str] = Field(alias="tags", default=[])
+    risk_rating: Optional[str] = Field(alias="riskRating", default=None)
 
     class Config:
         populate_by_name = True
@@ -61,6 +63,7 @@ class UpdateDealRequest(BaseModel):
     description: Optional[str] = Field(alias="description", default=None)
     status: Optional[str] = Field(alias="status", default=None)
     tags: Optional[List[str]] = Field(alias="tags", default=None)
+    risk_rating: Optional[str] = Field(alias="riskRating", default=None)
 
     class Config:
         populate_by_name = True

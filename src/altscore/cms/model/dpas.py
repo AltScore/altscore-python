@@ -10,6 +10,7 @@ from dateutil.parser import parse as date_parser
 
 class Client(BaseModel):
     id: str = Field(alias="clientId")
+    borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
     partner_id: str = Field(alias="partnerId")
     external_id: str = Field(alias="externalId")
     email: str = Field(alias="email")
@@ -45,7 +46,21 @@ class CreateDPAFlowDTO(BaseModel):
     disbursement_date: str = Field(alias="disbursementDate")
     client_id: str = Field(alias="clientId", default=None)
     reference_id: str = Field(alias="referenceId", default=None)
+    product_id: Optional[str] = Field(alias="productId", default=None)
+    external_id: Optional[str] = Field(alias="externalId", default=None)
     terms: Optional[Terms] = Field(alias="terms")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        populate_by_alias = True
+
+class AdvanceSimulationFlowDTO(BaseModel):
+    amount: Money = Field(alias="amount")
+    disbursement_date: str = Field(alias="disbursementDate")
+    client_id: str = Field(alias="clientId", default=None)
+    external_id: Optional[str] = Field(alias="externalId", default=None)
+    metadata: Optional[dict] = Field(alias="metadata", default=None)
 
     class Config:
         populate_by_name = True
@@ -306,7 +321,7 @@ class DPAFlowsAsyncModule(GenericAsyncModule):
             response = await client.post(
                 f"/{self.resource_version}/{self.resource}/advanced/simulations",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(
+                json=AdvanceSimulationFlowDTO.parse_obj(new_entity_data).dict(
                     by_alias=True,
                     exclude_none=True
                 ),

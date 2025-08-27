@@ -80,7 +80,7 @@ class CommunicationsAsyncModule:
     def build_headers(self):
         return build_headers(self)
 
-    @retry_on_401
+    @retry_on_401_async
     async def send_mail(self, mail_request: MailBody):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
