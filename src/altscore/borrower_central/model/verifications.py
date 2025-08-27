@@ -164,7 +164,7 @@ class VerificationsSyncModule(GenericSyncModule):
             raise_for_status_improved(request)
             return request.json()
 
-class VerificationsASyncModule(GenericAsyncModule):
+class VerificationsAsyncModule(GenericAsyncModule):
 
     def __init__(self, altscore_client):
         super().__init__(altscore_client, async_resource=VerificationsAsync,
