@@ -3,7 +3,7 @@ import base64
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List, Dict, Any, Union
 import httpx
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 
@@ -173,7 +173,7 @@ class VerificationsAsyncModule(GenericAsyncModule):
                          update_data_model=CreateVerificationSchema,
                          resource="/verifications")
 
-    @retry_on_401
+    @retry_on_401_async
     async def create_verification(self, request_body: Dict[str, Any]):
         request_data = CreateVerificationSchema(
             **request_body
@@ -188,7 +188,7 @@ class VerificationsAsyncModule(GenericAsyncModule):
             raise_for_status_improved(request)
             return request.json()
 
-    @retry_on_401
+    @retry_on_401_async
     async def retrieve_by_id(self, verification_id: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             request = client.get(
@@ -199,7 +199,7 @@ class VerificationsAsyncModule(GenericAsyncModule):
             raise_for_status_improved(request)
             return request.json()
 
-    @retry_on_401
+    @retry_on_401_async
     async def retrieve_all(self):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             request = client.get(
@@ -210,7 +210,7 @@ class VerificationsAsyncModule(GenericAsyncModule):
             raise_for_status_improved(request)
             return request.json()
 
-    @retry_on_401
+    @retry_on_401_async
     async def attempt(self, verification_id: str, request_body: Dict[str, Any]):
         request_data = CheckVerificationSchema(
             **request_body

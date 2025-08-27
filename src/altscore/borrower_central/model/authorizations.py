@@ -2,7 +2,7 @@ import httpx
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, List, Any
 
-from altscore.common.http_errors import raise_for_status_improved, retry_on_401
+from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 
@@ -126,7 +126,7 @@ class AuthorizationsAsyncModule(GenericAsyncModule):
                          resource="authorizations")
 
 
-    @retry_on_401
+    @retry_on_401_async
     async def sign_with_verification(self, authorization_id: str, request_body: Dict[str, Any]):
         request_data = VerificationRequest(
             **request_body
