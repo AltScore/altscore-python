@@ -189,17 +189,6 @@ class VerificationsAsyncModule(GenericAsyncModule):
             return request.json()
 
     @retry_on_401_async
-    async def retrieve_by_id(self, verification_id: str):
-        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
-            request = client.get(
-                f"/v1/verifications/{verification_id}",
-                headers=self.build_headers(),
-                timeout=120,
-            )
-            raise_for_status_improved(request)
-            return request.json()
-
-    @retry_on_401_async
     async def retrieve_all(self):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             request = client.get(
