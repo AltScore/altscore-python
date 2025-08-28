@@ -1,3 +1,5 @@
+import json
+
 import httpx
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, List, Any
@@ -139,4 +141,8 @@ class AuthorizationsAsyncModule(GenericAsyncModule):
                 timeout=120,
             )
             raise_for_status_improved(request)
-            return request.json()
+
+            if request.status_code == 202:
+                return {"status": "accepted", "message": "Authorization signing initiated"}
+            else:
+                return {"status": "rejected", "message": "Authorization signing failed"}
