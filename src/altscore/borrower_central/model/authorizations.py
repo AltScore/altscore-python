@@ -25,7 +25,6 @@ class DocumentRequest(BaseModel):
 
 class VerificationRequest(BaseModel):
     verification_id: str = Field(alias="verificationId")
-    provider: str = Field(alias="provider")
     documents: List[DocumentRequest] = Field(alias="documents")
 
     class Config:

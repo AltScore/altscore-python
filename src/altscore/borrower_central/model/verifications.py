@@ -36,7 +36,8 @@ class VerificationsAPIDTO(BaseModel):
 class CreateVerificationSchema(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
     provider: str = Field(alias="provider")
-    identity_key: str = Field(alias="identityKey")
+    provider_request_payload: Optional[dict] = Field(alias="providerRequestPayload", default=None)
+    identity_id: Optional[str] = Field(alias="identityId", default=None)
     status: Optional[str] = Field(alias="status", default="pending")
 
     class Config:
@@ -46,11 +47,9 @@ class CreateVerificationSchema(BaseModel):
 
 
 class CheckVerificationSchema(BaseModel):
-    borrower_id: str = Field(alias="borrowerId")
-    provider: str = Field(alias="provider")
-    identities_key: Optional[List[str]] = Field(alias="identitiesKey", default=None)
     video_url: Optional[str] = Field(default=None, alias="videoUrl")
     video_base64: Optional[str] = Field(default=None, alias="videoBase64")
+    provider_request_payload: Optional[dict] = Field(alias="providerRequestPayload", default=None)
 
     @validator('video_base64')
     def validate_base64(cls, v):
