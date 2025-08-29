@@ -150,22 +150,22 @@ class ClientAsync(ClientBase):
             )
         
     @retry_on_401_async
-    async def create_reservation(self, product_family: str, input: dict) -> None:
+    async def create_reservation(self, product_family: str, reservation: dict) -> None:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 self._reservations(self.data.id, product_family),
-                json=input,
+                json=reservation,
                 headers=self._header_builder(partner_id=self.data.partner_id),
                 timeout=30
             )
             raise_for_status_improved(response)
 
     @retry_on_401_async
-    async def update_reservation(self, product_family: str, source_id: str, input: dict) -> None:
+    async def update_reservation(self, product_family: str, source_id: str, reservation: dict) -> None:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.put(
                 self._reservations_source(self.data.id, product_family, source_id),
-                json=input,
+                json=reservation,
                 headers=self._header_builder(partner_id=self.data.partner_id),
                 timeout=30
             )
@@ -371,22 +371,22 @@ class ClientSync(ClientBase):
             )
     
     @retry_on_401
-    def create_reservation(self, product_family: str, input: dict) -> None:
+    def create_reservation(self, product_family: str, reservation: dict) -> None:
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 self._reservations(self.data.id, product_family),
-                json=input,
+                json=reservation,
                 headers=self._header_builder(partner_id=self.data.partner_id),
                 timeout=30
             )
             raise_for_status_improved(response)
 
     @retry_on_401
-    def update_reservation(self, product_family: str, source_id: str, input: dict) -> None:
+    def update_reservation(self, product_family: str, source_id: str, reservation: dict) -> None:
         with httpx.Client(base_url=self.base_url) as client:
             response = client.put(
                 self._reservations_source(self.data.id, product_family, source_id),
-                json=input,
+                json=reservation,
                 headers=self._header_builder(partner_id=self.data.partner_id),
                 timeout=30
             )
