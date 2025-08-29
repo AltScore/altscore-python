@@ -75,15 +75,11 @@ class ClientBase:
         return f"/v2/clients/{client_id}/credit-accounts/{product_family}/reservations"
     
     @staticmethod
-    def _reservations_source(
-            client_id: str, product_family: str, source_id: str
-    ) -> (str, Optional[dict]):
+    def _reservations_source(client_id: str, product_family: str, source_id: str):
         return f"/v2/clients/{client_id}/credit-accounts/{product_family}/reservations/{source_id}"
     
     @staticmethod
-    def _commit_reservation(
-            client_id: str, product_family: str, source_id: str
-    ) -> (str, Optional[dict]):
+    def _commit_reservation(client_id: str, product_family: str, source_id: str):
         return f"/v2/clients/{client_id}/credit-accounts/{product_family}/reservations/{source_id}/commit"
 
     @staticmethod
