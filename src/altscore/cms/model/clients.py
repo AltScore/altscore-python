@@ -73,6 +73,18 @@ class ClientBase:
             client_id: str, product_family: str
     ) -> (str, Optional[dict]):
         return f"/v2/clients/{client_id}/credit-accounts/{product_family}/reservations"
+    
+    @staticmethod
+    def _reservations_source(
+            client_id: str, product_family: str, source_id: str
+    ) -> (str, Optional[dict]):
+        return f"/v2/clients/{client_id}/credit-accounts/{product_family}/reservations/{source_id}"
+    
+    @staticmethod
+    def _commit_reservation(
+            client_id: str, product_family: str, source_id: str
+    ) -> (str, Optional[dict]):
+        return f"/v2/clients/{client_id}/credit-accounts/{product_family}/reservations/{source_id}/commit"
 
     @staticmethod
     def _status(client_id: str):
@@ -147,6 +159,37 @@ class ClientAsync(ClientBase):
             response = await client.post(
                 self._reservations(self.data.id, product_family),
                 json=input,
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401_async
+    async def update_reservation(self, product_family: str, source_id: str, input: dict) -> None:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.put(
+                self._reservations_source(self.data.id, product_family, source_id),
+                json=input,
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401_async
+    async def delete_reservation(self, product_family: str, source_id: str) -> None:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.delete(
+                self._reservations_source(self.data.id, product_family, source_id),
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401_async
+    async def commit_reservation(self, product_family: str, source_id: str) -> None:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.put(
+                self._commit_reservation(self.data.id, product_family, source_id),
                 headers=self._header_builder(partner_id=self.data.partner_id),
                 timeout=30
             )
@@ -337,6 +380,37 @@ class ClientSync(ClientBase):
             response = client.post(
                 self._reservations(self.data.id, product_family),
                 json=input,
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401
+    def update_reservation(self, product_family: str, source_id: str, input: dict) -> None:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.put(
+                self._reservations_source(self.data.id, product_family, source_id),
+                json=input,
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401
+    def delete_reservation(self, product_family: str, source_id: str) -> None:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.delete(
+                self._reservations_source(self.data.id, product_family, source_id),
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401
+    def commit_reservation(self, product_family: str, source_id: str) -> None:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.put(
+                self._commit_reservation(self.data.id, product_family, source_id),
                 headers=self._header_builder(partner_id=self.data.partner_id),
                 timeout=30
             )
