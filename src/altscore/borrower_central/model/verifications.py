@@ -36,6 +36,7 @@ class VerificationsAPIDTO(BaseModel):
 class CreateVerificationSchema(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
     provider: str = Field(alias="provider")
+    verification_type: Optional[str] = Field(alias="verificationType", default=None)
     provider_request_payload: Optional[dict] = Field(alias="providerRequestPayload", default=None)
     identity_id: Optional[str] = Field(alias="identityId", default=None)
     status: Optional[str] = Field(alias="status", default="pending")
