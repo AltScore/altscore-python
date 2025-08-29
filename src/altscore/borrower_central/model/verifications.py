@@ -1,4 +1,5 @@
 import base64
+from pprint import pprint
 
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List, Dict, Any, Union
@@ -9,8 +10,8 @@ from altscore.borrower_central.model.generics import GenericSyncResource, Generi
 
 
 class VerificationsAPIDTO(BaseModel):
+    id: str = Field(alias="id")
     borrower_id: Optional[str] = Field(alias="borrowerId")
-    verification_id: Optional[str] = Field(alias="verificationId", default=None)
     provider: str = Field(alias="provider")
     provider_verification_key: str = Field(
         alias="providerVerificationKey")
@@ -172,21 +173,6 @@ class VerificationsAsyncModule(GenericAsyncModule):
                          create_data_model=CreateVerificationSchema,
                          update_data_model=CreateVerificationSchema,
                          resource="/verifications")
-
-    @retry_on_401_async
-    async def create_verification(self, request_body: Dict[str, Any]):
-        request_data = CreateVerificationSchema(
-            **request_body
-        )
-        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
-            request = client.post(
-                f"/v1/verifications",
-                json=request_data.dict(by_alias=True),
-                headers=self.build_headers(),
-                timeout=120,
-            )
-            raise_for_status_improved(request)
-            return request.json()
 
     @retry_on_401_async
     async def retrieve_all(self):
