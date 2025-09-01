@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Tuple
 import httpx
 
 from altscore.cms.model.disbursement_accounts import CreateDisbursementClientAccountDTO, BankAccount, \
@@ -711,7 +711,7 @@ class ClientsAsyncModule(GenericAsyncModule):
             return response.json()["clientId"]
 
     @retry_on_401_async
-    async def list_clients_summary(self, product_family: str, **kwargs) -> tuple[list[ClientWithSummaryDTO], int]:
+    async def list_clients_summary(self, product_family: str, **kwargs) -> Tuple[List[ClientWithSummaryDTO], int]:
         query_params = {}
         for k, v in kwargs.items():
             if v is not None:
@@ -789,7 +789,7 @@ class ClientsSyncModule(GenericSyncModule):
             return response.json()["clientId"]
 
     @retry_on_401
-    def list_clients_summary(self, product_family: str, **kwargs) -> tuple[list[ClientWithSummaryDTO], int]:
+    def list_clients_summary(self, product_family: str, **kwargs) -> Tuple[List[ClientWithSummaryDTO], int]:
         query_params = {}
         for k, v in kwargs.items():
             if v is not None:
