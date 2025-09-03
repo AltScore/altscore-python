@@ -169,6 +169,10 @@ class ClientBase:
     @staticmethod
     def _status(client_id: str):
         return f"/v2/clients/{client_id}/status"
+    
+    @staticmethod
+    def _summary(client_id: str):
+        return f"/v2/clients/{client_id}/summary"
 
     @staticmethod
     def _get_payments_accounts(client_id: str):
@@ -232,7 +236,19 @@ class ClientAsync(ClientBase):
                 renew_token=self.renew_token,
                 data=CreditAccountAPIDTO.parse_obj(response.json())
             )
-        
+    
+
+    @retry_on_401_async
+    async def get_summary(self) -> ClientWithSummaryDTO:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
+                self._summary(self.data.id),
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return ClientWithSummaryDTO.parse_obj(response.json())
+
     @retry_on_401_async
     async def create_reservation(self, product_family: str, reservation: dict) -> None:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
@@ -454,6 +470,17 @@ class ClientSync(ClientBase):
                 data=CreditAccountAPIDTO.parse_obj(response.json())
             )
     
+    @retry_on_401
+    def get_summary(self) -> ClientWithSummaryDTO:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.get(
+                self._summary(self.data.id),
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return ClientWithSummaryDTO.parse_obj(response.json())
+
     @retry_on_401
     def create_reservation(self, product_family: str, reservation: dict) -> None:
         with httpx.Client(base_url=self.base_url) as client:
@@ -711,7 +738,7 @@ class ClientsAsyncModule(GenericAsyncModule):
             return response.json()["clientId"]
 
     @retry_on_401_async
-    async def list_clients_summary(self, product_family: str, **kwargs) -> Tuple[List[ClientWithSummaryDTO], int]:
+    async def query_summaries(self, **kwargs) -> Tuple[List[ClientWithSummaryDTO], int]:
         query_params = {}
         for k, v in kwargs.items():
             if v is not None:
@@ -719,10 +746,9 @@ class ClientsAsyncModule(GenericAsyncModule):
         headers = self.build_headers()
         async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
             response = await client.get(
-                f"/v2/clients/{product_family}/summary",
+                f"/v2/clients-summary",
                 params=query_params,
-                headers=headers,
-                timeout=30
+                headers=headers
             )
             raise_for_status_improved(response)
             total_count = int(response.headers["x-total-count"])
@@ -789,7 +815,7 @@ class ClientsSyncModule(GenericSyncModule):
             return response.json()["clientId"]
 
     @retry_on_401
-    def list_clients_summary(self, product_family: str, **kwargs) -> Tuple[List[ClientWithSummaryDTO], int]:
+    def query_summaries(self, **kwargs) -> Tuple[List[ClientWithSummaryDTO], int]:
         query_params = {}
         for k, v in kwargs.items():
             if v is not None:
@@ -797,10 +823,9 @@ class ClientsSyncModule(GenericSyncModule):
         headers = self.build_headers()
         with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
             response = client.get(
-                f"/v2/clients/{product_family}/summary",
+                f"/v2/clients-summary",
                 params=query_params,
-                headers=headers,
-                timeout=30
+                headers=headers
             )
             raise_for_status_improved(response)
             total_count = int(response.headers["x-total-count"])
