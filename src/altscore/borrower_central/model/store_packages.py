@@ -13,7 +13,7 @@ from altscore.common.http_errors import raise_for_status_improved, retry_on_401,
 class PackageAPIDTO(BaseModel):
     id: str = Field(alias="id")
     borrower_id: Optional[str] = Field(alias="borrowerId")
-    deal_id: Optional[str] = Field(alias="dealId")
+    deal_id: Optional[str] = Field(alias="dealId", default = None)
     source_id: Optional[str] = Field(alias="sourceId", default=None)
     alias: Optional[str] = Field(alias="alias", default=None)
     workflow_id: Optional[str] = Field(alias="workflowId", default=None)
