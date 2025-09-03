@@ -13,6 +13,7 @@ from altscore.common.http_errors import raise_for_status_improved, retry_on_401,
 class PackageAPIDTO(BaseModel):
     id: str = Field(alias="id")
     borrower_id: Optional[str] = Field(alias="borrowerId")
+    deal_id: Optional[str] = Field(alias="dealId", default = None)
     source_id: Optional[str] = Field(alias="sourceId", default=None)
     alias: Optional[str] = Field(alias="alias", default=None)
     workflow_id: Optional[str] = Field(alias="workflowId", default=None)
@@ -33,6 +34,7 @@ class PackageAPIDTO(BaseModel):
 
 class CreatePackageDTO(BaseModel):
     borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
+    deal_id: Optional[str] = Field(alias="dealId", default=None)
     source_id: Optional[str] = Field(alias="sourceId", default=None)
     workflow_id: Optional[str] = Field(alias="workflowId", default=None)
     alias: Optional[str] = Field(alias="alias", default=None)
@@ -279,13 +281,14 @@ class PackagesSyncModule(GenericSyncModule):
                     return package
         return None
 
-    def force_stale(self, package_id: Optional[str] = None, borrower_id: Optional[str] = None,
+    def force_stale(self, package_id: Optional[str] = None, borrower_id: Optional[str] = None, deal_id: Optional[str] = None,
                     workflow_id: Optional[str] = None, alias: Optional[str] = None):
-        if package_id is None and borrower_id is None and workflow_id is None and alias is None:
-            raise ValueError("At least one of package_id, borrower_id, workflow_id or alias must be provided")
+        if package_id is None and borrower_id is None and deal_id is None and workflow_id is None and alias is None:
+            raise ValueError("At least one of package_id, borrower_id, deal_id, workflow_id or alias must be provided")
         body = {
             "packageId": package_id,
             "borrowerId": borrower_id,
+            "dealId": deal_id,
             "workflowId": workflow_id,
             "alias": alias,
             "forcedStale": True
