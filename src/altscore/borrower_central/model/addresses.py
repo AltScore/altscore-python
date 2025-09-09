@@ -215,6 +215,34 @@ class AddressesSyncModule(GenericSyncModule):
             raise_for_status_improved(response)
             return response.json()["id"]
 
+    @retry_on_401
+    def add_picture_by_url(self, address_id: str, url: str, label: Optional[str] = None):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.post(
+                f"/v1/addresses/commands/add-picture-by-url",
+                headers=self.build_headers(),
+                json={
+                    "addressId": address_id,
+                    "url": url,
+                    "label": label
+                }
+            )
+            raise_for_status_improved(response)
+            return response.json()["attachmentId"]
+
+    @retry_on_401
+    def set_main_picture(self, address_id: str, attachment_id: str):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.post(
+                f"/v1/addresses/commands/set-main-picture",
+                headers=self.build_headers(),
+                json={
+                    "addressId": address_id,
+                    "attachmentId": attachment_id
+                }
+            )
+            raise_for_status_improved(response)
+
 
 class AddressesAsyncModule(GenericAsyncModule):
 
@@ -263,3 +291,31 @@ class AddressesAsyncModule(GenericAsyncModule):
             )
             raise_for_status_improved(response)
             return response.json()["id"]
+
+    @retry_on_401_async
+    async def add_picture_by_url(self, address_id: str, url: str, label: Optional[str] = None):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.post(
+                f"/v1/addresses/commands/add-picture-by-url",
+                headers=self.build_headers(),
+                json={
+                    "addressId": address_id,
+                    "url": url,
+                    "label": label
+                }
+            )
+            raise_for_status_improved(response)
+            return response.json()["attachmentId"]
+
+    @retry_on_401_async
+    async def set_main_picture(self, address_id: str, attachment_id: str):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.post(
+                f"/v1/addresses/commands/set-main-picture",
+                headers=self.build_headers(),
+                json={
+                    "addressId": address_id,
+                    "attachmentId": attachment_id
+                }
+            )
+            raise_for_status_improved(response)
