@@ -59,6 +59,8 @@ from altscore.borrower_central.model.bank_transactions import BankTransactionsSy
     BankTransactionsAsyncModule
 from altscore.borrower_central.model.actionables import ActionablesSyncModule, ActionablesAsyncModule
 
+from src.altscore.borrower_central.model.sftp_connections import SFTPConnectionSyncModule, SFTPConnectionAsyncModule
+
 
 class BorrowerCentralAsync:
     def __init__(self, altscore_client):

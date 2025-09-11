@@ -150,83 +150,6 @@ class SFTPConnectionAsyncModule:
                 for data in response.json()
             ]
 
-    @retry_on_401_async
-    async def list_files(self, path: str = "/") -> List[SFTPFileDTO]:
-        """List files and directories at the specified path."""
-        async with httpx.AsyncClient(base_url=self.base_url) as client:
-            response = await client.get(
-                self._list_files_url(self.data.id),
-                headers=self._header_builder(),
-                params={"path": path},
-                timeout=120
-            )
-            raise_for_status_improved(response)
-            return [
-                SFTPFileDTO.parse_obj(data)
-                for data in response.json()
-            ]
-
-    @retry_on_401_async
-    async def download_file(self, remote_path: str) -> str:
-        """Download a file from SFTP and return the package ID."""
-        async with httpx.AsyncClient(base_url=self.base_url) as client:
-            response = await client.post(
-                self._download_file_url(self.data.id),
-                headers=self._header_builder(),
-                json={"path": remote_path},
-                timeout=300  # Downloads may take longer
-            )
-            raise_for_status_improved(response)
-            return response.json()["package_id"]
-
-    @retry_on_401_async
-    async def upload_file(self, attachment_id: str, remote_path: str,
-                          filename: Optional[str] = None) -> SFTPUploadResultDTO:
-        """Upload a file from an attachment to SFTP."""
-        payload = {
-            "attachmentId": attachment_id,
-            "remotePath": remote_path,
-        }
-        if filename:
-            payload["filename"] = filename
-
-        async with httpx.AsyncClient(base_url=self.base_url) as client:
-            response = await client.post(
-                self._upload_file_url(self.data.id),
-                headers=self._header_builder(),
-                json=payload,
-                timeout=300  # Uploads may take longer
-            )
-            raise_for_status_improved(response)
-            return SFTPUploadResultDTO.parse_obj(response.json())
-
-    @retry_on_401_async
-    async def test_connection(self) -> Dict[str, Any]:
-        """Test the SFTP connection."""
-        async with httpx.AsyncClient(base_url=self.base_url) as client:
-            response = await client.post(
-                f"{self.base_url}/v1/sftp-connections/{self.data.id}/test",
-                headers=self._header_builder(),
-                timeout=30
-            )
-            raise_for_status_improved(response)
-            return response.json()
-
-    @retry_on_401_async
-    async def update(self, updates: Dict[str, Any]) -> SFTPConnectionDTO:
-        """Update the SFTP connection."""
-        async with httpx.AsyncClient(base_url=self.base_url) as client:
-            response = await client.patch(
-                self._get_connection_url(self.data.id),
-                headers=self._header_builder(),
-                json=updates,
-                timeout=120
-            )
-            raise_for_status_improved(response)
-            updated_data = SFTPConnectionDTO.parse_obj(response.json())
-            self.data = updated_data
-            return updated_data
-
 
 class SFTPConnectionSyncModule:
     def __init__(self, altscore_client):
@@ -284,7 +207,7 @@ class SFTPConnectionSyncModule:
             raise_for_status_improved(response)
 
     @retry_on_401
-    def list_all(self, tenant: Optional[str] = None) -> List[SFTPConnectionDTO]:
+    def query(self, tenant: Optional[str] = None) -> List[SFTPConnectionDTO]:
         """List all SFTP connections, optionally filtered by tenant."""
         params = {}
         if tenant:
@@ -312,6 +235,69 @@ class SFTPConnectionAsync(SFTPConnectionBase):
         self._header_builder = header_builder
         self.renew_token = renew_token
         self.data = connection_data
+
+    @retry_on_401_async
+    async def list_files(self, path: str = "/") -> List[SFTPFileDTO]:
+        """List files and directories at the specified path."""
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
+                self._list_files_url(self.data.id),
+                headers=self._header_builder(),
+                params={"path": path},
+                timeout=120
+            )
+            raise_for_status_improved(response)
+            return [
+                SFTPFileDTO.parse_obj(data)
+                for data in response.json()
+            ]
+
+    @retry_on_401_async
+    async def download_file(self, remote_path: str) -> str:
+        """Download a file from SFTP and return the package ID."""
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.post(
+                self._download_file_url(self.data.id),
+                headers=self._header_builder(),
+                json={"path": remote_path},
+                timeout=300  # Downloads may take longer
+            )
+            raise_for_status_improved(response)
+            return response.json()["packageId"]
+
+    @retry_on_401_async
+    async def upload_file(self, attachment_id: str, remote_path: str,
+                          filename: Optional[str] = None) -> SFTPUploadResultDTO:
+        """Upload a file from an attachment to SFTP."""
+        payload = {
+            "attachmentId": attachment_id,
+            "remotePath": remote_path,
+        }
+        if filename:
+            payload["filename"] = filename
+
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.post(
+                self._upload_file_url(self.data.id),
+                headers=self._header_builder(),
+                json=payload,
+                timeout=300  # Uploads may take longer
+            )
+            raise_for_status_improved(response)
+            return SFTPUploadResultDTO.parse_obj(response.json())
+
+    @retry_on_401_async
+    async def test_connection(self) -> Dict[str, Any]:
+        """Test the SFTP connection."""
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.post(
+                f"{self.base_url}/v1/sftp-connections/{self.data.id}/test",
+                headers=self._header_builder(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return response.json()
+
 
 
 class SFTPConnectionSync(SFTPConnectionBase):
@@ -350,7 +336,7 @@ class SFTPConnectionSync(SFTPConnectionBase):
                 timeout=300  # Downloads may take longer
             )
             raise_for_status_improved(response)
-            return response.json()["package_id"]
+            return response.json()["packageId"]
 
     @retry_on_401
     def upload_file(self, attachment_id: str, remote_path: str,
@@ -384,18 +370,3 @@ class SFTPConnectionSync(SFTPConnectionBase):
             )
             raise_for_status_improved(response)
             return response.json()
-
-    @retry_on_401
-    def update(self, updates: Dict[str, Any]) -> SFTPConnectionDTO:
-        """Update the SFTP connection."""
-        with httpx.Client(base_url=self.base_url) as client:
-            response = client.patch(
-                self._get_connection_url(self.data.id),
-                headers=self._header_builder(),
-                json=updates,
-                timeout=120
-            )
-            raise_for_status_improved(response)
-            updated_data = SFTPConnectionDTO.parse_obj(response.json())
-            self.data = updated_data
-            return updated_data
