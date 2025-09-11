@@ -115,6 +115,7 @@ class BorrowerCentralAsync:
         self.bank_transactions = BankTransactionsAsyncModule(altscore_client)
         self.conversational_templates = WhatsAppTemplateAsyncModule(altscore_client)
         self.actionables = ActionablesAsyncModule(altscore_client)
+        self.sftp_connections = SFTPConnectionAsyncModule(altscore_client)
 
 
 class BorrowerCentralSync:
@@ -172,3 +173,4 @@ class BorrowerCentralSync:
         self.bank_transactions = BankTransactionsSyncModule(altscore_client)
         self.conversational_templates = WhatsAppTemplateSyncModule(altscore_client)
         self.actionables = ActionablesSyncModule(altscore_client)
+        self.sftp_connections = SFTPConnectionSyncModule(altscore_client)
