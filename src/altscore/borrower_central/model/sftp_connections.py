@@ -25,11 +25,11 @@ class SFTPConnectionDTO(BaseModel):
 
 class NewSFTPConnectionDTO(BaseModel):
     host: str = Field(alias="host")
-    port: Optional[int] = Field(alias="port", default=22)
-    username: str = Field(alias="username")
-    password: str = Field(alias="password")
-    label: str = Field(alias="label")
-    base_path: Optional[str] = Field(alias="basePath", default="/")
+    port: Optional[int] = Field(alias="port", default=22, ge=1, le=65535)
+    username: str = Field(alias="username", min_length=1)
+    password: str = Field(alias="password", min_length=8)
+    label: str = Field(alias="label", min_length=1)
+    base_path: Optional[str] = Field(alias="basePath", default="/", min_length=1, regex=r'^/.*')
 
     class Config:
         populate_by_name = True
@@ -41,7 +41,7 @@ class SFTPFileDTO(BaseModel):
     name: str = Field(alias="name")
     path: str = Field(alias="path")
     size: Optional[int] = Field(alias="size", default=None)
-    isDirectory: bool = Field(alias="isDirectory", default=False)
+    is_directory: bool = Field(alias="isDirectory", default=False)
 
     class Config:
         populate_by_name = True
@@ -86,13 +86,16 @@ class SFTPConnectionSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: SFTPConnectionDTO):
         super().__init__(base_url, "sftp-connections", header_builder, renew_token, data)
+    
+    def _url(self, action: str) -> str:
+        return f"/v1/{self.resource}/{self.data.id}/{action}"
 
     @retry_on_401
     def list_files(self, path: str = "/") -> List[SFTPFileDTO]:
         """List files and directories at the specified path."""
         with httpx.Client(base_url=self.base_url) as client:
             response = client.get(
-                f"/v1/{self.resource}/{self.data.id}/list",
+                self._url("list"),
                 headers=self._header_builder(),
                 params={"path": path},
                 timeout=120
@@ -108,7 +111,7 @@ class SFTPConnectionSync(GenericSyncResource):
         """Download a file from SFTP and return the package ID."""
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
-                f"/v1/{self.resource}/{self.data.id}/download",
+                self._url("download"),
                 headers=self._header_builder(),
                 json={"path": remote_path},
                 timeout=300  # Downloads may take longer
@@ -129,7 +132,7 @@ class SFTPConnectionSync(GenericSyncResource):
 
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
-                f"/v1/{self.resource}/{self.data.id}/upload",
+                self._url("upload"),
                 headers=self._header_builder(),
                 json=payload,
                 timeout=300  # Uploads may take longer
@@ -142,7 +145,7 @@ class SFTPConnectionSync(GenericSyncResource):
         """Test the SFTP connection."""
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
-                f"/v1/{self.resource}/{self.data.id}/test",
+                self._url("test"),
                 headers=self._header_builder(),
                 timeout=30
             )
@@ -154,13 +157,16 @@ class SFTPConnectionAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: SFTPConnectionDTO):
         super().__init__(base_url, "sftp-connections", header_builder, renew_token, data)
+    
+    def _url(self, action: str) -> str:
+        return f"/v1/{self.resource}/{self.data.id}/{action}"
 
     @retry_on_401_async
     async def list_files(self, path: str = "/") -> List[SFTPFileDTO]:
         """List files and directories at the specified path."""
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.get(
-                f"/v1/{self.resource}/{self.data.id}/list",
+                self._url("list"),
                 headers=self._header_builder(),
                 params={"path": path},
                 timeout=120
@@ -176,7 +182,7 @@ class SFTPConnectionAsync(GenericAsyncResource):
         """Download a file from SFTP and return the package ID."""
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
-                f"/v1/{self.resource}/{self.data.id}/download",
+                self._url("download"),
                 headers=self._header_builder(),
                 json={"path": remote_path},
                 timeout=300  # Downloads may take longer
@@ -197,7 +203,7 @@ class SFTPConnectionAsync(GenericAsyncResource):
 
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
-                f"/v1/{self.resource}/{self.data.id}/upload",
+                self._url("upload"),
                 headers=self._header_builder(),
                 json=payload,
                 timeout=300  # Uploads may take longer
@@ -210,7 +216,7 @@ class SFTPConnectionAsync(GenericAsyncResource):
         """Test the SFTP connection."""
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
-                f"/v1/{self.resource}/{self.data.id}/test",
+                self._url("test"),
                 headers=self._header_builder(),
                 timeout=30
             )
