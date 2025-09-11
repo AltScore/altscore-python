@@ -59,67 +59,45 @@ class UpdateClientDTO(BaseModel):
     phone_number: Optional[str] = Field(alias="phoneNumber", default=None)
     borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
 
+class CMSBaseModel(BaseModel):
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        populate_by_alias = True
 
-class CreditMetrics(BaseModel):
+class CreditMetrics(CMSBaseModel):
     assigned: Money
     available: Money
     consumed: Money
     utilization_percentage: float = Field(alias="utilizationPercentage")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
 
-
-class OverdueBalanceBreakdown(BaseModel):
+class OverdueBalanceBreakdown(CMSBaseModel):
     interest: Money
     penalties: Money
     principal: Money
     taxes: Money
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
-
-
-class DebtInformation(BaseModel):
+class DebtInformation(CMSBaseModel):
     number_of_active_debts: int = Field(alias="numberOfActiveDebts")
     total_debt_amount: Money = Field(alias="totalDebtAmount")
     total_balance_amount: Money = Field(alias="totalBalanceAmount")
     total_overdue_amount: Money = Field(alias="totalOverdueAmount")
     overdue_balance_breakdown: OverdueBalanceBreakdown = Field(alias="overdueBalanceBreakdown")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
-
-
-class RiskIndicators(BaseModel):
+class RiskIndicators(CMSBaseModel):
     max_days_past_due: int = Field(alias="maxDaysPastDue")
     number_of_overdue_debts: int = Field(alias="numberOfOverdueDebts")
     oldest_overdue_date: str = Field(alias="oldestOverdueDate")
     client_risk_category: str = Field(alias="clientRiskCategory")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
-
-
-class ClientSummary(BaseModel):
+class ClientSummary(CMSBaseModel):
     credit_metrics: CreditMetrics = Field(alias="creditMetrics")
     debt_information: DebtInformation = Field(alias="debtInformation")
     risk_indicators: RiskIndicators = Field(alias="riskIndicators")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
 
-class SimpleClient(BaseModel):
+class SimpleClient(CMSBaseModel):
     client_id: str = Field(alias="clientId")
     partner_id: str = Field(alias="partnerId")
     borrower_id: str = Field(alias="borrowerId")
@@ -128,20 +106,9 @@ class SimpleClient(BaseModel):
     legal_name: str = Field(alias="legalName")
     status: str = Field(alias="status")
 
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
-
-class ClientWithSummaryDTO(BaseModel):
+class ClientWithSummaryDTO(CMSBaseModel):
     client: SimpleClient
     summary: ClientSummary
-
-    class Config:
-        populate_by_name = True
-        allow_population_by_field_name = True
-        populate_by_alias = True
-
 
 class ClientBase:
 
@@ -746,7 +713,7 @@ class ClientsAsyncModule(GenericAsyncModule):
         headers = self.build_headers()
         async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
             response = await client.get(
-                f"/v2/clients-summary",
+                "/v2/clients-summary",
                 params=query_params,
                 headers=headers
             )
@@ -823,7 +790,7 @@ class ClientsSyncModule(GenericSyncModule):
         headers = self.build_headers()
         with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
             response = client.get(
-                f"/v2/clients-summary",
+                "/v2/clients-summary",
                 params=query_params,
                 headers=headers
             )
