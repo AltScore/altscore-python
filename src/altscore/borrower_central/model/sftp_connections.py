@@ -245,7 +245,7 @@ class SFTPConnectionSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: SFTPConnectionDTO):
         super().__init__(base_url, "sftp-connections", header_builder, renew_token, data)
-    
+
     def _url(self, action: str) -> str:
         return f"/v1/{self.resource}/{self.data.id}/{action}"
 
@@ -297,7 +297,7 @@ class SFTPConnectionSync(GenericSyncResource):
                 timeout=300  # Uploads may take longer
             )
             raise_for_status_improved(response)
-            return SFTPUploadResultDTO.parse_obj(response.json())
+            return SFTPUploadResultDTO(**response.json())
 
     @retry_on_401
     def test_connection(self) -> Dict[str, Any]:
@@ -322,7 +322,7 @@ class SFTPConnectionSync(GenericSyncResource):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return SFTPDeleteResponse.parse_obj(response.json())
+            return SFTPDeleteResponse(**response.json())
 
     @retry_on_401
     def move_file(self, source_path: str, destination_path: str) -> SFTPMoveResponse:
@@ -335,7 +335,7 @@ class SFTPConnectionSync(GenericSyncResource):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return SFTPMoveResponse.parse_obj(response.json())
+            return SFTPMoveResponse(**response.json())
 
     @retry_on_401
     def create_directory(self, path: str, mode: Optional[int] = 755) -> SFTPMkdirResponse:
@@ -356,7 +356,7 @@ class SFTPConnectionSync(GenericSyncResource):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return SFTPMkdirResponse.parse_obj(response.json())
+            return SFTPMkdirResponse(**response.json())
 
     @retry_on_401
     def get_file_info(self, path: str) -> SFTPStatResponse:
@@ -369,7 +369,7 @@ class SFTPConnectionSync(GenericSyncResource):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return SFTPStatResponse.parse_obj(response.json())
+            return SFTPStatResponse(**response.json())
 
     @retry_on_401
     def copy_file(self, source_path: str, destination_path: str) -> SFTPCopyResponse:
@@ -382,7 +382,7 @@ class SFTPConnectionSync(GenericSyncResource):
                 timeout=300  # Copy operations may take longer, especially for large directories
             )
             raise_for_status_improved(response)
-            return SFTPCopyResponse.parse_obj(response.json())
+            return SFTPCopyResponse(**response.json())
 
     @retry_on_401
     def bulk_delete(self, paths: List[str]) -> SFTPBulkDeleteResponse:
@@ -403,7 +403,7 @@ class SFTPConnectionSync(GenericSyncResource):
             raise ValueError("paths list cannot be empty")
         if len(paths) > 50:
             raise ValueError("Maximum 50 paths allowed per bulk delete request")
-            
+
         with httpx.Client(base_url=self.base_url) as client:
             response = client.post(
                 self._url("bulk-delete"),
@@ -412,14 +412,14 @@ class SFTPConnectionSync(GenericSyncResource):
                 timeout=300  # Bulk operations may take longer
             )
             raise_for_status_improved(response)
-            return SFTPBulkDeleteResponse.parse_obj(response.json())
+            return SFTPBulkDeleteResponse(**response.json())
 
 
 class SFTPConnectionAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: SFTPConnectionDTO):
         super().__init__(base_url, "sftp-connections", header_builder, renew_token, data)
-    
+
     def _url(self, action: str) -> str:
         return f"/v1/{self.resource}/{self.data.id}/{action}"
 
@@ -471,7 +471,7 @@ class SFTPConnectionAsync(GenericAsyncResource):
                 timeout=300  # Uploads may take longer
             )
             raise_for_status_improved(response)
-            return SFTPUploadResultDTO.parse_obj(response.json())
+            return SFTPUploadResultDTO(**response.json())
 
     @retry_on_401_async
     async def test_connection(self) -> Dict[str, Any]:
@@ -496,7 +496,7 @@ class SFTPConnectionAsync(GenericAsyncResource):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return SFTPDeleteResponse.parse_obj(response.json())
+            return SFTPDeleteResponse(**response.json())
 
     @retry_on_401_async
     async def move_file(self, source_path: str, destination_path: str) -> SFTPMoveResponse:
@@ -509,7 +509,7 @@ class SFTPConnectionAsync(GenericAsyncResource):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return SFTPMoveResponse.parse_obj(response.json())
+            return SFTPMoveResponse(**response.json())
 
     @retry_on_401_async
     async def create_directory(self, path: str, mode: Optional[int] = 755) -> SFTPMkdirResponse:
@@ -530,7 +530,7 @@ class SFTPConnectionAsync(GenericAsyncResource):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return SFTPMkdirResponse.parse_obj(response.json())
+            return SFTPMkdirResponse(**response.json())
 
     @retry_on_401_async
     async def get_file_info(self, path: str) -> SFTPStatResponse:
@@ -543,7 +543,7 @@ class SFTPConnectionAsync(GenericAsyncResource):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return SFTPStatResponse.parse_obj(response.json())
+            return SFTPStatResponse(**response.json())
 
     @retry_on_401_async
     async def copy_file(self, source_path: str, destination_path: str) -> SFTPCopyResponse:
@@ -556,7 +556,7 @@ class SFTPConnectionAsync(GenericAsyncResource):
                 timeout=300  # Copy operations may take longer, especially for large directories
             )
             raise_for_status_improved(response)
-            return SFTPCopyResponse.parse_obj(response.json())
+            return SFTPCopyResponse(**response.json())
 
     @retry_on_401_async
     async def bulk_delete(self, paths: List[str]) -> SFTPBulkDeleteResponse:
@@ -577,7 +577,7 @@ class SFTPConnectionAsync(GenericAsyncResource):
             raise ValueError("paths list cannot be empty")
         if len(paths) > 50:
             raise ValueError("Maximum 50 paths allowed per bulk delete request")
-            
+
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             response = await client.post(
                 self._url("bulk-delete"),
@@ -586,4 +586,4 @@ class SFTPConnectionAsync(GenericAsyncResource):
                 timeout=300  # Bulk operations may take longer
             )
             raise_for_status_improved(response)
-            return SFTPBulkDeleteResponse.parse_obj(response.json())
+            return SFTPBulkDeleteResponse(**response.json())
