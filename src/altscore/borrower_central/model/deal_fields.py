@@ -130,17 +130,23 @@ class DealFieldsSyncModule(GenericSyncModule):
     def get_by_key(self, deal_id: str, key: str):
         """
         Get a deal field by its key
-        
+
         Args:
             deal_id: The ID of the deal
             key: The field key
-            
+
         Returns:
             List[DealFieldDTO]: List of deal fields matching the key
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
-                f"/v1/deal-fields/by-key/{deal_id}/{key}",
+                f"/v1/deal-fields",
+                params={
+                    "key": key,
+                    "deal-id": deal_id,
+                    "per-page": 100,
+                    "page": 1
+                },
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -245,7 +251,13 @@ class DealFieldsAsyncModule(GenericAsyncModule):
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
-                f"/v1/deal-fields/by-key/{deal_id}/{key}",
+                f"/v1/deal-fields",
+                params={
+                    "key": key,
+                    "deal-id": deal_id,
+                    "per-page": 100,
+                    "page": 1
+                },
                 headers=self.build_headers(),
                 timeout=120,
             )

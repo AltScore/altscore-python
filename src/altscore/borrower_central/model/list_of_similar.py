@@ -34,7 +34,8 @@ class Similar(BaseModel):
 
 class ListOfSimilarAPIDTO(BaseModel):
     id: str = Field(alias="id")
-    borrower_id: str = Field(alias="borrowerId")
+    borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
+    deal_id: Optional[str] = Field(alias="dealId", default=None)
     execution_id: Optional[str] = Field(alias="executionId")
     list_of_similar: List[Similar] = Field(alias="listOfSimilar")
     status: Optional[str] = Field(alias="status")
@@ -49,7 +50,8 @@ class ListOfSimilarAPIDTO(BaseModel):
 
 
 class CreateListOfSimilar(BaseModel):
-    borrower_id: Optional[str] = Field(alias="borrowerId")
+    borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
+    deal_id: Optional[str] = Field(alias="dealId", default=None)
     execution_id: Optional[str] = Field(alias="executionId")
     list_of_similar: List[Similar] = Field(alias="listOfSimilar")
 
