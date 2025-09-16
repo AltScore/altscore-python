@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Tuple
 import httpx
 
 from altscore.cms.model.disbursement_accounts import CreateDisbursementClientAccountDTO, BankAccount, \
@@ -9,6 +9,7 @@ from altscore.cms.model.credit_accounts import CreditAccountSync, CreditAccountA
 from altscore.cms.model.payment_accounts import PaymentAccountAPIDTO, CreatePaymentAccountDTO, \
     CreatePaymentReferenceDTO, Reference
 from altscore.cms.model.generics import GenericSyncModule, GenericAsyncModule, convert_to_dash_case
+from altscore.cms.model.common import Money
 import datetime as dt
 
 
@@ -58,6 +59,56 @@ class UpdateClientDTO(BaseModel):
     phone_number: Optional[str] = Field(alias="phoneNumber", default=None)
     borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
 
+class CMSBaseModel(BaseModel):
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        populate_by_alias = True
+
+class CreditMetrics(CMSBaseModel):
+    assigned: Money
+    available: Money
+    consumed: Money
+    utilization_percentage: float = Field(alias="utilizationPercentage")
+
+
+class OverdueBalanceBreakdown(CMSBaseModel):
+    interest: Money
+    penalties: Money
+    principal: Money
+    taxes: Money
+
+class DebtInformation(CMSBaseModel):
+    number_of_active_debts: int = Field(alias="numberOfActiveDebts")
+    total_debt_amount: Money = Field(alias="totalDebtAmount")
+    total_balance_amount: Money = Field(alias="totalBalanceAmount")
+    total_overdue_amount: Money = Field(alias="totalOverdueAmount")
+    overdue_balance_breakdown: OverdueBalanceBreakdown = Field(alias="overdueBalanceBreakdown")
+
+class RiskIndicators(CMSBaseModel):
+    max_days_past_due: int = Field(alias="maxDaysPastDue")
+    number_of_overdue_debts: int = Field(alias="numberOfOverdueDebts")
+    oldest_overdue_date: str = Field(alias="oldestOverdueDate")
+    client_risk_category: str = Field(alias="clientRiskCategory")
+
+class ClientSummary(CMSBaseModel):
+    credit_metrics: CreditMetrics = Field(alias="creditMetrics")
+    debt_information: DebtInformation = Field(alias="debtInformation")
+    risk_indicators: RiskIndicators = Field(alias="riskIndicators")
+
+
+class SimpleClient(CMSBaseModel):
+    client_id: str = Field(alias="clientId")
+    partner_id: str = Field(alias="partnerId")
+    borrower_id: str = Field(alias="borrowerId")
+    external_id: str = Field(alias="externalId")
+    email: str = Field(alias="email")
+    legal_name: str = Field(alias="legalName")
+    status: str = Field(alias="status")
+
+class ClientWithSummaryDTO(CMSBaseModel):
+    client: SimpleClient
+    summary: ClientSummary
 
 class ClientBase:
 
@@ -85,6 +136,10 @@ class ClientBase:
     @staticmethod
     def _status(client_id: str):
         return f"/v2/clients/{client_id}/status"
+    
+    @staticmethod
+    def _summary(client_id: str):
+        return f"/v2/clients/{client_id}/summary"
 
     @staticmethod
     def _get_payments_accounts(client_id: str):
@@ -148,7 +203,19 @@ class ClientAsync(ClientBase):
                 renew_token=self.renew_token,
                 data=CreditAccountAPIDTO.parse_obj(response.json())
             )
-        
+    
+
+    @retry_on_401_async
+    async def get_summary(self) -> ClientWithSummaryDTO:
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
+                self._summary(self.data.id),
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return ClientWithSummaryDTO.parse_obj(response.json())
+
     @retry_on_401_async
     async def create_reservation(self, product_family: str, reservation: dict) -> None:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
@@ -370,6 +437,17 @@ class ClientSync(ClientBase):
                 data=CreditAccountAPIDTO.parse_obj(response.json())
             )
     
+    @retry_on_401
+    def get_summary(self) -> ClientWithSummaryDTO:
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.get(
+                self._summary(self.data.id),
+                headers=self._header_builder(partner_id=self.data.partner_id),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return ClientWithSummaryDTO.parse_obj(response.json())
+
     @retry_on_401
     def create_reservation(self, product_family: str, reservation: dict) -> None:
         with httpx.Client(base_url=self.base_url) as client:
@@ -626,6 +704,24 @@ class ClientsAsyncModule(GenericAsyncModule):
             raise_for_status_improved(response)
             return response.json()["clientId"]
 
+    @retry_on_401_async
+    async def query_summaries(self, **kwargs) -> Tuple[List[ClientWithSummaryDTO], int]:
+        query_params = {}
+        for k, v in kwargs.items():
+            if v is not None:
+                query_params[convert_to_dash_case(k)] = v
+        headers = self.build_headers()
+        async with httpx.AsyncClient(base_url=self.altscore_client._cms_base_url) as client:
+            response = await client.get(
+                "/v2/clients-summary",
+                params=query_params,
+                headers=headers
+            )
+            raise_for_status_improved(response)
+            total_count = int(response.headers["x-total-count"])
+            resources = [ClientWithSummaryDTO.parse_obj(item) for item in response.json()]
+        return resources, total_count
+
 
 class ClientsSyncModule(GenericSyncModule):
 
@@ -684,3 +780,21 @@ class ClientsSyncModule(GenericSyncModule):
             )
             raise_for_status_improved(response)
             return response.json()["clientId"]
+
+    @retry_on_401
+    def query_summaries(self, **kwargs) -> Tuple[List[ClientWithSummaryDTO], int]:
+        query_params = {}
+        for k, v in kwargs.items():
+            if v is not None:
+                query_params[convert_to_dash_case(k)] = v
+        headers = self.build_headers()
+        with httpx.Client(base_url=self.altscore_client._cms_base_url) as client:
+            response = client.get(
+                "/v2/clients-summary",
+                params=query_params,
+                headers=headers
+            )
+            raise_for_status_improved(response)
+            total_count = int(response.headers["x-total-count"])
+            resources = [ClientWithSummaryDTO.parse_obj(item) for item in response.json()]
+        return resources, total_count
