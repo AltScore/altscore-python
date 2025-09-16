@@ -127,27 +127,6 @@ class DealFieldsSyncModule(GenericSyncModule):
             return [DealFieldDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401
-    def find_by_key(self, key: str, deal_id: str):
-        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
-            fields_found_req = client.get(
-                f"/v1/deal-fields",
-                params={
-                    "key": key,
-                    "deal-id": deal_id,
-                    "per-page": 1,
-                    "page": 1
-                },
-                headers=self.build_headers(),
-                timeout=120,
-            )
-            raise_for_status_improved(fields_found_req)
-            fields_found_data = fields_found_req.json()
-            if len(fields_found_data) == 0:
-                return None
-            else:
-                return self.retrieve(fields_found_data[0]["id"])
-
-    @retry_on_401
     def get_by_key(self, deal_id: str, key: str):
         """
         Get a deal field by its key
@@ -161,7 +140,13 @@ class DealFieldsSyncModule(GenericSyncModule):
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
-                f"/v1/deal-fields/by-key/{deal_id}/{key}",
+                f"/v1/deal-fields",
+                params={
+                    "key": key,
+                    "deal-id": deal_id,
+                    "per-page": 100,
+                    "page": 1
+                },
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -253,27 +238,6 @@ class DealFieldsAsyncModule(GenericAsyncModule):
             return [DealFieldDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401_async
-    async def find_by_key(self, key: str, deal_id: str):
-        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
-            fields_found_req = await client.get(
-                f"/v1/deal-fields",
-                params={
-                    "key": key,
-                    "deal-id": deal_id,
-                    "per-page": 1,
-                    "page": 1
-                },
-                headers=self.build_headers(),
-                timeout=120,
-            )
-            await raise_for_status_improved(fields_found_req)
-            fields_found_data = fields_found_req.json()
-            if len(fields_found_data) == 0:
-                return None
-            else:
-                return await self.retrieve(fields_found_data[0]["id"])
-
-    @retry_on_401_async
     async def get_by_key(self, deal_id: str, key: str):
         """
         Get a deal field by its key
@@ -287,7 +251,13 @@ class DealFieldsAsyncModule(GenericAsyncModule):
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
-                f"/v1/deal-fields/by-key/{deal_id}/{key}",
+                f"/v1/deal-fields",
+                params={
+                    "key": key,
+                    "deal-id": deal_id,
+                    "per-page": 100,
+                    "page": 1
+                },
                 headers=self.build_headers(),
                 timeout=120,
             )
