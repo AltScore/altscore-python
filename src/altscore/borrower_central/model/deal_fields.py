@@ -44,7 +44,7 @@ class CreateDealFieldRequest(BaseModel):
     deal_id: str = Field(alias="dealId")
     key: str = Field(alias="key")
     value: Any = Field(alias="value")
-    data_type: Literal["string", "number", "date", "boolean", "money"] = Field(alias="dataType")
+    data_type: Optional[Literal["string", "number", "date", "boolean", "money"]] = Field(alias="dataType", default=None)
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
@@ -58,6 +58,7 @@ class UpdateDealFieldRequest(BaseModel):
     """Model for updating a deal field"""
     deal_id: str = Field(alias="dealId")
     value: Any = Field(alias="value")
+    data_type: Optional[Literal["string", "number", "date", "boolean", "money"]] = Field(alias="dataType", default=None)
     reference_id: str = Field(alias="referenceId")  # Source of the value for history tracking
     tags: Optional[List[str]] = Field(alias="tags", default=[])
 
