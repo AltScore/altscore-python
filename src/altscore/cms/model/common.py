@@ -89,6 +89,7 @@ class Terms(BaseModel):
     disbursement_date: Optional[str] = Field(alias="disbursementDate")
     installments: int = Field(alias="installments")
     fees: Optional[List[Optional[TermsFees]]] = Field(alias="fees", default=None)
+    interest: Money = Field(alias="interest")
     interest_calculate_type: str = Field(alias="interestCalculateType")
     interest_rate: InterestRate = Field(alias="interestRate")
     interest_tax: float = Field(alias="interestTax")
