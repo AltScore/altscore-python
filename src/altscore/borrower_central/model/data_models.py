@@ -13,6 +13,7 @@ class DataModelAPIDTO(BaseModel):
     priority: Optional[int] = Field(alias="priority", default=None)
     order: Optional[int] = Field(alias="order", default=None)
     allowed_values: Optional[List[Any]] = Field(alias="allowedValues", default=None)
+    data_type: Optional[str] = Field(alias="dataType", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
     metadata: Optional[Dict[str, Any]] = Field(alias="metadata")
@@ -32,6 +33,7 @@ class DataModelCreate(BaseModel):
     priority: Optional[int] = Field(alias="priority", default=None)
     allowed_values: Optional[List[Any]] = Field(alias="allowedValues", default=None)
     order: Optional[int] = Field(alias="order", default=None)
+    data_type: Optional[str] = Field(alias="dataType", default=None)
     metadata: Optional[dict] = Field(alias="metadata", default={})
     is_segmentation_field: Optional[bool] = Field(alias="isSegmentationField", default=False)
 
@@ -48,6 +50,7 @@ class DataModelUpdate(BaseModel):
     priority: Optional[int] = Field(alias="priority", default=None)
     order: Optional[int] = Field(alias="order", default=None)
     allowed_values: Optional[List[Any]] = Field(alias="allowedValues", default=None)
+    data_type: Optional[str] = Field(alias="dataType", default=None)
     metadata: Optional[dict] = Field(alias="metadata", default={})
     is_segmentation_field: Optional[bool] = Field(alias="isSegmentationField", default=None)
 
