@@ -268,7 +268,8 @@ class MacrosAsync:
                     {
                         "borrower_id": borrower_id,
                         "key": key,
-                        "value": value
+                        "value": value,
+                        "dataType": "string"
                     }
                 ))
             for field_key in borrower_fields_to_create:
@@ -278,7 +279,8 @@ class MacrosAsync:
                     {
                         "borrower_id": borrower_id,
                         "key": key,
-                        "value": value
+                        "value": value,
+                        "dataType": "string"
                     }
                 ))
             if len(borrower_data.get("points_of_contact", [])) > 0:
