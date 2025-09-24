@@ -34,7 +34,8 @@ class MacrosSync:
                     {
                         "borrower_id": borrower_id,
                         "key": key,
-                        "value": value
+                        "value": value,
+                        "dataType": "string"
                     }
                 )
             for field_key in borrower_fields_to_create:
@@ -44,7 +45,8 @@ class MacrosSync:
                     {
                         "borrower_id": borrower_id,
                         "key": key,
-                        "value": value
+                        "value": value,
+                        "dataType": "string"
                     }
                 )
 
