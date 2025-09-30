@@ -178,7 +178,7 @@ class RequestSyncModule:
 
     @retry_on_401
     def new_sync(self, input_keys: Union[InputKeys, Dict], sources_config: List[Union[Dict, SourceConfig]],
-                 timeout: Optional[int] = None):
+                 timeout: Optional[int] = None, execution_id: Optional[str] = None, workflow_id: Optional[str] = None):
         if isinstance(input_keys, dict):
             # to validate the input keys
             input_keys = InputKeys.parse_obj(input_keys)
@@ -187,6 +187,10 @@ class RequestSyncModule:
         sources_config = [SourceConfig.parse_obj(s) if isinstance(s, dict) else s for s in sources_config]
         if timeout is not None:
             payload["timeout"] = timeout
+        if execution_id is not None:
+            payload["executionId"] = execution_id
+        if workflow_id is not None:
+            payload["workflowId"] = workflow_id
         payload["sourcesConfig"] = [s.dict(by_alias=True) for s in sources_config]
         with httpx.Client(base_url=self.altscore_client._altdata_base_url) as client:
             r = client.post(
@@ -201,13 +205,20 @@ class RequestSyncModule:
             return RequestResult.from_api(sync_data_response)
 
     @retry_on_401
-    def new_async(self, input_keys: Union[InputKeys, Dict], sources_config: List[Union[Dict, SourceConfig]]):
+    def new_async(self, input_keys: Union[InputKeys, Dict], sources_config: List[Union[Dict, SourceConfig]],
+                  execution_id: Optional[str] = None, workflow_id: Optional[str] = None):
         if isinstance(input_keys, dict):
             # to validate the input keys
             input_keys = InputKeys.parse_obj(input_keys)
         payload = input_keys.dict(by_alias=True, exclude_none=True)
         # to validate the sources config model
         sources_config = [SourceConfig.parse_obj(s) if isinstance(s, dict) else s for s in sources_config]
+
+        if execution_id is not None:
+            payload["executionId"] = execution_id
+
+        if workflow_id is not None:
+            payload["workflowId"] = workflow_id
 
         payload["sourcesConfig"] = [s.dict(by_alias=True) for s in sources_config]
         with httpx.Client(base_url=self.altscore_client._altdata_base_url) as client:
@@ -248,7 +259,8 @@ class RequestAsyncModule:
 
     @retry_on_401_async
     async def new_sync(self, input_keys: Union[InputKeys, Dict], sources_config: List[Union[Dict, SourceConfig]],
-                       timeout: Optional[int] = None):
+                       timeout: Optional[int] = None, execution_id: Optional[str] = None,
+                       workflow_id: Optional[str] = None):
         if isinstance(input_keys, dict):
             # to validate the input keys
             input_keys = InputKeys.parse_obj(input_keys)
@@ -257,6 +269,12 @@ class RequestAsyncModule:
         sources_config = [SourceConfig.parse_obj(s) if isinstance(s, dict) else s for s in sources_config]
         if timeout is not None:
             payload["timeout"] = timeout
+
+        if execution_id is not None:
+            payload["executionId"] = execution_id
+
+        if workflow_id is not None:
+            payload["workflowId"] = workflow_id
 
         payload["sourcesConfig"] = [s.dict(by_alias=True) for s in sources_config]
         async with httpx.AsyncClient(base_url=self.altscore_client._altdata_base_url) as client:
@@ -271,13 +289,20 @@ class RequestAsyncModule:
             return RequestResult.from_api(sync_data_response)
 
     @retry_on_401_async
-    async def new_async(self, input_keys: Union[InputKeys, Dict], sources_config: List[Union[Dict, SourceConfig]]):
+    async def new_async(self, input_keys: Union[InputKeys, Dict], sources_config: List[Union[Dict, SourceConfig]],
+                        execution_id: Optional[str] = None, workflow_id: Optional[str] = None):
         if isinstance(input_keys, dict):
             # to validate the input keys
             input_keys = InputKeys.parse_obj(input_keys)
         payload = input_keys.dict(by_alias=True, exclude_none=True)
         # to validate the sources config model
         sources_config = [SourceConfig.parse_obj(s) if isinstance(s, dict) else s for s in sources_config]
+
+        if execution_id is not None:
+            payload["executionId"] = execution_id
+
+        if workflow_id is not None:
+            payload["workflowId"] = workflow_id
 
         payload["sourcesConfig"] = [s.dict(by_alias=True) for s in sources_config]
         async with httpx.AsyncClient(base_url=self.altscore_client._altdata_base_url) as client:
