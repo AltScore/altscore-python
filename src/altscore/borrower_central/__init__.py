@@ -59,6 +59,8 @@ from altscore.borrower_central.model.bank_transactions import BankTransactionsSy
     BankTransactionsAsyncModule
 from altscore.borrower_central.model.actionables import ActionablesSyncModule, ActionablesAsyncModule
 
+from src.altscore.borrower_central.model.sftp_connections import SFTPConnectionSyncModule, SFTPConnectionAsyncModule
+
 
 class BorrowerCentralAsync:
     def __init__(self, altscore_client):
@@ -115,6 +117,7 @@ class BorrowerCentralAsync:
         self.bank_transactions = BankTransactionsAsyncModule(altscore_client)
         self.conversational_templates = WhatsAppTemplateAsyncModule(altscore_client)
         self.actionables = ActionablesAsyncModule(altscore_client)
+        self.sftp_connections = SFTPConnectionAsyncModule(altscore_client)
 
 
 class BorrowerCentralSync:
@@ -172,3 +175,4 @@ class BorrowerCentralSync:
         self.bank_transactions = BankTransactionsSyncModule(altscore_client)
         self.conversational_templates = WhatsAppTemplateSyncModule(altscore_client)
         self.actionables = ActionablesSyncModule(altscore_client)
+        self.sftp_connections = SFTPConnectionSyncModule(altscore_client)
