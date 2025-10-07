@@ -37,6 +37,7 @@ class WorkflowDataAPIDTO(BaseModel):
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
     use_high_memory: Optional[bool] = Field(alias="useHighMemory", default=None)
+    metadata: Optional[Dict[str, Any]] = Field(alias="metadata", default=None)
 
     class Config:
         populate_by_name = True
@@ -67,6 +68,7 @@ class CreateWorkflowDTO(BaseModel):
     schedule: Optional[WorkflowSchedule] = Field(alias="schedule", default=None)
     schedule_batch: Optional[WorkflowSchedule] = Field(alias="scheduleBatch", default=None)
     use_high_memory: Optional[bool] = Field(alias="useHighMemory", default=False)
+    metadata: Optional[Dict[str, Any]] = Field(alias="metadata", default=None)
 
     class Config:
         populate_by_name = True
@@ -86,6 +88,7 @@ class UpdateWorkflowDTO(BaseModel):
     initial_data: Optional[str] = Field(alias="initialData", default=None)
     input_schema: Optional[str] = Field(alias="inputSchema", default=None)
     use_high_memory: Optional[bool] = Field(alias="useHighMemory", default=None)
+    metadata: Optional[Dict[str, Any]] = Field(alias="metadata", default=None)
 
     class Config:
         populate_by_name = True
