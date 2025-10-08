@@ -367,6 +367,16 @@ class WorkflowsSyncModule(GenericSyncModule):
             return response.json()
 
     @retry_on_401
+    def clear_metadata(self, workflow_id: str):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.delete(
+                f"/v1/workflows/{workflow_id}/metadata",
+                headers=self.build_headers(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401
     def execute_batch_with_dataframe(self,
                                      dataframe,
                                      workflow_id=None,
@@ -650,6 +660,16 @@ class WorkflowsAsyncModule(GenericAsyncModule):
             )
             raise_for_status_improved(response)
             return response.json()
+
+    @retry_on_401_async
+    async def clear_metadata(self, workflow_id: str):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.delete(
+                f"/v1/workflows/{workflow_id}/metadata",
+                headers=self.build_headers(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
 
     @retry_on_401_async
     async def execute_batch_with_dataframe(self,
