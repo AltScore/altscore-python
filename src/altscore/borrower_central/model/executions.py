@@ -517,6 +517,21 @@ class ExecutionSyncModule(GenericSyncModule):
             raise_for_status_improved(response)
             return None
 
+    @retry_on_401
+    def set_billable_id(self, execution_id:str, billable_id:str):
+        payload = {
+            "billableId": billable_id
+        }
+
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.put(
+                f"/v1/{self.resource}/{execution_id}/billable-id",
+                json=payload,
+                headers=self.build_headers()
+            )
+            raise_for_status_improved(response)
+            return None
+
 
 class ExecutionAsyncModule(GenericAsyncModule):
 
@@ -552,6 +567,21 @@ class ExecutionAsyncModule(GenericAsyncModule):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
                 f"/v1/{self.resource}/commands/overwrite-principal",
+                json=payload,
+                headers=self.build_headers()
+            )
+            raise_for_status_improved(response)
+            return None
+
+    @retry_on_401_async
+    async def set_billable_id(self, execution_id:str, billable_id:str):
+        payload = {
+            "billableId": billable_id
+        }
+
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.put(
+                f"/v1/{self.resource}/{execution_id}/billable-id",
                 json=payload,
                 headers=self.build_headers()
             )
