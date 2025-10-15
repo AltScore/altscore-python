@@ -1,7 +1,7 @@
 import httpx
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any, Union, Literal
+from typing import Optional, List, Dict, Any, Literal
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 
@@ -115,7 +115,7 @@ class DealFieldsSyncModule(GenericSyncModule):
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
-                f"/v1/deal-fields",
+                "/v1/deal-fields",
                 params={
                     "deal-id": deal_id,
                     "page": page,
@@ -141,7 +141,7 @@ class DealFieldsSyncModule(GenericSyncModule):
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
-                f"/v1/deal-fields",
+                "/v1/deal-fields",
                 params={
                     "key": key,
                     "deal-id": deal_id,
@@ -226,7 +226,7 @@ class DealFieldsAsyncModule(GenericAsyncModule):
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
-                f"/v1/deal-fields",
+                "/v1/deal-fields",
                 params={
                     "deal-id": deal_id,
                     "page": page,
@@ -235,7 +235,7 @@ class DealFieldsAsyncModule(GenericAsyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            await raise_for_status_improved(response)
+            raise_for_status_improved(response)
             return [DealFieldDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401_async
@@ -252,7 +252,7 @@ class DealFieldsAsyncModule(GenericAsyncModule):
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
-                f"/v1/deal-fields",
+                "/v1/deal-fields",
                 params={
                     "key": key,
                     "deal-id": deal_id,
@@ -262,7 +262,7 @@ class DealFieldsAsyncModule(GenericAsyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            await raise_for_status_improved(response)
+            raise_for_status_improved(response)
             return [DealFieldDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401_async
@@ -282,7 +282,7 @@ class DealFieldsAsyncModule(GenericAsyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            await raise_for_status_improved(response)
+            raise_for_status_improved(response)
             return [ValueCounterDTO.parse_obj(item) for item in response.json()]
 
     @retry_on_401_async
@@ -308,5 +308,5 @@ class DealFieldsAsyncModule(GenericAsyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            await raise_for_status_improved(response)
+            raise_for_status_improved(response)
             return None

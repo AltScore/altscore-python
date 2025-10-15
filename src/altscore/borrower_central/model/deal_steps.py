@@ -85,7 +85,7 @@ class DealStepsSyncModule(GenericSyncModule):
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
-                f"/v1/deal-steps",
+                "/v1/deal-steps",
                 params={
                     "deal-id": deal_id,
                     "page": page,
@@ -177,7 +177,7 @@ class DealStepsAsyncModule(GenericAsyncModule):
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
-                f"/v1/deal-steps",
+                "/v1/deal-steps",
                 params={
                     "deal-id": deal_id,
                     "page": page,
@@ -186,7 +186,7 @@ class DealStepsAsyncModule(GenericAsyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            await raise_for_status_improved(response)
+            raise_for_status_improved(response)
             return [DealStepDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401_async
@@ -208,7 +208,7 @@ class DealStepsAsyncModule(GenericAsyncModule):
             )
             if response.status_code == 404:
                 return None
-            await raise_for_status_improved(response)
+            raise_for_status_improved(response)
             return DealStepAsync(
                 self.altscore_client._borrower_central_base_url,
                 self.build_headers,
@@ -240,5 +240,5 @@ class DealStepsAsyncModule(GenericAsyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            await raise_for_status_improved(response)
+            raise_for_status_improved(response)
             return [DealStepDTO.parse_obj(data) for data in response.json()]

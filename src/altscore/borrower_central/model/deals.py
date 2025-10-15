@@ -1,10 +1,9 @@
 import httpx
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
-from altscore.borrower_central.model.deal_steps import DealStepDTO
 
 
 # DTO for current step in a deal
@@ -27,7 +26,7 @@ class DealDTO(BaseModel):
     """Data transfer object for deals"""
     id: str = Field(alias="id")
     external_id: Optional[str] = Field(alias="externalId", default=None)
-    name: str = Field(alias="name")
+    label: Optional[str] = Field(alias="label", default=None)
     description: Optional[str] = Field(alias="description", default=None)
     status: Optional[str] = Field(alias="status", default=None)
     current_step: Optional[StepDataDTO] = Field(alias="currentStep", default=None)
@@ -44,7 +43,7 @@ class DealDTO(BaseModel):
 
 class CreateDealRequest(BaseModel):
     """Model for creating a new deal"""
-    name: str = Field(alias="name")
+    label: str = Field(alias="label")
     description: Optional[str] = Field(alias="description", default=None)
     status: Optional[str] = Field(alias="status", default=None)
     external_id: Optional[str] = Field(alias="externalId", default=None)
@@ -59,7 +58,7 @@ class CreateDealRequest(BaseModel):
 
 class UpdateDealRequest(BaseModel):
     """Model for updating a deal"""
-    name: Optional[str] = Field(alias="name", default=None)
+    label: Optional[str] = Field(alias="label", default=None)
     description: Optional[str] = Field(alias="description", default=None)
     status: Optional[str] = Field(alias="status", default=None)
     tags: Optional[List[str]] = Field(alias="tags", default=None)
@@ -276,7 +275,7 @@ class DealsSyncModule(GenericSyncModule):
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
-                f"/v1/deals",
+                "/v1/deals",
                 params={
                     "borrower-id": borrower_id,
                     "page": page,
@@ -303,7 +302,7 @@ class DealsSyncModule(GenericSyncModule):
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
-                f"/v1/deals",
+                "/v1/deals",
                 params={
                     "status": status,
                     "page": page,
@@ -314,6 +313,29 @@ class DealsSyncModule(GenericSyncModule):
             )
             raise_for_status_improved(response)
             return response.json()
+
+    @retry_on_401
+    def retrieve_by_external_id(self, external_id: str) -> Optional[DealSync]:
+        """
+        Retrieve a deal by its external ID
+        """
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                "/v1/deals",
+                params={"external-id": external_id},
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            raise_for_status_improved(response)
+            deals = response.json()
+            if deals and len(deals) > 0:
+                return DealSync(
+                    base_url=self.altscore_client._borrower_central_base_url,
+                    header_builder=self.build_headers,
+                    renew_token=self.renew_token,
+                    data=deals[0]
+                )
+            return None
 
 
 # Module for deals - asynchronous
@@ -347,7 +369,7 @@ class DealsAsyncModule(GenericAsyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            await raise_for_status_improved(response)
+            raise_for_status_improved(response)
             return None
 
     @retry_on_401_async
@@ -365,7 +387,7 @@ class DealsAsyncModule(GenericAsyncModule):
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
-                f"/v1/deals",
+                "/v1/deals",
                 params={
                     "borrower-id": borrower_id,
                     "page": page,
@@ -374,25 +396,25 @@ class DealsAsyncModule(GenericAsyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            await raise_for_status_improved(response)
+            raise_for_status_improved(response)
             return response.json()
 
     @retry_on_401_async
     async def query_by_status(self, status: str, page: int = 1, per_page: int = 10):
         """
         Find deals by status
-        
+
         Args:
             status: The status to filter by
             page: Page number for pagination
             per_page: Number of results per page
-            
+
         Returns:
             Dict with deals and pagination info
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
-                f"/v1/deals",
+                "/v1/deals",
                 params={
                     "status": status,
                     "page": page,
@@ -401,5 +423,28 @@ class DealsAsyncModule(GenericAsyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            await raise_for_status_improved(response)
+            raise_for_status_improved(response)
             return response.json()
+
+    @retry_on_401_async
+    async def retrieve_by_external_id(self, external_id: str) -> Optional[DealAsync]:
+        """
+        Retrieve a deal by its external ID
+        """
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                "/v1/deals",
+                params={"external-id": external_id},
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            raise_for_status_improved(response)
+            deals = response.json()
+            if deals and len(deals) > 0:
+                return DealAsync(
+                    base_url=self.altscore_client._borrower_central_base_url,
+                    header_builder=self.build_headers,
+                    renew_token=self.renew_token,
+                    data=deals[0]
+                )
+            return None
