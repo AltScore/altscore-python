@@ -1,7 +1,7 @@
 import httpx
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, Dict
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 
@@ -83,7 +83,7 @@ class DealContactsSyncModule(GenericSyncModule):
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
-                f"/v1/deal-contacts",
+                "/v1/deal-contacts",
                 params={
                     "deal-id": deal_id,
                     "page": page,
@@ -110,7 +110,7 @@ class DealContactsSyncModule(GenericSyncModule):
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
-                f"/v1/deal-contacts",
+                "/v1/deal-contacts",
                 params={
                     "borrower-id": borrower_id,
                     "page": page,
@@ -138,7 +138,7 @@ class DealContactsSyncModule(GenericSyncModule):
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
-                f"/v1/deal-contacts",
+                "/v1/deal-contacts",
                 params={
                     "deal-id": deal_id,
                     "borrower-id": borrower_id,
@@ -166,7 +166,7 @@ class DealContactsSyncModule(GenericSyncModule):
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
-                f"/v1/deal-contacts",
+                "/v1/deal-contacts",
                 params={
                     "role-key": role_key,
                     "page": page,
@@ -204,7 +204,7 @@ class DealContactsAsyncModule(GenericAsyncModule):
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
-                f"/v1/deal-contacts",
+                "/v1/deal-contacts",
                 params={
                     "deal-id": deal_id,
                     "page": page,
@@ -213,7 +213,7 @@ class DealContactsAsyncModule(GenericAsyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            await raise_for_status_improved(response)
+            raise_for_status_improved(response)
             return [DealContactDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401_async
@@ -231,7 +231,7 @@ class DealContactsAsyncModule(GenericAsyncModule):
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
-                f"/v1/deal-contacts",
+                "/v1/deal-contacts",
                 params={
                     "borrower-id": borrower_id,
                     "page": page,
@@ -240,7 +240,7 @@ class DealContactsAsyncModule(GenericAsyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            await raise_for_status_improved(response)
+            raise_for_status_improved(response)
             return [DealContactDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401_async
@@ -259,7 +259,7 @@ class DealContactsAsyncModule(GenericAsyncModule):
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
-                f"/v1/deal-contacts",
+                "/v1/deal-contacts",
                 params={
                     "deal-id": deal_id,
                     "borrower-id": borrower_id,
@@ -269,7 +269,7 @@ class DealContactsAsyncModule(GenericAsyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            await raise_for_status_improved(response)
+            raise_for_status_improved(response)
             return [DealContactDTO.parse_obj(data) for data in response.json()]
     
     @retry_on_401_async
@@ -287,7 +287,7 @@ class DealContactsAsyncModule(GenericAsyncModule):
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
-                f"/v1/deal-contacts",
+                "/v1/deal-contacts",
                 params={
                     "role-key": role_key,
                     "page": page,
@@ -296,5 +296,5 @@ class DealContactsAsyncModule(GenericAsyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            await raise_for_status_improved(response)
+            raise_for_status_improved(response)
             return [DealContactDTO.parse_obj(data) for data in response.json()]

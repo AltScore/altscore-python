@@ -155,7 +155,7 @@ class MetricsAsyncModule(GenericAsyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            await raise_for_status_improved(metrics_found_request)
+            raise_for_status_improved(metrics_found_request)
             metrics_found_data = metrics_found_request.json()
             if len(metrics_found_data) == 0:
                 return None
