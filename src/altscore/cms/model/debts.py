@@ -69,6 +69,7 @@ class DebtAPIDTO(BaseModel):
     version: int = Field(alias="version")
     days_past_due: Optional[int] = Field(alias="daysPastDue", default=None)
     max_days_past_due: Optional[int] = Field(alias="maxDaysPastDue", default=None)
+    source: Optional[str] = Field(alias="source", default="simple_credit")
 
     class Config:
         populate_by_name = True
