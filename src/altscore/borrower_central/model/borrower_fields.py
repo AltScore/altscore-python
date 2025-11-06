@@ -198,7 +198,7 @@ class BorrowerFieldsAsyncModule(GenericAsyncModule):
             if len(fields_found_data) == 0:
                 return None
             else:
-                return self.retrieve(fields_found_data[0]["id"])
+                return await self.retrieve(fields_found_data[0]["id"])
 
 
     async def count_distinct_values(self, key: str):
@@ -228,7 +228,6 @@ class BorrowerFieldsAsyncModule(GenericAsyncModule):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return
 
     @retry_on_401_async
     async def bulk_update_by_borrower_ids(self, borrower_ids: List[str], key: str, new_value: Any, reference_id: Optional[str] = None):
@@ -248,4 +247,3 @@ class BorrowerFieldsAsyncModule(GenericAsyncModule):
                 timeout=120
             )
             raise_for_status_improved(response)
-            return
