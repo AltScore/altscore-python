@@ -449,8 +449,8 @@ class BorrowersAsyncModule:
         Exact match by identity
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
-            identities_found_request = await client.get(
-                f"/v1/identities",
+            response = await client.get(
+                "/v1/identities",
                 params={
                     "key": identity_key,
                     "value": identity_value,
@@ -460,13 +460,14 @@ class BorrowersAsyncModule:
                 headers=self.build_headers(),
                 timeout=120,
             )
-            if identities_found_request.status_code == 200:
-                identities_found_data = identities_found_request.json()
-                if len(identities_found_data) == 0:
-                    return None
-                else:
-                    if identities_found_data[0]["value"] == identity_value:
-                        return await self.retrieve(identities_found_data[0]["borrowerId"])
+            response.raise_for_status()
+            identities = response.json()
+            if len(identities) == 0:
+                return None
+
+            identity = identities[0]
+            if identity["value"] == identity_value:
+                return await self.retrieve(identity["borrowerId"])
             return None
 
     @retry_on_401_async
@@ -692,8 +693,8 @@ class BorrowersSyncModule:
         Exact match by identity
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
-            identities_found_request = client.get(
-                f"/v1/identities",
+            response = client.get(
+                "/v1/identities",
                 params={
                     "key": identity_key,
                     "value": identity_value,
@@ -703,13 +704,14 @@ class BorrowersSyncModule:
                 headers=self.build_headers(),
                 timeout=120,
             )
-            if identities_found_request.status_code == 200:
-                identities_found_data = identities_found_request.json()
-                if len(identities_found_data) == 0:
-                    return None
-                else:
-                    if identities_found_data[0]["value"] == identity_value:
-                        return self.retrieve(identities_found_data[0]["borrowerId"])
+            response.raise_for_status()
+            identities = response.json()
+            if len(identities) == 0:
+                return None
+
+            identity = identities[0]
+            if identity["value"] == identity_value:
+                return self.retrieve(identity["borrowerId"])
             return None
 
     @retry_on_401
