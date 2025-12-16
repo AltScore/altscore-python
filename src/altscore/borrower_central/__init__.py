@@ -46,6 +46,8 @@ from altscore.borrower_central.model.report_templates import ReportTemplateAsync
     ReportTemplateSyncModule
 from altscore.borrower_central.model.deals import DealsAsyncModule, DealsSyncModule
 from altscore.borrower_central.model.deal_fields import DealFieldsAsyncModule, DealFieldsSyncModule
+from altscore.borrower_central.model.assets import AssetsAsyncModule, AssetsSyncModule
+from altscore.borrower_central.model.asset_fields import AssetFieldsAsyncModule, AssetFieldsSyncModule
 from altscore.borrower_central.model.deal_steps import DealStepsAsyncModule, DealStepsSyncModule
 from altscore.borrower_central.model.deal_contacts import DealContactsAsyncModule, DealContactsSyncModule
 from altscore.borrower_central.model.accounting_documents import AccountingDocumentsAsyncModule, \
@@ -108,6 +110,8 @@ class BorrowerCentralAsync:
         self.deals = DealsAsyncModule(altscore_client)
         self.deal_fields = DealFieldsAsyncModule(altscore_client)
         self.deal_steps = DealStepsAsyncModule(altscore_client)
+        self.assets = AssetsAsyncModule(altscore_client)
+        self.asset_fields = AssetFieldsAsyncModule(altscore_client)
         self.deal_contacts = DealContactsAsyncModule(altscore_client)
         self.accounting_documents = AccountingDocumentsAsyncModule(altscore_client)
         self.accounting_line_items = LineItemsAsyncModule(altscore_client)
@@ -166,6 +170,8 @@ class BorrowerCentralSync:
         self.deals = DealsSyncModule(altscore_client)
         self.deal_fields = DealFieldsSyncModule(altscore_client)
         self.deal_steps = DealStepsSyncModule(altscore_client)
+        self.assets = AssetsSyncModule(altscore_client)
+        self.asset_fields = AssetFieldsSyncModule(altscore_client)
         self.deal_contacts = DealContactsSyncModule(altscore_client)
         self.accounting_documents = AccountingDocumentsSyncModule(altscore_client)
         self.accounting_line_items = LineItemsSyncModule(altscore_client)
