@@ -14,6 +14,7 @@ class AssetDTO(BaseModel):
     external_id: Optional[str] = Field(alias="externalId", default=None)
     label: Optional[str] = Field(alias="label", default=None)
     description: Optional[str] = Field(alias="description", default=None)
+    group: Optional[str] = Field(alias="group", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt", default=None)
     has_attachments: bool = Field(alias="hasAttachments")
@@ -30,6 +31,7 @@ class CreateAssetRequest(BaseModel):
     label: str = Field(alias="label")
     description: Optional[str] = Field(alias="description", default=None)
     external_id: Optional[str] = Field(alias="externalId", default=None)
+    group: Optional[str] = Field(alias="group", default=None)
 
     class Config:
         populate_by_name = True
@@ -153,6 +155,33 @@ class AssetsSyncModule(GenericSyncModule):
                 )
             return None
 
+    @retry_on_401
+    def query_by_group(self, group: str, page: int = 1, per_page: int = 10):
+        """
+        Find assets by group
+
+        Args:
+            group: The group key to filter by
+            page: Page number for pagination
+            per_page: Number of results per page
+
+        Returns:
+            Dict with assets and pagination info
+        """
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                "/v1/assets",
+                params={
+                    "group": group,
+                    "page": page,
+                    "per-page": per_page
+                },
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            raise_for_status_improved(response)
+            return response.json()
+
 
 # Module for assets - asynchronous
 class AssetsAsyncModule(GenericAsyncModule):
@@ -237,3 +266,30 @@ class AssetsAsyncModule(GenericAsyncModule):
                     data=assets[0]
                 )
             return None
+
+    @retry_on_401_async
+    async def query_by_group(self, group: str, page: int = 1, per_page: int = 10):
+        """
+        Find assets by group
+
+        Args:
+            group: The group key to filter by
+            page: Page number for pagination
+            per_page: Number of results per page
+
+        Returns:
+            Dict with assets and pagination info
+        """
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                "/v1/assets",
+                params={
+                    "group": group,
+                    "page": page,
+                    "per-page": per_page
+                },
+                headers=self.build_headers(),
+                timeout=120,
+            )
+            raise_for_status_improved(response)
+            return response.json()
