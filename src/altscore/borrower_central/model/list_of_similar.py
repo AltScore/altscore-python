@@ -1,7 +1,7 @@
 import httpx
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 
@@ -13,7 +13,7 @@ class ListStatus:
 class SimilarEntity(BaseModel):
     entity_type: str = Field(alias="entityType")
     key: str = Field(alias="key")
-    proposed_value: str = Field(alias="proposedValue")
+    proposed_value: Any = Field(alias="proposedValue")
 
     class Config:
         populate_by_name = True
