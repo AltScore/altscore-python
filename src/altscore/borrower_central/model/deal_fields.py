@@ -1,9 +1,19 @@
 import httpx
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, root_validator
 from typing import Optional, List, Dict, Any, Literal
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
+
+
+class Money(BaseModel):
+    amount: str = Field(alias="amount")
+    currency: str = Field(alias="currency")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
 
 
 # DTO for field value history
@@ -37,6 +47,24 @@ class DealFieldDTO(BaseModel):
         populate_by_name = True
         allow_population_by_field_name = True
         allow_population_by_alias = True
+
+    @root_validator(pre=False)
+    def parse_money_values(cls, values):
+        """Parse money values based on the field's data_type"""
+        data_type = values.get("data_type")
+        history = values.get("history", [])
+
+        # Parse current value based on data_type
+        current_value = values.get("value")
+        if data_type == "money" and isinstance(current_value, dict):
+            values["value"] = Money.parse_obj(current_value)
+
+        # Parse history values based on data_type
+        for hist_item in history:
+            if data_type == "money" and isinstance(hist_item.value, dict):
+                hist_item.value = Money.parse_obj(hist_item.value)
+
+        return values
 
 
 class CreateDealFieldRequest(BaseModel):

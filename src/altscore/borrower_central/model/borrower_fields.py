@@ -1,10 +1,21 @@
 import httpx
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, root_validator
 from typing import Optional, List, Dict, Any
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 import datetime as dt
+
+
+class Money(BaseModel):
+    amount: str = Field(alias="amount")
+    currency: str = Field(alias="currency")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
 
 class HistoricValue(BaseModel):
     reference_id: str = Field(alias="referenceId")  # this is the id an identifier for the source of the value
@@ -34,6 +45,25 @@ class BorrowerFieldAPIDTO(BaseModel):
         allow_population_by_field_name = True
         allow_population_by_alias = True
 
+    @root_validator(pre=False)
+    def parse_history_values(cls, values):
+        """Parse history values based on the field's data_type"""
+        data_type = values.get("data_type")
+        history = values.get("history", [])
+        
+        # Parse current value based on data_type
+        current_value = values.get("value")
+        if data_type == "money" and isinstance(current_value, dict):
+            values["value"] = Money.parse_obj(current_value)
+        
+        # Parse history values based on data_type
+        if history:
+            for hist_item in history:
+                if data_type == "money" and isinstance(hist_item.value, dict):
+                    hist_item.value = Money.parse_obj(hist_item.value)
+        
+        return values
+
 
 class CreateBorrowerFieldDTO(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
@@ -61,7 +91,7 @@ class UpdateBorrowerFieldDTO(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
     form_id: Optional[str] = Field(alias="formId", default=None)
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
-    value: Optional[str] = Field(alias="value")
+    value: Optional[Any] = Field(alias="value")
     data_type: Optional[str] = Field(alias="dataType", default=None)
     tags: List[str] = Field(alias="tags", default=[])
     updated_at: Optional[dt.datetime] = Field(alias="updatedAt", default=None)
@@ -169,6 +199,21 @@ class BorrowerFieldsSyncModule(GenericSyncModule):
             raise_for_status_improved(response)
             return
 
+    @retry_on_401
+    def get_by_borrower_id(self, borrower_id: str, page: int = 1, per_page: int = 100):
+        """
+        Get all borrower fields for a specific borrower
+        
+        Args:
+            borrower_id: The ID of the borrower
+            page: Page number for pagination
+            per_page: Number of results per page
+            
+        Returns:
+            List[BorrowerFieldSync]: List of borrower fields for the borrower
+        """
+        return self.query(borrower_id=borrower_id, page=page, per_page=per_page)
+
 class BorrowerFieldsAsyncModule(GenericAsyncModule):
 
     def __init__(self, altscore_client):
@@ -247,3 +292,18 @@ class BorrowerFieldsAsyncModule(GenericAsyncModule):
                 timeout=120
             )
             raise_for_status_improved(response)
+
+    @retry_on_401_async
+    async def get_by_borrower_id(self, borrower_id: str, page: int = 1, per_page: int = 100):
+        """
+        Get all borrower fields for a specific borrower
+        
+        Args:
+            borrower_id: The ID of the borrower
+            page: Page number for pagination
+            per_page: Number of results per page
+            
+        Returns:
+            List[BorrowerFieldAsync]: List of borrower fields for the borrower
+        """
+        return await self.query(borrower_id=borrower_id, page=page, per_page=per_page)
