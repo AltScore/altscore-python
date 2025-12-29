@@ -161,6 +161,7 @@ class WhatsAppTemplateSyncModule(GenericSyncModule):
                 timeout=120,
             )
             raise_for_status_improved(request)
+            return request.json()
 
 
 class WhatsAppTemplateAsyncModule(GenericAsyncModule):
@@ -200,4 +201,5 @@ class WhatsAppTemplateAsyncModule(GenericAsyncModule):
                 timeout=120,
             )
             raise_for_status_improved(response)
+            return response.json()
 
