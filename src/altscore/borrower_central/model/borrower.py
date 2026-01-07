@@ -390,47 +390,47 @@ class BorrowersAsyncModule:
         return build_headers(self)
 
     @retry_on_401_async
-    async def create(self, new_entity_data: dict):
+    async def create(self, new_entity_data: dict, timeout: int = 120):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
                 "/v1/borrowers",
                 headers=self.build_headers(),
                 json=CreateBorrowerDTO.parse_obj(new_entity_data).dict(by_alias=True),
-                timeout=120
+                timeout=timeout
             )
             raise_for_status_improved(response)
             return response.json()["id"]
 
     @retry_on_401_async
-    async def patch(self, resource_id: str, patch_data: dict):
+    async def patch(self, resource_id: str, patch_data: dict, timeout: int = 120):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.patch(
                 f"/v1/borrowers/{resource_id}",
                 headers=self.build_headers(),
                 json=UpdateBorrowerDTO.parse_obj(patch_data).dict(by_alias=True),
-                timeout=120
+                timeout=timeout
             )
             raise_for_status_improved(response)
-            return await self.retrieve(response.json()["id"])
+            return await self.retrieve(response.json()["id"], timeout=timeout)
 
     @retry_on_401_async
-    async def delete(self, resource_id: str):
+    async def delete(self, resource_id: str, timeout: int = 120):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.delete(
                 f"/v1/borrowers/{resource_id}",
                 headers=self.build_headers(),
-                timeout=120
+                timeout=timeout
             )
             raise_for_status_improved(response)
             return None
 
     @retry_on_401_async
-    async def retrieve(self, resource_id: str):
+    async def retrieve(self, resource_id: str, timeout: int = 120):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
                 f"/v1/borrowers/{resource_id}",
                 headers=self.build_headers(),
-                timeout=120,
+                timeout=timeout,
             )
             if response.status_code == 200:
                 return BorrowerAsync(
@@ -634,47 +634,47 @@ class BorrowersSyncModule:
         return build_headers(self)
 
     @retry_on_401
-    def create(self, new_entity_data: dict):
+    def create(self, new_entity_data: dict, timeout: int = 120):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
                 "/v1/borrowers",
                 headers=self.build_headers(),
                 json=CreateBorrowerDTO.parse_obj(new_entity_data).dict(by_alias=True),
-                timeout=120
+                timeout=timeout
             )
             raise_for_status_improved(response)
             return response.json()["id"]
 
     @retry_on_401
-    def patch(self, resource_id: str, patch_data: dict):
+    def patch(self, resource_id: str, patch_data: dict, timeout: int = 120):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.patch(
                 f"/v1/borrowers/{resource_id}",
                 headers=self.build_headers(),
                 json=UpdateBorrowerDTO.parse_obj(patch_data).dict(by_alias=True),
-                timeout=120
+                timeout=timeout
             )
             raise_for_status_improved(response)
-            return self.retrieve(response.json()["id"])
+            return self.retrieve(response.json()["id"], timeout=timeout)
 
     @retry_on_401
-    def delete(self, resource_id: str):
+    def delete(self, resource_id: str, timeout: int = 120):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.delete(
                 f"/v1/borrowers/{resource_id}",
                 headers=self.build_headers(),
-                timeout=120
+                timeout=timeout
             )
             raise_for_status_improved(response)
             return None
 
     @retry_on_401
-    def retrieve(self, resource_id: str):
+    def retrieve(self, resource_id: str, timeout: int = 120):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
                 f"/v1/borrowers/{resource_id}",
                 headers=self.build_headers(),
-                timeout=120
+                timeout=timeout
             )
             if response.status_code == 200:
                 return BorrowerSync(

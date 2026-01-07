@@ -51,11 +51,43 @@ class IdentitySync(GenericSyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "identities", header_builder, renew_token, IdentityAPIDTO.parse_obj(data))
 
+    @retry_on_401
+    def unmask(self) -> str:
+        """
+        Calls GET /v1/identities/{id}/unmask.
+        Returns the plaintext value (requires bc.private.read and non-form_token principal).
+        """
+        with httpx.Client() as client:
+            resp = client.get(
+                f"{self.base_url}/v1/{self.resource}/{self.data.id}/unmask",
+                headers=self._header_builder(),
+                timeout=300,
+            )
+            raise_for_status_improved(resp)
+            data = resp.json()
+            return data.get("value")
+
 
 class IdentityAsync(GenericAsyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "identities", header_builder, renew_token, IdentityAPIDTO.parse_obj(data))
+
+    @retry_on_401_async
+    async def unmask(self) -> str:
+        """
+        Calls GET /v1/identities/{id}/unmask.
+        Returns the plaintext value (requires bc.private.read and non-form_token principal).
+        """
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f"{self.base_url}/v1/{self.resource}/{self.data.id}/unmask",
+                headers=self._header_builder(),
+                timeout=300,
+            )
+            raise_for_status_improved(resp)
+            data = resp.json()
+            return data.get("value")
 
 
 class IdentitiesSyncModule(GenericSyncModule):
@@ -72,7 +104,7 @@ class IdentitiesSyncModule(GenericSyncModule):
     def find_by_key(self, key: str, borrower_id: str):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             identities_found_req = client.get(
-                f"/v1/identities",
+                "/v1/identities",
                 params={
                     "key": key,
                     "borrower-id": borrower_id,
@@ -89,6 +121,22 @@ class IdentitiesSyncModule(GenericSyncModule):
             else:
                 return self.retrieve(identities_found_data[0]["id"])
 
+    @retry_on_401
+    def unmask(self, identity_id: str) -> str:
+        """
+        Calls GET /v1/identities/{identity_id}/unmask.
+        Returns the plaintext value (requires bc.private.read and non-form_token principal).
+        """
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            resp = client.get(
+                f"/v1/identities/{identity_id}/unmask",
+                headers=self.build_headers(),
+                timeout=300,
+            )
+            raise_for_status_improved(resp)
+            data = resp.json()
+            return data.get("value")
+
 
 class IdentitiesAsyncModule(GenericAsyncModule):
 
@@ -104,7 +152,7 @@ class IdentitiesAsyncModule(GenericAsyncModule):
     async def find_by_key(self, key: str, borrower_id: str):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             identities_found_req = await client.get(
-                f"/v1/identities",
+                "/v1/identities",
                 params={
                     "key": key,
                     "borrower-id": borrower_id,
@@ -120,3 +168,19 @@ class IdentitiesAsyncModule(GenericAsyncModule):
                 return None
             else:
                 return await self.retrieve(identities_found_data[0]["id"])
+
+    @retry_on_401_async
+    async def unmask(self, identity_id: str) -> str:
+        """
+        Calls GET /v1/identities/{identity_id}/unmask.
+        Returns the plaintext value (requires bc.private.read and non-form_token principal).
+        """
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            resp = await client.get(
+                f"/v1/identities/{identity_id}/unmask",
+                headers=self.build_headers(),
+                timeout=300,
+            )
+            raise_for_status_improved(resp)
+            data = resp.json()
+            return data.get("value")
