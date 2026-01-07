@@ -54,31 +54,31 @@ class GenericSyncResource(GenericBase):
         return self.data.created_at
 
     @retry_on_401
-    def get_attachments(self):
+    def get_attachments(self, timeout: int = 300):
         if self.data.has_attachments:
             with httpx.Client() as client:
                 response = client.get(
                     self._get_attachments(self.data.id),
                     headers=self._header_builder(),
-                    timeout=300
+                    timeout=timeout
                 )
                 raise_for_status_improved(response)
                 self.attachments = [AttachmentAPIDTO.parse_obj(e) for e in response.json()]
         return self.attachments
 
     @retry_on_401
-    def post_attachment(self, attachment: Dict):
+    def post_attachment(self, attachment: Dict, timeout: int = 300):
         with httpx.Client() as client:
             response = client.post(
                 self._get_attachments(self.data.id),
                 headers=self._header_builder(),
-                timeout=300,
+                timeout=timeout,
                 json=AttachmentInput.parse_obj(attachment).dict(by_alias=True, exclude_none=True)
             )
             raise_for_status_improved(response)
 
     @retry_on_401
-    def upload_attachment(self, file_path: str, label: str = None, metadata: Dict = None):
+    def upload_attachment(self, file_path: str, label: str = None, metadata: Dict = None, timeout: int = 300):
         file_name = os.path.basename(file_path)
         content_type = mimetypes.guess_type(file_path)[0] or 'application/octet-stream'
         upload_url = urllib.parse.urljoin(self._get_attachments(self.data.id), "attachments/upload")
@@ -94,28 +94,28 @@ class GenericSyncResource(GenericBase):
                     data=data if isinstance(data,dict) else None,
                     files={'file': (file_name, file, content_type)},
                     headers=self._header_builder(),
-                    timeout=300,
+                    timeout=timeout,
                 )
                 raise_for_status_improved(response)
 
     @retry_on_401
-    def delete_attachment(self, attachment_id):
+    def delete_attachment(self, attachment_id, timeout: int = 300):
         with httpx.Client() as client:
             response = client.delete(
                 self._delete_attachment(self.data.id, attachment_id),
                 headers=self._header_builder(),
-                timeout=300
+                timeout=timeout
             )
             raise_for_status_improved(response)
 
     @retry_on_401
-    def get_content(self):
+    def get_content(self, timeout: int = 300):
         if self.resource in ["stores/packages"]:
             with httpx.Client() as client:
                 response = client.get(
                     self._get_content(self.data.id),
                     headers=self._header_builder(),
-                    timeout=300
+                    timeout=timeout
                 )
                 raise_for_status_improved(response)
                 self.content = response.text
@@ -143,31 +143,31 @@ class GenericAsyncResource(GenericBase):
         return self.data.created_at
 
     @retry_on_401_async
-    async def get_attachments(self):
+    async def get_attachments(self, timeout: int = 300):
         if self.data.has_attachments:
             async with httpx.AsyncClient() as client:
                 response = await client.get(
                     self._get_attachments(self.data.id),
                     headers=self._header_builder(),
-                    timeout=300
+                    timeout=timeout
                 )
                 raise_for_status_improved(response)
                 self.attachments = [AttachmentAPIDTO.parse_obj(e) for e in response.json()]
         return self.attachments
 
     @retry_on_401_async
-    async def post_attachment(self, attachment: Dict):
+    async def post_attachment(self, attachment: Dict, timeout: int = 300):
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 self._get_attachments(self.data.id),
                 headers=self._header_builder(),
-                timeout=300,
+                timeout=timeout,
                 json=AttachmentInput.parse_obj(attachment).dict(by_alias=True, exclude_none=True)
             )
             raise_for_status_improved(response)
 
     @retry_on_401_async
-    async def upload_attachment(self, file_path: str, label: str = None, metadata: Dict = None):
+    async def upload_attachment(self, file_path: str, label: str = None, metadata: Dict = None, timeout: int = 300):
         file_name = os.path.basename(file_path)
         content_type = mimetypes.guess_type(file_path)[0] or 'application/octet-stream'
         upload_url = urllib.parse.urljoin(self._get_attachments(self.data.id), "attachments/upload")
@@ -185,28 +185,28 @@ class GenericAsyncResource(GenericBase):
                     data=data,
                     files={'file': (file_name, file_content, content_type)},
                     headers=self._header_builder(),
-                    timeout=300,
+                    timeout=timeout,
                 )
                 raise_for_status_improved(response)
 
     @retry_on_401_async
-    async def delete_attachment(self, attachment_id):
+    async def delete_attachment(self, attachment_id, timeout: int = 300):
         async with httpx.AsyncClient() as client:
             response = await client.delete(
                 self._delete_attachment(self.data.id, attachment_id),
                 headers=self._header_builder(),
-                timeout=300
+                timeout=timeout
             )
             raise_for_status_improved(response)
 
     @retry_on_401_async
-    async def get_content(self):
+    async def get_content(self, timeout: int = 300):
         if self.resource in ["stores/packages"]:
             async with httpx.AsyncClient() as client:
                 response = await client.get(
                     self._get_content(self.data.id),
                     headers=self._header_builder(),
-                    timeout=300
+                    timeout=timeout
                 )
                 raise_for_status_improved(response)
                 self.content = response.text
@@ -236,12 +236,12 @@ class GenericSyncModule:
         return build_headers(self)
 
     @retry_on_401
-    def retrieve(self, resource_id: str):
+    def retrieve(self, resource_id: str, timeout: int = 30):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
                 f"/v1/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
-                timeout=30
+                timeout=timeout
             )
             if response.status_code == 200:
                 return self.sync_resource(
@@ -258,9 +258,10 @@ class GenericSyncModule:
     @retry_on_401
     def retrieve_all(self, **kwargs):
         query_params = {}
-        per_page = 10
+        per_page = kwargs.get("per_page", 10)
+        timeout = kwargs.get("timeout", 30)
         for k, v in kwargs.items():
-            if v is not None:
+            if v is not None and k not in ["timeout", "per_page"]:
                 query_params[convert_to_dash_case(k)] = v
         query_params["per-page"] = per_page
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
@@ -268,7 +269,7 @@ class GenericSyncModule:
                 f"/v1/{self.resource}",
                 params=query_params,
                 headers=self.build_headers(),
-                timeout=30
+                timeout=timeout
             )
             raise_for_status_improved(response)
             total_count = int(response.headers["x-total-count"])
@@ -278,50 +279,51 @@ class GenericSyncModule:
             pages = range(1, total_pages + 1)
         else:
             pages = [1]
+        clean_kwargs = {k: v for k, v in kwargs.items() if k not in ["timeout", "per_page"]}
         for page in pages:
-            r = self.query(page=page, per_page=per_page, **kwargs)
+            r = self.query(page=page, per_page=per_page, timeout=timeout, **clean_kwargs)
             resources.append(r)
         resources = [item for sublist in resources for item in sublist]
         return resources
 
     @retry_on_401
-    def create(self, new_entity_data: Dict, update_if_exists: bool = False) -> str:
+    def create(self, new_entity_data: Dict, update_if_exists: bool = False, timeout: int = 30) -> str:
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
                 f"/v1/{self.resource}",
                 headers=self.build_headers(),
                 json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
-                timeout=30
+                timeout=timeout
             )
             if response.status_code == 409 and update_if_exists:
                 data = response.json()
                 if data.get("code") == "DuplicateError":
                     duplicate_id = data.get("details", {}).get("duplicateId", None)
                     if duplicate_id:
-                        return self.patch(duplicate_id, new_entity_data)
+                        return self.patch(duplicate_id, new_entity_data, timeout=timeout)
 
             raise_for_status_improved(response)
             return response.json()["id"]
 
     @retry_on_401
-    def patch(self, resource_id: str, patch_data: Dict) -> str:
+    def patch(self, resource_id: str, patch_data: Dict, timeout: int = 30) -> str:
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.patch(
                 f"/v1/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
                 json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True),
-                timeout=30
+                timeout=timeout
             )
             raise_for_status_improved(response)
             return resource_id
 
     @retry_on_401
-    def delete(self, resource_id: str):
+    def delete(self, resource_id: str, timeout: int = 30):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.delete(
                 f"/v1/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
-                timeout=30
+                timeout=timeout
             )
             raise_for_status_improved(response)
             return None
@@ -329,16 +331,19 @@ class GenericSyncModule:
     @retry_on_401
     def query(self, **kwargs):
         query_params = {}
+        timeout = kwargs.get("timeout", 30)
+        per_page = kwargs.get("per_page", 100)
         for k, v in kwargs.items():
-            if v is not None:
+            if v is not None and k not in ["timeout", "per_page"]:
                 query_params[convert_to_dash_case(k)] = v
+        query_params["per-page"] = per_page
 
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.get(
                 f"/v1/{self.resource}",
                 headers=self.build_headers(),
                 params=query_params,
-                timeout=30
+                timeout=timeout
             )
             raise_for_status_improved(response)
             return [self.sync_resource(
@@ -379,12 +384,12 @@ class GenericAsyncModule:
         print(json.dumps(self.retrieve_data_model.schema(), indent=2, ensure_ascii=False))
 
     @retry_on_401_async
-    async def retrieve(self, resource_id: str):
+    async def retrieve(self, resource_id: str, timeout: int = 30):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.get(
                 f"/v1/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
-                timeout=30
+                timeout=timeout
             )
             if response.status_code == 200:
                 return self.async_resource(
@@ -439,13 +444,13 @@ class GenericAsyncModule:
         return resources
 
     @retry_on_401_async
-    async def create(self, new_entity_data: Dict, update_if_exists: bool = False) -> str:
+    async def create(self, new_entity_data: Dict, update_if_exists: bool = False, timeout: int = 30) -> str:
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
                 f"/v1/{self.resource}",
                 headers=self.build_headers(),
                 json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
-                timeout=30
+                timeout=timeout
             )
             if response.status_code == 409 and update_if_exists:
                 if response.status_code == 409 and update_if_exists:
@@ -453,29 +458,29 @@ class GenericAsyncModule:
                     if data.get("code") == "DuplicateError":
                         duplicate_id = data.get("details", {}).get("duplicateId", None)
                         if duplicate_id:
-                            return await self.patch(duplicate_id, new_entity_data)
+                            return await self.patch(duplicate_id, new_entity_data, timeout=timeout)
             raise_for_status_improved(response)
             return response.json()["id"]
 
     @retry_on_401_async
-    async def patch(self, resource_id: str, patch_data: Dict) -> str:
+    async def patch(self, resource_id: str, patch_data: Dict, timeout: int = 30) -> str:
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.patch(
                 f"/v1/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
                 json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True),
-                timeout=30
+                timeout=timeout
             )
             raise_for_status_improved(response)
             return resource_id
 
     @retry_on_401_async
-    async def delete(self, resource_id: str):
+    async def delete(self, resource_id: str, timeout: int = 30):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.delete(
                 f"/v1/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
-                timeout=30
+                timeout=timeout
             )
             raise_for_status_improved(response)
             return None
