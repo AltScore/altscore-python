@@ -132,6 +132,7 @@ class PackageSync(GenericSyncResource):
             )
             raise_for_status_improved(response)
 
+    @retry_on_401
     def upload_package_attachment(self, file_path: str, label: str = None, metadata: Dict = None):
         max_cloud_run_allowed_size = 32 * 1024 * 1024
 
@@ -145,9 +146,9 @@ class PackageSync(GenericSyncResource):
             )
         else:
             self.upload_attachment_with_signed_url(
-                file_path = file_path,
-                label = label,
-                metadata = metadata
+                file_path=file_path,
+                label=label,
+                metadata=metadata
             )
 
 
@@ -200,6 +201,7 @@ class PackageAsync(GenericAsyncResource):
             )
             raise_for_status_improved(response)
 
+    @retry_on_401_async
     async def upload_package_attachment(self, file_path: str, label: str = None, metadata: Dict = None):
         max_cloud_run_allowed_size = 32 * 1024 * 1024
 
@@ -213,9 +215,9 @@ class PackageAsync(GenericAsyncResource):
             )
         else:
             await self.upload_attachment_with_signed_url(
-                file_path = file_path,
-                label = label,
-                metadata = metadata
+                file_path=file_path,
+                label=label,
+                metadata=metadata
             )
 
 
@@ -229,6 +231,7 @@ class PackagesSyncModule(GenericSyncModule):
                          update_data_model=None,
                          resource="stores/packages")
 
+    @retry_on_401
     def retrieve_package_by_alias(self, alias: str, data_age: Optional[dt.timedelta] = None) -> Optional[PackageSync]:
         packages = self.query(alias=alias, sort_by="createdAt", sort_order="desc")
         if len(packages) > 0:
@@ -240,6 +243,7 @@ class PackagesSyncModule(GenericSyncModule):
                     return package
         return None
 
+    @retry_on_401
     def retrieve_source_package(
             self, source_id: str, borrower_id: Optional[str] = None, data_age: Optional[dt.timedelta] = None,
             package_alias: Optional[str] = None
@@ -268,6 +272,7 @@ class PackagesSyncModule(GenericSyncModule):
                     return package
         return None
 
+    @retry_on_401
     def retrieve_workflow_package(
             self, workflow_id: str, alias: str, data_age: Optional[dt.timedelta] = None
     ) -> Optional[PackageSync]:
@@ -281,8 +286,21 @@ class PackagesSyncModule(GenericSyncModule):
                     return package
         return None
 
+    @retry_on_401
     def force_stale(self, package_id: Optional[str] = None, borrower_id: Optional[str] = None, deal_id: Optional[str] = None,
                     workflow_id: Optional[str] = None, alias: Optional[str] = None):
+        """
+        Mark packages as stale based on the provided filters.
+
+        Args:
+            package_id: The ID of a specific package to mark as stale
+            borrower_id: Mark all packages for this borrower as stale
+            deal_id: Mark all packages for this deal as stale
+            workflow_id: Mark all packages for this workflow as stale
+            alias: Mark all packages with this alias as stale
+
+        At least one parameter must be provided.
+        """
         if package_id is None and borrower_id is None and deal_id is None and workflow_id is None and alias is None:
             raise ValueError("At least one of package_id, borrower_id, deal_id, workflow_id or alias must be provided")
         body = {
@@ -295,12 +313,15 @@ class PackagesSyncModule(GenericSyncModule):
         }
         body = {k: v for k, v in body.items() if v is not None}
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
-            client.put(
-                "/stores/packages/stale",
+            response = client.put(
+                "/v1/stores/packages/stale",
                 json=body,
-                headers=self.build_headers()
+                headers=self.build_headers(),
+                timeout=120
             )
+            raise_for_status_improved(response)
 
+    @retry_on_401
     def create_from_altdata_request_result(
             self, borrower_id: str, source_id: str, altdata_request_result: RequestResult,
             attachments: Optional[List[Dict[str, Any]]] = None,
@@ -325,6 +346,7 @@ class PackagesSyncModule(GenericSyncModule):
                     )
         return created_package_id
 
+    @retry_on_401
     def create_all_from_altdata_request_result(
             self, borrower_id: str, altdata_request_result: RequestResult,
     ) -> Dict[str, str]:
@@ -348,6 +370,7 @@ class PackagesAsyncModule(GenericAsyncModule):
                          update_data_model=None,
                          resource="/stores/packages")
 
+    @retry_on_401_async
     async def retrieve_package_by_alias(
             self, alias: str, data_age: Optional[dt.timedelta] = None
     ) -> Optional[PackageAsync]:
@@ -361,6 +384,7 @@ class PackagesAsyncModule(GenericAsyncModule):
                     return package
         return None
 
+    @retry_on_401_async
     async def retrieve_source_package(
             self, source_id: str, borrower_id: Optional[str] = None, data_age: Optional[dt.timedelta] = None,
             package_alias: Optional[str] = None
@@ -388,6 +412,7 @@ class PackagesAsyncModule(GenericAsyncModule):
                     return package
         return None
 
+    @retry_on_401_async
     async def retrieve_workflow_package(
             self, workflow_id: str, alias: str, data_age: Optional[dt.timedelta] = None
     ) -> Optional[PackageAsync]:
@@ -401,6 +426,43 @@ class PackagesAsyncModule(GenericAsyncModule):
                     return package
         return None
 
+    @retry_on_401_async
+    async def force_stale(self, package_id: Optional[str] = None, borrower_id: Optional[str] = None,
+                          deal_id: Optional[str] = None, workflow_id: Optional[str] = None,
+                          alias: Optional[str] = None):
+        """
+        Mark packages as stale based on the provided filters.
+
+        Args:
+            package_id: The ID of a specific package to mark as stale
+            borrower_id: Mark all packages for this borrower as stale
+            deal_id: Mark all packages for this deal as stale
+            workflow_id: Mark all packages for this workflow as stale
+            alias: Mark all packages with this alias as stale
+
+        At least one parameter must be provided.
+        """
+        if package_id is None and borrower_id is None and deal_id is None and workflow_id is None and alias is None:
+            raise ValueError("At least one of package_id, borrower_id, deal_id, workflow_id or alias must be provided")
+        body = {
+            "packageId": package_id,
+            "borrowerId": borrower_id,
+            "dealId": deal_id,
+            "workflowId": workflow_id,
+            "alias": alias,
+            "forcedStale": True
+        }
+        body = {k: v for k, v in body.items() if v is not None}
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.put(
+                "/v1/stores/packages/stale",
+                json=body,
+                headers=self.build_headers(),
+                timeout=120
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401_async
     async def create_from_altdata_request_result(
             self, borrower_id: str, source_id: str, altdata_request_result: RequestResult,
             attachments: Optional[List[Dict[str, Any]]] = None, content_type: str = "json",
@@ -417,7 +479,7 @@ class PackagesAsyncModule(GenericAsyncModule):
         }
         created_package_id = await self.create(package_data)
         if attachments is not None:
-            package_obj: PackageSync = await self.retrieve(created_package_id)
+            package_obj: PackageAsync = await self.retrieve(created_package_id)
             if package_obj is not None:
                 for attachment in attachments:
                     await package_obj.post_attachment(
@@ -425,6 +487,7 @@ class PackagesAsyncModule(GenericAsyncModule):
                     )
         return created_package_id
 
+    @retry_on_401_async
     async def create_all_from_altdata_request_result(
             self, borrower_id: str, altdata_request_result: RequestResult,
     ) -> Dict[str, str]:
