@@ -13,7 +13,8 @@ from altscore.common.http_errors import raise_for_status_improved, retry_on_401,
 class PackageAPIDTO(BaseModel):
     id: str = Field(alias="id")
     borrower_id: Optional[str] = Field(alias="borrowerId")
-    deal_id: Optional[str] = Field(alias="dealId", default = None)
+    deal_id: Optional[str] = Field(alias="dealId", default=None)
+    asset_id: Optional[str] = Field(alias="assetId", default=None)
     source_id: Optional[str] = Field(alias="sourceId", default=None)
     alias: Optional[str] = Field(alias="alias", default=None)
     workflow_id: Optional[str] = Field(alias="workflowId", default=None)
@@ -35,6 +36,7 @@ class PackageAPIDTO(BaseModel):
 class CreatePackageDTO(BaseModel):
     borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
     deal_id: Optional[str] = Field(alias="dealId", default=None)
+    asset_id: Optional[str] = Field(alias="assetId", default=None)
     source_id: Optional[str] = Field(alias="sourceId", default=None)
     workflow_id: Optional[str] = Field(alias="workflowId", default=None)
     alias: Optional[str] = Field(alias="alias", default=None)
@@ -288,7 +290,7 @@ class PackagesSyncModule(GenericSyncModule):
 
     @retry_on_401
     def force_stale(self, package_id: Optional[str] = None, borrower_id: Optional[str] = None, deal_id: Optional[str] = None,
-                    workflow_id: Optional[str] = None, alias: Optional[str] = None):
+                    asset_id: Optional[str] = None, workflow_id: Optional[str] = None, alias: Optional[str] = None):
         """
         Mark packages as stale based on the provided filters.
 
@@ -296,17 +298,19 @@ class PackagesSyncModule(GenericSyncModule):
             package_id: The ID of a specific package to mark as stale
             borrower_id: Mark all packages for this borrower as stale
             deal_id: Mark all packages for this deal as stale
+            asset_id: Mark all packages for this asset as stale
             workflow_id: Mark all packages for this workflow as stale
             alias: Mark all packages with this alias as stale
 
         At least one parameter must be provided.
         """
-        if package_id is None and borrower_id is None and deal_id is None and workflow_id is None and alias is None:
-            raise ValueError("At least one of package_id, borrower_id, deal_id, workflow_id or alias must be provided")
+        if package_id is None and borrower_id is None and deal_id is None and asset_id is None and workflow_id is None and alias is None:
+            raise ValueError("At least one of package_id, borrower_id, deal_id, asset_id, workflow_id or alias must be provided")
         body = {
             "packageId": package_id,
             "borrowerId": borrower_id,
             "dealId": deal_id,
+            "assetId": asset_id,
             "workflowId": workflow_id,
             "alias": alias,
             "forcedStale": True
@@ -428,8 +432,8 @@ class PackagesAsyncModule(GenericAsyncModule):
 
     @retry_on_401_async
     async def force_stale(self, package_id: Optional[str] = None, borrower_id: Optional[str] = None,
-                          deal_id: Optional[str] = None, workflow_id: Optional[str] = None,
-                          alias: Optional[str] = None):
+                          deal_id: Optional[str] = None, asset_id: Optional[str] = None,
+                          workflow_id: Optional[str] = None, alias: Optional[str] = None):
         """
         Mark packages as stale based on the provided filters.
 
@@ -437,17 +441,19 @@ class PackagesAsyncModule(GenericAsyncModule):
             package_id: The ID of a specific package to mark as stale
             borrower_id: Mark all packages for this borrower as stale
             deal_id: Mark all packages for this deal as stale
+            asset_id: Mark all packages for this asset as stale
             workflow_id: Mark all packages for this workflow as stale
             alias: Mark all packages with this alias as stale
 
         At least one parameter must be provided.
         """
-        if package_id is None and borrower_id is None and deal_id is None and workflow_id is None and alias is None:
-            raise ValueError("At least one of package_id, borrower_id, deal_id, workflow_id or alias must be provided")
+        if package_id is None and borrower_id is None and deal_id is None and asset_id is None and workflow_id is None and alias is None:
+            raise ValueError("At least one of package_id, borrower_id, deal_id, asset_id, workflow_id or alias must be provided")
         body = {
             "packageId": package_id,
             "borrowerId": borrower_id,
             "dealId": deal_id,
+            "assetId": asset_id,
             "workflowId": workflow_id,
             "alias": alias,
             "forcedStale": True
