@@ -38,6 +38,26 @@ class WorkflowDataAPIDTO(BaseModel):
     updated_at: Optional[str] = Field(alias="updatedAt")
     use_high_memory: Optional[bool] = Field(alias="useHighMemory", default=None)
     metadata: Optional[Dict[str, Any]] = Field(alias="metadata", default=None)
+    published_revision_id: Optional[str] = Field(alias="publishedRevisionId", default=None)
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class WorkflowRevisionDataAPIDTO(BaseModel):
+    revision_id: str = Field(alias="revisionId")
+    workflow_id: str = Field(alias="workflowId")
+    revision_number: int = Field(alias="revisionNumber")
+    published: bool = Field(alias="published")
+    flow_definition: Optional[dict] = Field(alias="flowDefinition", default=None)
+    input_schema: Optional[str] = Field(alias="inputSchema", default=None)
+    nodes: Optional[List[Dict]] = Field(alias="nodes", default=None)
+    edges: Optional[List[Dict]] = Field(alias="edges", default=None)
+    created_at: str = Field(alias="createdAt")
+    updated_at: Optional[str] = Field(alias="updatedAt", default=None)
+    created_by: Optional[str] = Field(alias="createdBy", default=None)
 
     class Config:
         populate_by_name = True
@@ -377,6 +397,18 @@ class WorkflowsSyncModule(GenericSyncModule):
             raise_for_status_improved(response)
 
     @retry_on_401
+    def retrieve_revision(self, workflow_id: str, revision_id: str) -> WorkflowRevisionDataAPIDTO:
+        """Retrieve a specific workflow revision."""
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                f"/v1/workflows/{workflow_id}/revisions/{revision_id}",
+                headers=self.build_headers(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return WorkflowRevisionDataAPIDTO.parse_obj(response.json())
+
+    @retry_on_401
     def execute_batch_with_dataframe(self,
                                      dataframe,
                                      workflow_id=None,
@@ -670,6 +702,18 @@ class WorkflowsAsyncModule(GenericAsyncModule):
                 timeout=30
             )
             raise_for_status_improved(response)
+
+    @retry_on_401_async
+    async def retrieve_revision(self, workflow_id: str, revision_id: str) -> WorkflowRevisionDataAPIDTO:
+        """Retrieve a specific workflow revision."""
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                f"/v1/workflows/{workflow_id}/revisions/{revision_id}",
+                headers=self.build_headers(),
+                timeout=30
+            )
+            raise_for_status_improved(response)
+            return WorkflowRevisionDataAPIDTO.parse_obj(response.json())
 
     @retry_on_401_async
     async def execute_batch_with_dataframe(self,

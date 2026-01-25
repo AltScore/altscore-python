@@ -80,6 +80,7 @@ class ExecutionAPIDTO(BaseModel):
     created_at: str = Field(alias="createdAt")
     execution_time: Optional[int] = Field(alias="executionTime", default=None)
     response_time: Optional[int] = Field(alias="responseTime", default=None)
+    workflow_revision_id: Optional[str] = Field(alias="workflowRevisionId", default=None)
 
     class Config:
         populate_by_name = True
@@ -135,6 +136,7 @@ class CreateExecutionOutput(BaseModel):
     deal_id: Optional[str] = Field(alias="dealId", default=None)
     execution_time: Optional[int] = Field(alias="executionTime", default=None)
     notices: Optional[List[ExecutionNotice]] = Field(alias="notices", default=[])
+    unsuccessful_sources: Optional[bool] = Field(alias="unsuccessfulSources", default=None)
 
     class Config:
         populate_by_name = True
