@@ -110,6 +110,7 @@ class ExecutionOutputDataAPIDTO(BaseModel):
     workflow_id: str = Field(alias="workflowId")
     workflow_alias: str = Field(alias="workflowAlias")
     workflow_version: str = Field(alias="workflowVersion")
+    workflow_revision_id: Optional[str] = Field(alias="workflowRevisionId", default=None)
     workflow_type: Optional[str] = Field(alias="workflowType")
     status: Optional[str] = Field(alias="status", default=None)
     is_success: Optional[bool] = Field(alias="isSuccess")
