@@ -1,7 +1,7 @@
 import httpx
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from pydantic import BaseModel, Field, root_validator
-from typing import Optional, List, Dict, Any, Literal
+from typing import Optional, List, Dict, Any
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 
@@ -14,6 +14,14 @@ class Money(BaseModel):
         populate_by_name = True
         allow_population_by_field_name = True
         allow_population_by_alias = True
+
+
+# DTO for money array items
+class MoneyArrayItemDTO(BaseModel):
+    """Data transfer object for a money array item"""
+    key: str = Field(alias="key")
+    label: Optional[str] = Field(alias="label", default=None)
+    value: Money = Field(alias="value")
 
 
 # DTO for field value history
@@ -58,11 +66,15 @@ class DealFieldDTO(BaseModel):
         current_value = values.get("value")
         if data_type == "money" and isinstance(current_value, dict):
             values["value"] = Money.parse_obj(current_value)
+        elif data_type == "money_array" and isinstance(current_value, list):
+            values["value"] = [MoneyArrayItemDTO.parse_obj(item) for item in current_value]
 
         # Parse history values based on data_type
         for hist_item in history:
             if data_type == "money" and isinstance(hist_item.value, dict):
                 hist_item.value = Money.parse_obj(hist_item.value)
+            elif data_type == "money_array" and isinstance(hist_item.value, list):
+                hist_item.value = [MoneyArrayItemDTO.parse_obj(item) for item in hist_item.value]
 
         return values
 
@@ -72,7 +84,7 @@ class CreateDealFieldRequest(BaseModel):
     deal_id: str = Field(alias="dealId")
     key: str = Field(alias="key")
     value: Any = Field(alias="value")
-    data_type: Optional[Literal["string", "number", "date", "boolean", "money"]] = Field(alias="dataType", default=None)
+    data_type: Optional[str] = Field(alias="dataType", default=None)
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
     tags: List[str] = Field(alias="tags", default=[])
 
@@ -86,7 +98,7 @@ class UpdateDealFieldRequest(BaseModel):
     """Model for updating a deal field"""
     deal_id: str = Field(alias="dealId")
     value: Any = Field(alias="value")
-    data_type: Optional[Literal["string", "number", "date", "boolean", "money"]] = Field(alias="dataType", default=None)
+    data_type: Optional[str] = Field(alias="dataType", default=None)
     reference_id: Optional[str] = Field(alias="referenceId", default=None)  # Source of the value for history tracking
     tags: Optional[List[str]] = Field(alias="tags", default=[])
 
