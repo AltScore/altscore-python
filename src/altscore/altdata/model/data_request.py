@@ -27,6 +27,7 @@ class Address(BaseModel):
 class Location(BaseModel):
     lat: float = Field(alias="lat")
     lon: float = Field(alias="lon")
+    zoom: Optional[float] = Field(alias="zoom", default=None)
 
     class Config:
         populate_by_name = True
@@ -60,6 +61,12 @@ class InputKeys(BaseModel):
     authorization_reference: Optional[str] = Field(alias="authorizationReference", default=None)
     passport_number: Optional[str] = Field(alias="passportNumber", default=None)
     items: Optional[List] = Field(alias="items", default=None)
+    company_name: Optional[str] = Field(alias="companyName", default=None)
+    state_code: Optional[str] = Field(alias="stateCode", default=None)
+    score: Optional[str] = Field(alias="score", default=None)
+    service_number: Optional[str] = Field(alias="serviceNumber", default=None)
+    social_security_id: Optional[str] = Field(alias="socialSecurityId", default=None)
+    year: Optional[str] = Field(alias="year", default=None)
 
     class Config:
         populate_by_name = True
