@@ -8,15 +8,15 @@ import httpx
 
 
 class Address(BaseModel):
-    street1: str = Field(alias="street1")
+    street1: Optional[str] = Field(alias="street1", default=None)
     street2: Optional[str] = Field(alias="street2", default=None)
-    neighborhood: str = Field(alias="neighborhood", default=None)
-    district: str = Field(alias="district", default=None)
-    city: str = Field(alias="city", default=None)
-    state: str = Field(alias="state", default=None)
+    neighborhood: Optional[str] = Field(alias="neighborhood", default=None)
+    district: Optional[str] = Field(alias="district", default=None)
+    city: Optional[str] = Field(alias="city", default=None)
+    state: Optional[str] = Field(alias="state", default=None)
     province: Optional[str] = Field(alias="province", default=None)
-    zip_code: str = Field(alias="zipCode", default=None)
-    country: str = Field(alias="country", default=None)
+    zip_code: Optional[str] = Field(alias="zipCode", default=None)
+    country: Optional[str] = Field(alias="country", default=None)
 
     class Config:
         populate_by_name = True
@@ -25,8 +25,8 @@ class Address(BaseModel):
 
 
 class Location(BaseModel):
-    lat: float = Field(alias="lat")
-    lon: float = Field(alias="lon")
+    lat: Optional[float] = Field(alias="lat", default=None)
+    lon: Optional[float] = Field(alias="lon", default=None)
     zoom: Optional[float] = Field(alias="zoom", default=None)
 
     class Config:
