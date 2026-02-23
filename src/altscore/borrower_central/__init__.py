@@ -19,6 +19,7 @@ from altscore.borrower_central.model.relationships import RelationshipsAsyncModu
 from altscore.borrower_central.model.store_packages import PackagesAsyncModule, PackagesSyncModule
 from altscore.borrower_central.model.store_sources import SourcesAsyncModule, SourcesSyncModule
 from altscore.borrower_central.model.store_secrets import SecretsAsyncModule, SecretsSyncModule
+from altscore.borrower_central.model.verifications import VerificationsSyncModule, VerificationsAsyncModule
 from altscore.borrower_central.model.workflows import WorkflowsAsyncModule, WorkflowsSyncModule
 from altscore.borrower_central.model.evaluators import EvaluatorAsyncModule, EvaluatorSyncModule
 from altscore.borrower_central.model.forms import FormsAsyncModule, FormsSyncModule
@@ -121,6 +122,7 @@ class BorrowerCentralAsync:
         self.bank_account_balances = BankAccountBalancesAsyncModule(altscore_client)
         self.bank_transactions = BankTransactionsAsyncModule(altscore_client)
         self.conversational_templates = WhatsAppTemplateAsyncModule(altscore_client)
+        self.verifications = VerificationsAsyncModule(altscore_client)
         self.actionables = ActionablesAsyncModule(altscore_client)
         self.input_validation = InputValidationAsyncModule(altscore_client)
         self.api = APIRequestAsyncModule(altscore_client)
@@ -183,6 +185,7 @@ class BorrowerCentralSync:
         self.bank_account_balances = BankAccountBalancesSyncModule(altscore_client)
         self.bank_transactions = BankTransactionsSyncModule(altscore_client)
         self.conversational_templates = WhatsAppTemplateSyncModule(altscore_client)
+        self.verifications = VerificationsSyncModule(altscore_client)
         self.actionables = ActionablesSyncModule(altscore_client)
         self.input_validation = InputValidationSyncModule(altscore_client)
         self.api = APIRequestSyncModule(altscore_client)
