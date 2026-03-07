@@ -10,6 +10,11 @@ from dateutil.parser import parse as parse_date
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 
 
+def altdata_source_slug(source_id: str, version: str) -> str:
+    """Canonical slug for AltData source packages. Always use this for read and write."""
+    return f"AD_{source_id}_{version}"
+
+
 class PackageAPIDTO(BaseModel):
     id: str = Field(alias="id")
     borrower_id: Optional[str] = Field(alias="borrowerId")
@@ -332,7 +337,7 @@ class PackagesSyncModule(GenericSyncModule):
             content_type: str = "json", package_alias: Optional[str] = None
     ):
         package = altdata_request_result.to_package(source_id)
-        bc_source_id = "AD_{}_{}".format(source_id, package["version"])
+        bc_source_id = altdata_source_slug(source_id, package["version"])
         package_data = {
             "borrower_id": borrower_id,
             "source_id": bc_source_id,
@@ -475,7 +480,7 @@ class PackagesAsyncModule(GenericAsyncModule):
             package_alias: Optional[str] = None
     ):
         package = altdata_request_result.to_package(source_id)
-        bc_source_id = "AD_{}_{}".format(source_id, package["version"])
+        bc_source_id = altdata_source_slug(source_id, package["version"])
         package_data = {
             "borrower_id": borrower_id,
             "source_id": bc_source_id,
