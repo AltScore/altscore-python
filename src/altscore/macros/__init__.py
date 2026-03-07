@@ -369,6 +369,170 @@ class MacrosSync:
         })
         return {"borrower_id": borrower_id, "created": True}
 
+    def evaluate(
+            self,
+            evaluator_alias: str,
+            evaluator_version: str,
+            reference_id: str,
+            data: Dict,
+            entities: Optional[List[Dict]] = None,
+            execution_id: Optional[str] = None,
+    ) -> dict:
+        """
+        Run an evaluator by alias/version with a simplified interface.
+
+        Builds the EvaluatorInput internally (instance + entities), calls the
+        evaluator, and returns the output as a plain dict.
+
+        Args:
+            evaluator_alias: Evaluator alias (e.g. "scoring", "kyc")
+            evaluator_version: Evaluator version (e.g. "v2", "v3")
+            reference_id: Subject identifier -- typically the borrower_id
+            data: Dict of variables for the evaluator instance
+            entities: Optional list of entity dicts (co-debtors, guarantors).
+                      Each must have entityId, role, data. Defaults to [].
+            execution_id: Optional workflow execution ID. When provided, stored
+                          in the instance data as _execution_id so the evaluation
+                          is traceable back to the execution that triggered it.
+
+        Returns:
+            dict with keys: score, scorecard, metrics, rules, decision.
+            Raises Exception if the evaluator returns an error.
+        """
+        bc = self.altscore_client.borrower_central
+
+        instance_data = dict(data)
+        if execution_id is not None:
+            instance_data["_execution_id"] = execution_id
+
+        evaluator_input = {
+            "instance": {
+                "referenceId": reference_id,
+                "referenceDate": dt.datetime.now().isoformat(),
+                "data": instance_data,
+            },
+            "entities": entities or [],
+        }
+
+        result = bc.evaluators.evaluate(
+            evaluator_input=evaluator_input,
+            evaluator_alias=evaluator_alias,
+            evaluator_version=evaluator_version,
+        )
+
+        if hasattr(result, "traceback"):
+            raise Exception(f"Evaluator error: {result.detail}")
+
+        return result.dict(by_alias=True)
+
+    def get_borrower_metrics(
+            self,
+            borrower_id: str,
+            metric_keys: List[str],
+            default=-999999,
+            none_on_sentinel: Optional[List[str]] = None,
+    ) -> dict:
+        """
+        Batch-extract borrower metrics with sentinel handling.
+
+        Retrieves the borrower once, then loops through metric_keys calling
+        get_metric_by_key() for each. Returns a flat dict.
+
+        Args:
+            borrower_id: The borrower to query
+            metric_keys: List of metric key strings to extract
+            default: Default value for missing metrics (default: -999999)
+            none_on_sentinel: List of keys where the sentinel value should be
+                              replaced with None instead of kept as-is. Useful for
+                              keys like "days_since_first_sale" where -999999 means
+                              "not applicable" rather than a valid number.
+
+        Returns:
+            dict mapping each metric key to its value
+        """
+        bc = self.altscore_client.borrower_central
+        none_keys = set(none_on_sentinel or [])
+
+        borrower = bc.borrowers.retrieve(borrower_id)
+        if borrower is None:
+            raise ValueError(f"Borrower {borrower_id} not found")
+
+        metrics = {}
+        for key in metric_keys:
+            metric_obj = borrower.get_metric_by_key(key)
+            if metric_obj is not None:
+                value = metric_obj.data.value
+                if value == default and key in none_keys:
+                    metrics[key] = None
+                else:
+                    metrics[key] = value
+            else:
+                metrics[key] = None if key in none_keys else default
+        return metrics
+
+    def create_alerts_from_rules(
+            self,
+            borrower_id: str,
+            rules: List[Dict],
+            execution_id: Optional[str] = None,
+            level_mapping: Optional[Dict[str, int]] = None,
+            default_level: int = 0,
+    ) -> List[Dict]:
+        """
+        Create borrower alerts from evaluator rule results.
+
+        Filters rules where hit == True, derives alert level from a prefix
+        mapping, and creates alerts via the API. Duplicates (HTTP 409) are
+        skipped silently; all other errors propagate.
+
+        Args:
+            borrower_id: The borrower to create alerts for
+            rules: The "rules" list from evaluator output
+            execution_id: Optional execution ID to tie alerts to the workflow run
+            level_mapping: Dict mapping rule code prefixes to alert levels.
+                           E.g. {"DR_D": 2, "DR_R": 1, "DR_AP": 2}.
+                           The first matching prefix wins.
+            default_level: Alert level when no prefix matches (default: 0)
+
+        Returns:
+            List of alert body dicts that were created (or attempted)
+        """
+        from httpx import HTTPStatusError
+
+        bc = self.altscore_client.borrower_central
+        level_map = level_mapping or {}
+
+        hit_rules = [r for r in rules if r.get("hit") is True]
+        alerts = []
+
+        for rule in hit_rules:
+            code = rule.get("code", "")
+            level = default_level
+            for prefix, lvl in level_map.items():
+                if code.startswith(prefix):
+                    level = lvl
+                    break
+
+            alert_body = {
+                "borrowerId": borrower_id,
+                "ruleCode": code.replace("_", "-"),
+                "level": level,
+                "message": rule.get("label") or rule.get("value") or code,
+            }
+            if execution_id is not None:
+                alert_body["referenceId"] = execution_id
+
+            try:
+                bc.alerts.create(alert_body)
+            except HTTPStatusError as e:
+                if e.response.status_code == 409:
+                    pass  # duplicate alert, expected
+                else:
+                    raise
+            alerts.append(alert_body)
+
+        return alerts
+
 
 class MacrosAsync:
     def __init__(self, altscore_client):
@@ -732,3 +896,164 @@ class MacrosAsync:
             "value": identity_value,
         })
         return {"borrower_id": borrower_id, "created": True}
+
+    async def evaluate(
+            self,
+            evaluator_alias: str,
+            evaluator_version: str,
+            reference_id: str,
+            data: Dict,
+            entities: Optional[List[Dict]] = None,
+            execution_id: Optional[str] = None,
+    ) -> dict:
+        """
+        Run an evaluator by alias/version with a simplified interface.
+
+        Builds the EvaluatorInput internally (instance + entities), calls the
+        evaluator, and returns the output as a plain dict.
+
+        Args:
+            evaluator_alias: Evaluator alias (e.g. "scoring", "kyc")
+            evaluator_version: Evaluator version (e.g. "v2", "v3")
+            reference_id: Subject identifier -- typically the borrower_id
+            data: Dict of variables for the evaluator instance
+            entities: Optional list of entity dicts (co-debtors, guarantors).
+                      Each must have entityId, role, data. Defaults to [].
+            execution_id: Optional workflow execution ID. When provided, stored
+                          in the instance data as _execution_id so the evaluation
+                          is traceable back to the execution that triggered it.
+
+        Returns:
+            dict with keys: score, scorecard, metrics, rules, decision.
+            Raises Exception if the evaluator returns an error.
+        """
+        bc = self.altscore_client.borrower_central
+
+        instance_data = dict(data)
+        if execution_id is not None:
+            instance_data["_execution_id"] = execution_id
+
+        evaluator_input = {
+            "instance": {
+                "referenceId": reference_id,
+                "referenceDate": dt.datetime.now().isoformat(),
+                "data": instance_data,
+            },
+            "entities": entities or [],
+        }
+
+        result = await bc.evaluators.evaluate(
+            evaluator_input=evaluator_input,
+            evaluator_alias=evaluator_alias,
+            evaluator_version=evaluator_version,
+        )
+
+        if hasattr(result, "traceback"):
+            raise Exception(f"Evaluator error: {result.detail}")
+
+        return result.dict(by_alias=True)
+
+    async def get_borrower_metrics(
+            self,
+            borrower_id: str,
+            metric_keys: List[str],
+            default=-999999,
+            none_on_sentinel: Optional[List[str]] = None,
+    ) -> dict:
+        """
+        Batch-extract borrower metrics with sentinel handling.
+
+        Retrieves the borrower once, then loops through metric_keys calling
+        get_metric_by_key() for each. Returns a flat dict.
+
+        Args:
+            borrower_id: The borrower to query
+            metric_keys: List of metric key strings to extract
+            default: Default value for missing metrics (default: -999999)
+            none_on_sentinel: List of keys where the sentinel value should be
+                              replaced with None instead of kept as-is.
+
+        Returns:
+            dict mapping each metric key to its value
+        """
+        bc = self.altscore_client.borrower_central
+        none_keys = set(none_on_sentinel or [])
+
+        borrower = await bc.borrowers.retrieve(borrower_id)
+        if borrower is None:
+            raise ValueError(f"Borrower {borrower_id} not found")
+
+        metrics = {}
+        for key in metric_keys:
+            metric_obj = await borrower.get_metric_by_key(key)
+            if metric_obj is not None:
+                value = metric_obj.data.value
+                if value == default and key in none_keys:
+                    metrics[key] = None
+                else:
+                    metrics[key] = value
+            else:
+                metrics[key] = None if key in none_keys else default
+        return metrics
+
+    async def create_alerts_from_rules(
+            self,
+            borrower_id: str,
+            rules: List[Dict],
+            execution_id: Optional[str] = None,
+            level_mapping: Optional[Dict[str, int]] = None,
+            default_level: int = 0,
+    ) -> List[Dict]:
+        """
+        Create borrower alerts from evaluator rule results.
+
+        Filters rules where hit == True, derives alert level from a prefix
+        mapping, and creates alerts via the API. Duplicates (HTTP 409) are
+        skipped silently; all other errors propagate.
+
+        Args:
+            borrower_id: The borrower to create alerts for
+            rules: The "rules" list from evaluator output
+            execution_id: Optional execution ID to tie alerts to the workflow run
+            level_mapping: Dict mapping rule code prefixes to alert levels.
+                           E.g. {"DR_D": 2, "DR_R": 1, "DR_AP": 2}.
+            default_level: Alert level when no prefix matches (default: 0)
+
+        Returns:
+            List of alert body dicts that were created (or attempted)
+        """
+        from httpx import HTTPStatusError
+
+        bc = self.altscore_client.borrower_central
+        level_map = level_mapping or {}
+
+        hit_rules = [r for r in rules if r.get("hit") is True]
+        alerts = []
+
+        for rule in hit_rules:
+            code = rule.get("code", "")
+            level = default_level
+            for prefix, lvl in level_map.items():
+                if code.startswith(prefix):
+                    level = lvl
+                    break
+
+            alert_body = {
+                "borrowerId": borrower_id,
+                "ruleCode": code.replace("_", "-"),
+                "level": level,
+                "message": rule.get("label") or rule.get("value") or code,
+            }
+            if execution_id is not None:
+                alert_body["referenceId"] = execution_id
+
+            try:
+                await bc.alerts.create(alert_body)
+            except HTTPStatusError as e:
+                if e.response.status_code == 409:
+                    pass  # duplicate alert, expected
+                else:
+                    raise
+            alerts.append(alert_body)
+
+        return alerts
