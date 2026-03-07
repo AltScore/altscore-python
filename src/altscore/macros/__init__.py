@@ -1,10 +1,13 @@
 from uuid import uuid4
+import datetime as dt
 
 from fuzzywuzzy import process
 
 from altscore.borrower_central.model.borrower import BorrowerSync, BorrowerAsync
+from altscore.borrower_central.model.store_packages import altdata_source_slug
+from altscore.altdata.model.data_request import SourceConfig
 from altscore.macros.validate_inputs import validate_borrower_data
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Dict, Union
 import asyncio
 from loguru import logger
 
@@ -239,6 +242,93 @@ class MacrosSync:
                     "allowedValues": allowed_values
                 }
             )
+
+    def enrich_borrower(
+            self,
+            borrower_id: str,
+            sources: List[Dict],
+            input_keys: Dict,
+            data_age_minutes: int = 360,
+            timeout_seconds: int = 120,
+    ) -> dict:
+        """
+        Full AltData enrichment cycle with caching.
+
+        Checks freshness for each source, calls AltData for stale/missing ones,
+        stores results as packages. Returns a summary dict.
+
+        Args:
+            borrower_id: The borrower to enrich
+            sources: List of source configs, e.g. [{"sourceId": "ECU-PUB-0002", "version": "v1"}]
+            input_keys: Identity keys for AltData lookup, e.g. {"person_id": "123"}
+            data_age_minutes: Max age in minutes before a package is considered stale (default 360)
+            timeout_seconds: AltData sync call timeout (default 120)
+
+        Returns:
+            dict with keys: source_results, all_sources_ok, sources_created, sources_fresh, sources_failed
+        """
+        bc = self.altscore_client.borrower_central
+        ad = self.altscore_client.altdata
+
+        data_age = dt.timedelta(minutes=data_age_minutes)
+        source_results = []
+        sources_to_call = []
+
+        for src in sources:
+            s = SourceConfig.parse_obj(src) if isinstance(src, dict) else src
+            slug = altdata_source_slug(s.source_id, s.version)
+            pkg = bc.store_packages.retrieve_source_package(
+                source_id=slug, borrower_id=borrower_id, data_age=data_age
+            )
+            if pkg is not None:
+                source_results.append({
+                    "source_slug": slug, "package_id": pkg.data.id, "status": "fresh"
+                })
+            else:
+                sources_to_call.append(s)
+
+        if sources_to_call:
+            try:
+                result = ad.requests.new_sync(
+                    input_keys=input_keys,
+                    sources_config=sources_to_call,
+                    timeout=timeout_seconds,
+                )
+                for call in result.call_summary:
+                    slug = altdata_source_slug(call.source_id, call.version)
+                    if call.is_success:
+                        pkg_id = bc.store_packages.create_from_altdata_request_result(
+                            borrower_id=borrower_id,
+                            source_id=call.source_id,
+                            altdata_request_result=result,
+                        )
+                        source_results.append({
+                            "source_slug": slug, "package_id": pkg_id, "status": "created"
+                        })
+                    else:
+                        source_results.append({
+                            "source_slug": slug, "status": "failed",
+                            "error": call.error_message or "Unknown error"
+                        })
+            except Exception as e:
+                for s in sources_to_call:
+                    slug = altdata_source_slug(s.source_id, s.version)
+                    if not any(r["source_slug"] == slug for r in source_results):
+                        source_results.append({
+                            "source_slug": slug, "status": "failed", "error": str(e)
+                        })
+
+        created = sum(1 for r in source_results if r["status"] == "created")
+        fresh = sum(1 for r in source_results if r["status"] == "fresh")
+        failed = sum(1 for r in source_results if r["status"] == "failed")
+
+        return {
+            "source_results": source_results,
+            "all_sources_ok": failed == 0,
+            "sources_created": created,
+            "sources_fresh": fresh,
+            "sources_failed": failed,
+        }
 
 class MacrosAsync:
     def __init__(self, altscore_client):
@@ -476,3 +566,90 @@ class MacrosAsync:
                 "allowedValues": new_allowed_values
             }
         )
+
+    async def enrich_borrower(
+            self,
+            borrower_id: str,
+            sources: List[Dict],
+            input_keys: Dict,
+            data_age_minutes: int = 360,
+            timeout_seconds: int = 120,
+    ) -> dict:
+        """
+        Full AltData enrichment cycle with caching.
+
+        Checks freshness for each source, calls AltData for stale/missing ones,
+        stores results as packages. Returns a summary dict.
+
+        Args:
+            borrower_id: The borrower to enrich
+            sources: List of source configs, e.g. [{"sourceId": "ECU-PUB-0002", "version": "v1"}]
+            input_keys: Identity keys for AltData lookup, e.g. {"person_id": "123"}
+            data_age_minutes: Max age in minutes before a package is considered stale (default 360)
+            timeout_seconds: AltData sync call timeout (default 120)
+
+        Returns:
+            dict with keys: source_results, all_sources_ok, sources_created, sources_fresh, sources_failed
+        """
+        bc = self.altscore_client.borrower_central
+        ad = self.altscore_client.altdata
+
+        data_age = dt.timedelta(minutes=data_age_minutes)
+        source_results = []
+        sources_to_call = []
+
+        for src in sources:
+            s = SourceConfig.parse_obj(src) if isinstance(src, dict) else src
+            slug = altdata_source_slug(s.source_id, s.version)
+            pkg = await bc.store_packages.retrieve_source_package(
+                source_id=slug, borrower_id=borrower_id, data_age=data_age
+            )
+            if pkg is not None:
+                source_results.append({
+                    "source_slug": slug, "package_id": pkg.data.id, "status": "fresh"
+                })
+            else:
+                sources_to_call.append(s)
+
+        if sources_to_call:
+            try:
+                result = await ad.requests.new_sync(
+                    input_keys=input_keys,
+                    sources_config=sources_to_call,
+                    timeout=timeout_seconds,
+                )
+                for call in result.call_summary:
+                    slug = altdata_source_slug(call.source_id, call.version)
+                    if call.is_success:
+                        pkg_id = await bc.store_packages.create_from_altdata_request_result(
+                            borrower_id=borrower_id,
+                            source_id=call.source_id,
+                            altdata_request_result=result,
+                        )
+                        source_results.append({
+                            "source_slug": slug, "package_id": pkg_id, "status": "created"
+                        })
+                    else:
+                        source_results.append({
+                            "source_slug": slug, "status": "failed",
+                            "error": call.error_message or "Unknown error"
+                        })
+            except Exception as e:
+                for s in sources_to_call:
+                    slug = altdata_source_slug(s.source_id, s.version)
+                    if not any(r["source_slug"] == slug for r in source_results):
+                        source_results.append({
+                            "source_slug": slug, "status": "failed", "error": str(e)
+                        })
+
+        created = sum(1 for r in source_results if r["status"] == "created")
+        fresh = sum(1 for r in source_results if r["status"] == "fresh")
+        failed = sum(1 for r in source_results if r["status"] == "failed")
+
+        return {
+            "source_results": source_results,
+            "all_sources_ok": failed == 0,
+            "sources_created": created,
+            "sources_fresh": fresh,
+            "sources_failed": failed,
+        }
