@@ -330,6 +330,46 @@ class MacrosSync:
             "sources_failed": failed,
         }
 
+    def find_or_create_borrower(
+            self,
+            identity_key: str,
+            identity_value: str,
+            persona: str = "individual",
+            label: Optional[str] = None,
+    ) -> dict:
+        """
+        Idempotent borrower lookup/creation by identity key.
+
+        Searches for an existing borrower with the given identity key+value.
+        If found, returns the borrower_id. If not, creates a new borrower
+        with that identity attached.
+
+        Args:
+            identity_key: Identity key to search by (e.g. "person_id", "tax_id", "email")
+            identity_value: The value to match
+            persona: "individual" or "company" (used only on creation)
+            label: Display name (defaults to identity_value if not provided)
+
+        Returns:
+            dict with keys: borrower_id, created
+        """
+        bc = self.altscore_client.borrower_central
+        identities = bc.identities.query(key=identity_key, value=identity_value, per_page=1)
+        if identities:
+            return {"borrower_id": identities[0].data.borrower_id, "created": False}
+
+        borrower_id = bc.borrowers.create({
+            "persona": persona,
+            "label": label or identity_value,
+        })
+        bc.identities.create({
+            "borrowerId": borrower_id,
+            "key": identity_key,
+            "value": identity_value,
+        })
+        return {"borrower_id": borrower_id, "created": True}
+
+
 class MacrosAsync:
     def __init__(self, altscore_client):
         self.altscore_client = altscore_client
@@ -653,3 +693,42 @@ class MacrosAsync:
             "sources_fresh": fresh,
             "sources_failed": failed,
         }
+
+    async def find_or_create_borrower(
+            self,
+            identity_key: str,
+            identity_value: str,
+            persona: str = "individual",
+            label: Optional[str] = None,
+    ) -> dict:
+        """
+        Idempotent borrower lookup/creation by identity key.
+
+        Searches for an existing borrower with the given identity key+value.
+        If found, returns the borrower_id. If not, creates a new borrower
+        with that identity attached.
+
+        Args:
+            identity_key: Identity key to search by (e.g. "person_id", "tax_id", "email")
+            identity_value: The value to match
+            persona: "individual" or "company" (used only on creation)
+            label: Display name (defaults to identity_value if not provided)
+
+        Returns:
+            dict with keys: borrower_id, created
+        """
+        bc = self.altscore_client.borrower_central
+        identities = await bc.identities.query(key=identity_key, value=identity_value, per_page=1)
+        if identities:
+            return {"borrower_id": identities[0].data.borrower_id, "created": False}
+
+        borrower_id = await bc.borrowers.create({
+            "persona": persona,
+            "label": label or identity_value,
+        })
+        await bc.identities.create({
+            "borrowerId": borrower_id,
+            "key": identity_key,
+            "value": identity_value,
+        })
+        return {"borrower_id": borrower_id, "created": True}
