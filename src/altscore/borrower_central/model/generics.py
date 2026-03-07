@@ -120,6 +120,18 @@ class GenericSyncResource(GenericBase):
                 raise_for_status_improved(response)
                 self.content = response.text
 
+    @retry_on_401
+    def get_content_json(self, timeout: int = 300):
+        if self.resource in ["stores/packages"]:
+            with httpx.Client() as client:
+                response = client.get(
+                    self._get_content(self.data.id),
+                    headers=self._header_builder(),
+                    timeout=timeout
+                )
+                raise_for_status_improved(response)
+                self.content = response.json()
+
     def __str__(self):
         return str(self.data)
 
@@ -210,6 +222,18 @@ class GenericAsyncResource(GenericBase):
                 )
                 raise_for_status_improved(response)
                 self.content = response.text
+
+    @retry_on_401_async
+    async def get_content_json(self, timeout: int = 300):
+        if self.resource in ["stores/packages"]:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    self._get_content(self.data.id),
+                    headers=self._header_builder(),
+                    timeout=timeout
+                )
+                raise_for_status_improved(response)
+                self.content = response.json()
 
     def __str__(self):
         return str(self.data)
