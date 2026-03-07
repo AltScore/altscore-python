@@ -482,7 +482,8 @@ class MacrosSync:
         Create borrower alerts from evaluator rule results.
 
         Filters rules where hit == True, derives alert level from a prefix
-        mapping, and creates alerts via the API. Swallows duplicates.
+        mapping, and creates alerts via the API. Duplicates (HTTP 409) are
+        skipped silently; all other errors propagate.
 
         Args:
             borrower_id: The borrower to create alerts for
@@ -496,6 +497,8 @@ class MacrosSync:
         Returns:
             List of alert body dicts that were created (or attempted)
         """
+        from httpx import HTTPStatusError
+
         bc = self.altscore_client.borrower_central
         level_map = level_mapping or {}
 
@@ -521,8 +524,11 @@ class MacrosSync:
 
             try:
                 bc.alerts.create(alert_body)
-            except Exception:
-                pass
+            except HTTPStatusError as e:
+                if e.response.status_code == 409:
+                    pass  # duplicate alert, expected
+                else:
+                    raise
             alerts.append(alert_body)
 
         return alerts
@@ -1002,7 +1008,8 @@ class MacrosAsync:
         Create borrower alerts from evaluator rule results.
 
         Filters rules where hit == True, derives alert level from a prefix
-        mapping, and creates alerts via the API. Swallows duplicates.
+        mapping, and creates alerts via the API. Duplicates (HTTP 409) are
+        skipped silently; all other errors propagate.
 
         Args:
             borrower_id: The borrower to create alerts for
@@ -1015,6 +1022,8 @@ class MacrosAsync:
         Returns:
             List of alert body dicts that were created (or attempted)
         """
+        from httpx import HTTPStatusError
+
         bc = self.altscore_client.borrower_central
         level_map = level_mapping or {}
 
@@ -1040,8 +1049,11 @@ class MacrosAsync:
 
             try:
                 await bc.alerts.create(alert_body)
-            except Exception:
-                pass
+            except HTTPStatusError as e:
+                if e.response.status_code == 409:
+                    pass  # duplicate alert, expected
+                else:
+                    raise
             alerts.append(alert_body)
 
         return alerts
