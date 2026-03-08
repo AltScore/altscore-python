@@ -408,7 +408,6 @@ class WorkflowsSyncModule(GenericSyncModule):
             raise_for_status_improved(response)
             return WorkflowRevisionDataAPIDTO.parse_obj(response.json())
 
-    @retry_on_401
     def execute_batch_with_dataframe(self,
                                      dataframe,
                                      workflow_id=None,
@@ -715,7 +714,6 @@ class WorkflowsAsyncModule(GenericAsyncModule):
             raise_for_status_improved(response)
             return WorkflowRevisionDataAPIDTO.parse_obj(response.json())
 
-    @retry_on_401_async
     async def execute_batch_with_dataframe(self,
                                            dataframe,
                                            workflow_id=None,

@@ -1,22 +1,35 @@
+import time
+import asyncio
 from json import loads
 from functools import wraps
 from httpx import HTTPStatusError
 from loguru import logger
 
+MAX_RETRIES_ON_5XX = 3
+BACKOFF_BASE_SECONDS = 1
+
 
 def retry_on_401(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        try:
-            return f(*args, **kwargs)
-        except HTTPStatusError as e:
-            if e.response.status_code == 401:
-                logger.info("Token expired, renewing and retrying")
-                args[0].renew_token()  # Assuming the first argument is self
-                logger.info("Token renewed, retrying")
+        for attempt in range(1 + MAX_RETRIES_ON_5XX):
+            try:
                 return f(*args, **kwargs)
-            else:
-                raise
+            except HTTPStatusError as e:
+                if e.response.status_code == 401:
+                    logger.info("Token expired, renewing and retrying")
+                    args[0].renew_token()
+                    logger.info("Token renewed, retrying")
+                    return f(*args, **kwargs)
+                elif e.response.status_code >= 500 and attempt < MAX_RETRIES_ON_5XX:
+                    wait = BACKOFF_BASE_SECONDS * (2 ** attempt)
+                    logger.warning(
+                        "Server error {} on attempt {}/{}, retrying in {}s",
+                        e.response.status_code, attempt + 1, 1 + MAX_RETRIES_ON_5XX, wait
+                    )
+                    time.sleep(wait)
+                else:
+                    raise
 
     return wrapper
 
@@ -24,16 +37,24 @@ def retry_on_401(f):
 def retry_on_401_async(f):
     @wraps(f)
     async def wrapper(*args, **kwargs):
-        try:
-            return await f(*args, **kwargs)
-        except HTTPStatusError as e:
-            if e.response.status_code == 401:
-                logger.info("Token expired, renewing and retrying")
-                args[0].renew_token()  # Assuming the first argument is self
-                logger.info("Token renewed, retrying")
+        for attempt in range(1 + MAX_RETRIES_ON_5XX):
+            try:
                 return await f(*args, **kwargs)
-            else:
-                raise
+            except HTTPStatusError as e:
+                if e.response.status_code == 401:
+                    logger.info("Token expired, renewing and retrying")
+                    args[0].renew_token()
+                    logger.info("Token renewed, retrying")
+                    return await f(*args, **kwargs)
+                elif e.response.status_code >= 500 and attempt < MAX_RETRIES_ON_5XX:
+                    wait = BACKOFF_BASE_SECONDS * (2 ** attempt)
+                    logger.warning(
+                        "Server error {} on attempt {}/{}, retrying in {}s",
+                        e.response.status_code, attempt + 1, 1 + MAX_RETRIES_ON_5XX, wait
+                    )
+                    await asyncio.sleep(wait)
+                else:
+                    raise
 
     return wrapper
 

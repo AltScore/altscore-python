@@ -139,7 +139,6 @@ class PackageSync(GenericSyncResource):
             )
             raise_for_status_improved(response)
 
-    @retry_on_401
     def upload_package_attachment(self, file_path: str, label: str = None, metadata: Dict = None):
         max_cloud_run_allowed_size = 32 * 1024 * 1024
 
@@ -208,7 +207,6 @@ class PackageAsync(GenericAsyncResource):
             )
             raise_for_status_improved(response)
 
-    @retry_on_401_async
     async def upload_package_attachment(self, file_path: str, label: str = None, metadata: Dict = None):
         max_cloud_run_allowed_size = 32 * 1024 * 1024
 
@@ -330,7 +328,6 @@ class PackagesSyncModule(GenericSyncModule):
             )
             raise_for_status_improved(response)
 
-    @retry_on_401
     def create_from_altdata_request_result(
             self, borrower_id: str, source_id: str, altdata_request_result: RequestResult,
             attachments: Optional[List[Dict[str, Any]]] = None,
@@ -355,7 +352,6 @@ class PackagesSyncModule(GenericSyncModule):
                     )
         return created_package_id
 
-    @retry_on_401
     def create_all_from_altdata_request_result(
             self, borrower_id: str, altdata_request_result: RequestResult,
     ) -> Dict[str, str]:
@@ -473,7 +469,6 @@ class PackagesAsyncModule(GenericAsyncModule):
             )
             raise_for_status_improved(response)
 
-    @retry_on_401_async
     async def create_from_altdata_request_result(
             self, borrower_id: str, source_id: str, altdata_request_result: RequestResult,
             attachments: Optional[List[Dict[str, Any]]] = None, content_type: str = "json",
@@ -498,7 +493,6 @@ class PackagesAsyncModule(GenericAsyncModule):
                     )
         return created_package_id
 
-    @retry_on_401_async
     async def create_all_from_altdata_request_result(
             self, borrower_id: str, altdata_request_result: RequestResult,
     ) -> Dict[str, str]:
