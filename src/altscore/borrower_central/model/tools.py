@@ -39,7 +39,7 @@ class ReportGeneratorAsyncModule:
 
     @retry_on_401_async
     async def generate(self, report_request: dict) -> str:
-        with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
                 "/v1/tools/generate-report",
                 headers=self.build_headers(),

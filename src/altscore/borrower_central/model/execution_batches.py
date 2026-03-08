@@ -199,7 +199,7 @@ class ExecutionBatchAsync(GenericAsyncResource):
             "state": state
         }
 
-        with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient() as client:
             response = await client.patch(
                 self._execution_batch(self.data.id),
                 headers=self._header_builder(),
