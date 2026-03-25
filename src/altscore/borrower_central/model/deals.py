@@ -112,6 +112,7 @@ class DealSync(GenericSyncResource):
                 }
             )
             raise_for_status_improved(response)
+            self.data.is_test = is_test
             return None
 
     def _deal_fields(
@@ -297,6 +298,7 @@ class DealAsync(GenericAsyncResource):
                 }
             )
             raise_for_status_improved(response)
+            self.data.is_test = is_test
             return None
 
     def _deal_fields(

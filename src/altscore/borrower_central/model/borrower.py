@@ -868,6 +868,7 @@ class BorrowerAsync(BorrowerBase):
                 }
             )
             raise_for_status_improved(response)
+            self.data.label = label
             return None
 
     @retry_on_401_async
@@ -997,6 +998,7 @@ class BorrowerAsync(BorrowerBase):
                 }
             )
             raise_for_status_improved(response)
+            self.data.flag = flag
             return None
 
     @retry_on_401_async
@@ -1010,6 +1012,7 @@ class BorrowerAsync(BorrowerBase):
                 }
             )
             raise_for_status_improved(response)
+            self.data.is_test = is_test
             return None
 
     @retry_on_401_async
@@ -1452,6 +1455,7 @@ class BorrowerSync(BorrowerBase):
                 }
             )
             raise_for_status_improved(response)
+            self.data.label = label
             return None
 
     @retry_on_401
@@ -1581,6 +1585,7 @@ class BorrowerSync(BorrowerBase):
                 }
             )
             raise_for_status_improved(response)
+            self.data.flag = flag
             return None
 
     @retry_on_401
@@ -1594,6 +1599,7 @@ class BorrowerSync(BorrowerBase):
                 }
             )
             raise_for_status_improved(response)
+            self.data.is_test = is_test
             return None
 
     @retry_on_401

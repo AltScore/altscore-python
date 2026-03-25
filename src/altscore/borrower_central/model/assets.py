@@ -78,6 +78,7 @@ class AssetSync(GenericSyncResource):
                 }
             )
             raise_for_status_improved(response)
+            self.data.is_test = is_test
             return None
 
 
@@ -96,6 +97,7 @@ class AssetAsync(GenericAsyncResource):
                 }
             )
             raise_for_status_improved(response)
+            self.data.is_test = is_test
             return None
 
 

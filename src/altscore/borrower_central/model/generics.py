@@ -141,6 +141,8 @@ class GenericSyncResource(GenericBase):
                 json={"isTest": is_test}
             )
             raise_for_status_improved(response)
+            if hasattr(self.data, "is_test"):
+                self.data.is_test = is_test
             return None
 
     def __str__(self):
@@ -255,6 +257,8 @@ class GenericAsyncResource(GenericBase):
                 json={"isTest": is_test}
             )
             raise_for_status_improved(response)
+            if hasattr(self.data, "is_test"):
+                self.data.is_test = is_test
             return None
 
     def __str__(self):
