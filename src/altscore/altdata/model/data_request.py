@@ -67,6 +67,7 @@ class InputKeys(BaseModel):
     service_number: Optional[str] = Field(alias="serviceNumber", default=None)
     social_security_id: Optional[str] = Field(alias="socialSecurityId", default=None)
     year: Optional[str] = Field(alias="year", default=None)
+    jurisdiction_code: Optional[str] = Field(alias="jurisdictionCode", default=None)
 
     class Config:
         populate_by_name = True
