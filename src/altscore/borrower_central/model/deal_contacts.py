@@ -14,6 +14,7 @@ class DealContactDTO(BaseModel):
     borrower_id: str = Field(alias="borrowerId")
     role_key: str = Field(alias="roleKey")
     is_primary: bool = Field(alias="isPrimary")
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt", default=None)
 

@@ -77,6 +77,7 @@ class ExecutionAPIDTO(BaseModel):
     is_success: Optional[bool] = Field(alias="isSuccess", default=None)
     is_billable: Optional[bool] = Field(alias="isBillable", default=None)
     is_re_scoring: Optional[bool] = Field(alias="isReScoring", default=None)
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
     created_at: str = Field(alias="createdAt")
     execution_time: Optional[int] = Field(alias="executionTime", default=None)
     response_time: Optional[int] = Field(alias="responseTime", default=None)

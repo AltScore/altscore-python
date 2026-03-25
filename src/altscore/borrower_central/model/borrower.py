@@ -53,6 +53,7 @@ class BorrowerAPIDTO(BaseModel):
     repayment_risk_rating: Optional[int] = Field(alias="repaymentRiskRating", default=None)
     current_step: Optional[StepDataInBorrower] = Field(alias="currentStep", default=None)
     cms_client_ids: Optional[List[str]] = Field(alias="cmsClientIds", default=[])
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
 
@@ -134,6 +135,7 @@ class BorrowerSummaryAPIDTO(BaseModel):
     repayment_risk_rating: Optional[int] = Field(alias="repaymentRiskRating", default=None)
     current_step: Optional[StepDataInBorrower] = Field(alias="currentStep", default=None)
     cms_client_ids: Optional[List[str]] = Field(alias="cmsClientIds", default=[])
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
 
@@ -151,6 +153,7 @@ class CreateBorrowerDTO(BaseModel):
     repayment_risk_rating: Optional[int] = Field(alias="repaymentRiskRating", default=None)
     flag: Optional[str] = Field(alias="flag", default=None)
     tags: List[str] = Field(alias="tags", default=[])
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
 
     class Config:
         populate_by_name = True
@@ -997,6 +1000,19 @@ class BorrowerAsync(BorrowerBase):
             return None
 
     @retry_on_401_async
+    async def set_is_test(self, is_test: bool):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.put(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/is-test",
+                headers=self._header_builder(),
+                json={
+                    "isTest": is_test
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    @retry_on_401_async
     async def get_documents(self, **kwargs) -> List[DocumentAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._documents(self.data.id, **kwargs)
@@ -1562,6 +1578,19 @@ class BorrowerSync(BorrowerBase):
                 json={
                     "value": flag,
                     "referenceId": reference_id
+                }
+            )
+            raise_for_status_improved(response)
+            return None
+
+    @retry_on_401
+    def set_is_test(self, is_test: bool):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.put(
+                f"{self.base_url}/v1/borrowers/{self.data.id}/is-test",
+                headers=self._header_builder(),
+                json={
+                    "isTest": is_test
                 }
             )
             raise_for_status_improved(response)

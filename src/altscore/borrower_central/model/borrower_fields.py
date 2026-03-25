@@ -37,6 +37,7 @@ class BorrowerFieldAPIDTO(BaseModel):
     data_type: str = Field(alias="dataType")
     history: List[HistoricValue] = Field(alias="history")
     tags: List[str] = Field(alias="tags", default=[])
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
 

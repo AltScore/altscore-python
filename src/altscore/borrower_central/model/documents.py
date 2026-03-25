@@ -15,6 +15,7 @@ class DocumentsAPIDTO(BaseModel):
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
     has_attachments: bool = Field(alias="hasAttachments")
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
 
     @root_validator
     def check_id_requirements(cls, values):

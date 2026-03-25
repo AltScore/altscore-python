@@ -35,6 +35,7 @@ class DealDTO(BaseModel):
     current_step: Optional[StepDataDTO] = Field(alias="currentStep", default=None)
     tags: List[str] = Field(alias="tags", default=[])
     risk_rating: Optional[str] = Field(alias="riskRating", default=None)
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt", default=None)
 
@@ -52,6 +53,7 @@ class CreateDealRequest(BaseModel):
     external_id: Optional[str] = Field(alias="externalId", default=None)
     tags: List[str] = Field(alias="tags", default=[])
     risk_rating: Optional[str] = Field(alias="riskRating", default=None)
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
 
     class Config:
         populate_by_name = True
@@ -98,6 +100,19 @@ class PutCurrentStepRequest(BaseModel):
 class DealSync(GenericSyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "deals", header_builder, renew_token, DealDTO.parse_obj(data))
+
+    @retry_on_401
+    def set_is_test(self, is_test: bool):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.put(
+                f"{self.base_url}/v1/deals/{self.data.id}/is-test",
+                headers=self._header_builder(),
+                json={
+                    "isTest": is_test
+                }
+            )
+            raise_for_status_improved(response)
+            return None
 
     def _deal_fields(
             self, deal_id: str, key: Optional[str] = None, sort_by: Optional[str] = None,
@@ -270,6 +285,19 @@ class DealSync(GenericSyncResource):
 class DealAsync(GenericAsyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "deals", header_builder, renew_token, DealDTO.parse_obj(data))
+
+    @retry_on_401_async
+    async def set_is_test(self, is_test: bool):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.put(
+                f"{self.base_url}/v1/deals/{self.data.id}/is-test",
+                headers=self._header_builder(),
+                json={
+                    "isTest": is_test
+                }
+            )
+            raise_for_status_improved(response)
+            return None
 
     def _deal_fields(
             self, deal_id: str, key: Optional[str] = None, sort_by: Optional[str] = None,
