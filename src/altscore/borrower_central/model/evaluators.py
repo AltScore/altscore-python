@@ -15,6 +15,7 @@ class EvaluatorAPIDTO(BaseModel):
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
     specs: Dict = Field(alias="specs")
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
 
     class Config:
         populate_by_name = True
@@ -190,6 +191,18 @@ class EvaluatorSyncModule(GenericSyncModule):
                          update_data_model=UpdateEvaluatorDTO,
                          resource="evaluators")
 
+    @retry_on_401
+    def set_is_test(self, evaluator_id: str, is_test: bool):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            resp = client.put(
+                f"/v1/evaluators/{evaluator_id}/is-test",
+                headers=self.build_headers(),
+                json={"isTest": is_test},
+                timeout=300,
+            )
+            raise_for_status_improved(resp)
+            return None
+
     def renew_token(self):
         self.altscore_client.renew_token()
 
@@ -229,6 +242,18 @@ class EvaluatorAsyncModule(GenericAsyncModule):
                          create_data_model=CreateEvaluatorDTO,
                          update_data_model=UpdateEvaluatorDTO,
                          resource="evaluators")
+
+    @retry_on_401_async
+    async def set_is_test(self, evaluator_id: str, is_test: bool):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            resp = await client.put(
+                f"/v1/evaluators/{evaluator_id}/is-test",
+                headers=self.build_headers(),
+                json={"isTest": is_test},
+                timeout=300,
+            )
+            raise_for_status_improved(resp)
+            return None
 
     def renew_token(self):
         self.altscore_client.renew_token()

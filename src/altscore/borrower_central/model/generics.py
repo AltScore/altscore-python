@@ -132,6 +132,19 @@ class GenericSyncResource(GenericBase):
                 raise_for_status_improved(response)
                 self.content = response.json()
 
+    @retry_on_401
+    def set_is_test(self, is_test: bool):
+        with httpx.Client() as client:
+            response = client.put(
+                f"{self.base_url}/v1/{self.resource}/{self.data.id}/is-test",
+                headers=self._header_builder(),
+                json={"isTest": is_test}
+            )
+            raise_for_status_improved(response)
+            if hasattr(self.data, "is_test"):
+                self.data.is_test = is_test
+            return None
+
     def __str__(self):
         return str(self.data)
 
@@ -234,6 +247,19 @@ class GenericAsyncResource(GenericBase):
                 )
                 raise_for_status_improved(response)
                 self.content = response.json()
+
+    @retry_on_401_async
+    async def set_is_test(self, is_test: bool):
+        async with httpx.AsyncClient() as client:
+            response = await client.put(
+                f"{self.base_url}/v1/{self.resource}/{self.data.id}/is-test",
+                headers=self._header_builder(),
+                json={"isTest": is_test}
+            )
+            raise_for_status_improved(response)
+            if hasattr(self.data, "is_test"):
+                self.data.is_test = is_test
+            return None
 
     def __str__(self):
         return str(self.data)

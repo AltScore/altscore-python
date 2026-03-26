@@ -18,6 +18,7 @@ class AssetDTO(BaseModel):
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt", default=None)
     has_attachments: bool = Field(alias="hasAttachments")
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
 
     class Config:
         populate_by_name = True
@@ -32,6 +33,7 @@ class CreateAssetRequest(BaseModel):
     description: Optional[str] = Field(alias="description", default=None)
     external_id: Optional[str] = Field(alias="externalId", default=None)
     group: Optional[str] = Field(alias="group", default=None)
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
 
     class Config:
         populate_by_name = True
@@ -65,10 +67,38 @@ class AssetSync(GenericSyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "assets", header_builder, renew_token, AssetDTO.parse_obj(data))
 
+    @retry_on_401
+    def set_is_test(self, is_test: bool):
+        with httpx.Client(base_url=self.base_url) as client:
+            response = client.put(
+                f"{self.base_url}/v1/assets/{self.data.id}/is-test",
+                headers=self._header_builder(),
+                json={
+                    "isTest": is_test
+                }
+            )
+            raise_for_status_improved(response)
+            self.data.is_test = is_test
+            return None
+
 
 class AssetAsync(GenericAsyncResource):
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
         super().__init__(base_url, "assets", header_builder, renew_token, AssetDTO.parse_obj(data))
+
+    @retry_on_401_async
+    async def set_is_test(self, is_test: bool):
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.put(
+                f"{self.base_url}/v1/assets/{self.data.id}/is-test",
+                headers=self._header_builder(),
+                json={
+                    "isTest": is_test
+                }
+            )
+            raise_for_status_improved(response)
+            self.data.is_test = is_test
+            return None
 
 
 # Module for assets - synchronous

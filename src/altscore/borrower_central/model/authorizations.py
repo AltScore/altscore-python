@@ -23,6 +23,7 @@ class AuthorizationAPIDTO(BaseModel):
     updated_at: Optional[str] = Field(alias="updatedAt")
     has_attachments: bool = Field(alias="hasAttachments", default=False)
     has_signatures: bool = Field(alias="hasSignatures", default=False)
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
 
     class Config:
         populate_by_name = True

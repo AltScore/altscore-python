@@ -17,6 +17,7 @@ class IdentityAPIDTO(BaseModel):
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
     has_attachments: bool = Field(alias="hasAttachments", default=False)
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
 
     class Config:
         populate_by_name = True

@@ -14,6 +14,7 @@ class PointOfContactAPIDTO(BaseModel):
     priority: Optional[int] = Field(alias="priority", default=None)
     verified_at: Optional[str] = Field(alias="verifiedAt", default=None)
     tags: List[str] = Field(alias="tags", default=[])
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
 

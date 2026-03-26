@@ -21,6 +21,7 @@ class DataModelAPIDTO(BaseModel):
     metadata: Optional[Dict[str, Any]] = Field(alias="metadata")
     is_segmentation_field: Optional[bool] = Field(alias="isSegmentationField", default=False)
     is_sensitive: Optional[bool] = Field(alias="isSensitive", default=False)
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
 
     class Config:
         populate_by_name = True
@@ -40,6 +41,7 @@ class DataModelCreate(BaseModel):
     metadata: Optional[dict] = Field(alias="metadata", default={})
     is_segmentation_field: Optional[bool] = Field(alias="isSegmentationField", default=False)
     is_sensitive: Optional[bool] = Field(alias="isSensitive", default=False)
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
 
     class Config:
         populate_by_name = True
@@ -83,6 +85,18 @@ class DataModelSyncModule(GenericSyncModule):
                          create_data_model=DataModelCreate, update_data_model=DataModelUpdate, resource="data-models")
 
     @retry_on_401
+    def set_is_test(self, data_model_id: str, is_test: bool):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            resp = client.put(
+                f"/v1/data-models/{data_model_id}/is-test",
+                headers=self.build_headers(),
+                json={"isTest": is_test},
+                timeout=300,
+            )
+            raise_for_status_improved(resp)
+            return None
+
+    @retry_on_401
     def make_sensitive(self, data_model_id: str):
         """
         Calls PUT /v1/data-models/{data_model_id}/make-sensitive.
@@ -108,6 +122,18 @@ class DataModelAsyncModule(GenericAsyncModule):
     def __init__(self, altscore_client):
         super().__init__(altscore_client, async_resource=DataModelSync, retrieve_data_model=DataModelAPIDTO,
                          create_data_model=DataModelCreate, update_data_model=DataModelUpdate, resource="data-models")
+
+    @retry_on_401_async
+    async def set_is_test(self, data_model_id: str, is_test: bool):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            resp = await client.put(
+                f"/v1/data-models/{data_model_id}/is-test",
+                headers=self.build_headers(),
+                json={"isTest": is_test},
+                timeout=300,
+            )
+            raise_for_status_improved(resp)
+            return None
 
     @retry_on_401_async
     async def make_sensitive(self, data_model_id: str):

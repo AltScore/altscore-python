@@ -16,6 +16,7 @@ class RuleAPIDTO(BaseModel):
     code: str = Field(alias="code")
     label: str = Field(alias="label")
     alerts: List[RuleAlert] = Field(alias="alerts", default=[])
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
     created_at: str = Field(alias="createdAt")
     updated_at: Optional[str] = Field(alias="updatedAt")
 
@@ -65,6 +66,18 @@ class RulesSyncModule(GenericSyncModule):
                          resource="rules")
 
     @retry_on_401
+    def set_is_test(self, rule_id: str, is_test: bool):
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            resp = client.put(
+                f"/v1/rules/{rule_id}/is-test",
+                headers=self.build_headers(),
+                json={"isTest": is_test},
+                timeout=300,
+            )
+            raise_for_status_improved(resp)
+            return None
+
+    @retry_on_401
     def retrieve_by_code(self, code: str):
         query_params = {
             "code": code
@@ -98,6 +111,18 @@ class RulesAsyncModule(GenericAsyncModule):
                          create_data_model=CreateRuleDTO,
                          update_data_model=CreateRuleDTO,
                          resource="rules")
+
+    @retry_on_401_async
+    async def set_is_test(self, rule_id: str, is_test: bool):
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            resp = await client.put(
+                f"/v1/rules/{rule_id}/is-test",
+                headers=self.build_headers(),
+                json={"isTest": is_test},
+                timeout=300,
+            )
+            raise_for_status_improved(resp)
+            return None
 
     @retry_on_401_async
     async def retrieve_by_code(self, code: str):

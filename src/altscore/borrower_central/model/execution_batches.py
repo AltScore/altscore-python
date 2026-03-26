@@ -168,6 +168,7 @@ class ExecutionBatchAPIDTO(BaseModel):
     inputs: Optional[ExecutionBatchInputs] = Field(alias="inputs", default=None)
     outputs: Optional[ExecutionBatchOutputs] = Field(alias="outputs", default=None)
     debug: Optional[bool] = Field(alias="debug", default=False)
+    is_test: Optional[bool] = Field(alias="isTest", default=None)
 
     class Config:
         populate_by_name = True
