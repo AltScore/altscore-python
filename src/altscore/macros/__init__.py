@@ -27,6 +27,7 @@ class MacrosSync:
                 "riskRating": borrower_data.get("risk_rating") or borrower_data.get("riskRating"),
                 "repaymentRiskRating": borrower_data.get("repayment_risk_rating") or \
                                        borrower_data.get("repaymentRiskRating"),
+                "isTest": borrower_data.get("is_test") or borrower_data.get("isTest"),
             }
         )
         try:
@@ -549,6 +550,7 @@ class MacrosAsync:
                 "riskRating": borrower_data.get("risk_rating") or borrower_data.get("riskRating"),
                 "repaymentRiskRating": borrower_data.get("repayment_risk_rating") or \
                                        borrower_data.get("repaymentRiskRating"),
+                "isTest": borrower_data.get("is_test") or borrower_data.get("isTest"),
             }
         )
         try:
