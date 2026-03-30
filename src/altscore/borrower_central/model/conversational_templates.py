@@ -141,7 +141,7 @@ class WhatsAppTemplateSyncModule(GenericSyncModule):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             request = client.post(
                 f"/v1/conversational/templates/{template_id}/publish",
-                json=request_data.dict(by_alias=True),
+                json=request_data.dict(by_alias=True, exclude_none=True),
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -156,7 +156,7 @@ class WhatsAppTemplateSyncModule(GenericSyncModule):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             request = client.post(
                 f"/v1/conversational/templates/{template_id}/send",
-                json=request_data.dict(by_alias=True),
+                json=request_data.dict(by_alias=True, exclude_none=True),
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -180,7 +180,7 @@ class WhatsAppTemplateAsyncModule(GenericAsyncModule):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
                 f"/v1/conversational/templates/{template_id}/publish",
-                json=request_data.dict(by_alias=True),
+                json=request_data.dict(by_alias=True, exclude_none=True),
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -195,7 +195,7 @@ class WhatsAppTemplateAsyncModule(GenericAsyncModule):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
                 f"/v1/conversational/templates/{template_id}/send",
-                json=request_data.dict(by_alias=True),
+                json=request_data.dict(by_alias=True, exclude_none=True),
                 headers=self.build_headers(),
                 timeout=120,
             )

@@ -162,7 +162,7 @@ class WorkflowSync(GenericSyncResource):
                     "workflowId": self.data.id,
                     "schedule": schedule,
                     "scheduleBatch": schedule_batch
-                }).dict(by_alias=True)
+                }).dict(by_alias=True, exclude_none=True)
             )
 
             raise_for_status_improved(response)
@@ -204,7 +204,7 @@ class WorkflowAsync(GenericAsyncResource):
                     "workflowId": self.data.id,
                     "schedule": schedule,
                     "scheduleBatch": schedule_batch
-                }).dict(by_alias=True)
+                }).dict(by_alias=True, exclude_none=True)
             )
             raise_for_status_improved(response)
 

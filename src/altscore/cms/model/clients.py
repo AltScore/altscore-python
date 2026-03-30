@@ -309,7 +309,7 @@ class ClientAsync(ClientBase):
                     "partner_id": self.data.partner_id,
                     "client_id": self.data.id,
                     "auto_create_references": auto_create_references
-                }).dict(by_alias=True),
+                }).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -541,7 +541,7 @@ class ClientSync(ClientBase):
                     "partner_id": self.data.partner_id,
                     "client_id": self.data.id,
                     "auto_create_references": auto_create_references
-                }).dict(by_alias=True),
+                }).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)

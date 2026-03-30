@@ -303,7 +303,7 @@ class ExecutionSync(GenericSyncResource):
             response = client.put(
                 self._output(self.data.id),
                 headers=self._header_builder(),
-                json=output_obj.dict(by_alias=True),
+                json=output_obj.dict(by_alias=True, exclude_none=True),
                 timeout=300
             )
             raise_for_status_improved(response)
@@ -435,7 +435,7 @@ class ExecutionAsync(GenericAsyncResource):
             response = await client.put(
                 self._output(self.data.id),
                 headers=self._header_builder(),
-                json=output_obj.dict(by_alias=True),
+                json=output_obj.dict(by_alias=True, exclude_none=True),
                 timeout=300
             )
             raise_for_status_improved(response)

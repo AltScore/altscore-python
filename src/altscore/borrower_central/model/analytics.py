@@ -76,7 +76,7 @@ class AnalyticsAsyncModule:
             response = await client.post(
                 "/v1/analytics/commands/new-metric",
                 headers=self.build_headers(),
-                json=NewQueryDTO.parse_obj(new_metric).dict(by_alias=True),
+                json=NewQueryDTO.parse_obj(new_metric).dict(by_alias=True, exclude_none=True),
                 timeout=120
             )
             raise_for_status_improved(response)
@@ -88,7 +88,7 @@ class AnalyticsAsyncModule:
             response = await client.post(
                 "/v1/analytics/commands/get-metrics",
                 headers=self.build_headers(),
-                json=ExecuteQueryDTO.parse_obj(query).dict(by_alias=True),
+                json=ExecuteQueryDTO.parse_obj(query).dict(by_alias=True, exclude_none=True),
                 timeout=120
             )
             raise_for_status_improved(response)
@@ -122,7 +122,7 @@ class AnalyticsSyncModule:
             response = client.post(
                 "/v1/analytics/commands/new-metric",
                 headers=self.build_headers(),
-                json=NewQueryDTO.parse_obj(new_metric).dict(by_alias=True),
+                json=NewQueryDTO.parse_obj(new_metric).dict(by_alias=True, exclude_none=True),
                 timeout=120
             )
             raise_for_status_improved(response)
@@ -134,7 +134,7 @@ class AnalyticsSyncModule:
             response = client.post(
                 "/v1/analytics/commands/get-metrics",
                 headers=self.build_headers(),
-                json=ExecuteQueryDTO.parse_obj(query).dict(by_alias=True),
+                json=ExecuteQueryDTO.parse_obj(query).dict(by_alias=True, exclude_none=True),
                 timeout=120
             )
             raise_for_status_improved(response)

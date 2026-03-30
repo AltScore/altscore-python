@@ -361,7 +361,7 @@ class GenericSyncModule:
             response = client.patch(
                 f"/v1/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
-                json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True),
+                json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
                 timeout=timeout
             )
             raise_for_status_improved(response)
@@ -499,7 +499,7 @@ class GenericAsyncModule:
             response = await client.post(
                 f"/v1/{self.resource}",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
+                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
                 timeout=timeout
             )
             if response.status_code == 409 and update_if_exists:
@@ -518,7 +518,7 @@ class GenericAsyncModule:
             response = await client.patch(
                 f"/v1/{self.resource}/{resource_id}",
                 headers=self.build_headers(),
-                json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True),
+                json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
                 timeout=timeout
             )
             raise_for_status_improved(response)

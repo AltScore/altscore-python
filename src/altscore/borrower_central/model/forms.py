@@ -89,7 +89,7 @@ class FormsSyncModule(GenericSyncModule):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = client.post(
                 f"/v1/{self.resource}/commands/borrower-sign-up",
-                json=BorrowerSignUpRequest.parse_obj(borrower_sign_up_request).dict(by_alias=True),
+                json=BorrowerSignUpRequest.parse_obj(borrower_sign_up_request).dict(by_alias=True, exclude_none=True),
                 timeout=120
             )
             raise_for_status_improved(response)
@@ -142,7 +142,7 @@ class FormsAsyncModule(GenericAsyncModule):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
             response = await client.post(
                 f"/v1/{self.resource}/commands/borrower-sign-up",
-                json=BorrowerSignUpRequest.parse_obj(borrower_sign_up_request).dict(by_alias=True),
+                json=BorrowerSignUpRequest.parse_obj(borrower_sign_up_request).dict(by_alias=True, exclude_none=True),
                 timeout=120
             )
             raise_for_status_improved(response)

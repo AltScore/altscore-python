@@ -398,7 +398,7 @@ class BorrowersAsyncModule:
             response = await client.post(
                 "/v1/borrowers",
                 headers=self.build_headers(),
-                json=CreateBorrowerDTO.parse_obj(new_entity_data).dict(by_alias=True),
+                json=CreateBorrowerDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
                 timeout=timeout
             )
             raise_for_status_improved(response)
@@ -410,7 +410,7 @@ class BorrowersAsyncModule:
             response = await client.patch(
                 f"/v1/borrowers/{resource_id}",
                 headers=self.build_headers(),
-                json=UpdateBorrowerDTO.parse_obj(patch_data).dict(by_alias=True),
+                json=UpdateBorrowerDTO.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
                 timeout=timeout
             )
             raise_for_status_improved(response)
@@ -642,7 +642,7 @@ class BorrowersSyncModule:
             response = client.post(
                 "/v1/borrowers",
                 headers=self.build_headers(),
-                json=CreateBorrowerDTO.parse_obj(new_entity_data).dict(by_alias=True),
+                json=CreateBorrowerDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
                 timeout=timeout
             )
             raise_for_status_improved(response)
@@ -654,7 +654,7 @@ class BorrowersSyncModule:
             response = client.patch(
                 f"/v1/borrowers/{resource_id}",
                 headers=self.build_headers(),
-                json=UpdateBorrowerDTO.parse_obj(patch_data).dict(by_alias=True),
+                json=UpdateBorrowerDTO.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
                 timeout=timeout
             )
             raise_for_status_improved(response)
@@ -967,7 +967,7 @@ class BorrowerAsync(BorrowerBase):
                     "value": risk_rating,
                     "reference_id": reference_id,
                     "updated_at": updated_at
-                }).dict(by_alias=True)
+                }).dict(by_alias=True, exclude_none=True)
             )
             raise_for_status_improved(response)
             return None
@@ -1554,7 +1554,7 @@ class BorrowerSync(BorrowerBase):
                     "value": risk_rating,
                     "reference_id": reference_id,
                     "updated_at": updated_at
-                }).dict(by_alias=True)
+                }).dict(by_alias=True, exclude_none=True)
             )
             raise_for_status_improved(response)
             return None
