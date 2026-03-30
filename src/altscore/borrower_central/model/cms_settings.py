@@ -77,7 +77,7 @@ class CMSSettingsSyncModule(GenericSyncModule):
             response = client.put(
                 f"/v1/{self.resource}",
                 headers=self.build_headers(),
-                json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True),
+                json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -123,7 +123,7 @@ class CMSSettingsAsyncModule(GenericAsyncModule):
             response = await client.put(
                 f"/v1/{self.resource}",
                 headers=self.build_headers(),
-                json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True),
+                json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)

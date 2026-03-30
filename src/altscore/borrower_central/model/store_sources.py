@@ -80,7 +80,7 @@ class SourcesSyncModule(GenericSyncModule):
             response = client.post(
                 f"/v1/stores/sources/altdata",
                 headers=self.build_headers(),
-                json=CreateAltdataSourceDTO.parse_obj(new_entity_data).dict(by_alias=True),
+                json=CreateAltdataSourceDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
                 timeout=120
             )
             raise_for_status_improved(response)
@@ -107,7 +107,7 @@ class SourcesAsyncModule(GenericAsyncModule):
             response = await client.post(
                 f"/v1/stores/sources/altdata",
                 headers=self.build_headers(),
-                json=CreateAltdataSourceDTO.parse_obj(new_entity_data).dict(by_alias=True),
+                json=CreateAltdataSourceDTO.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
                 timeout=120
             )
             raise_for_status_improved(response)

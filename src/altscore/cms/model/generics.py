@@ -31,7 +31,7 @@ class GenericSyncModule:
             response = client.post(
                 f"/{self.resource_version}/{self.resource}",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
+                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -183,7 +183,7 @@ class GenericAsyncModule:
             response = await client.post(
                 f"/{self.resource_version}/{self.resource}",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
+                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)

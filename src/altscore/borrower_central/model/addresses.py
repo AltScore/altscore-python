@@ -210,7 +210,7 @@ class AddressesSyncModule(GenericSyncModule):
             response = client.post(
                 f"/v1/addresses/commands/new-address-from-address-str",
                 headers=self.build_headers(),
-                json=NewAddressFromAddressStrDTO.parse_obj(new_address_data).dict(by_alias=True),
+                json=NewAddressFromAddressStrDTO.parse_obj(new_address_data).dict(by_alias=True, exclude_none=True),
             )
             raise_for_status_improved(response)
             return response.json()["id"]
@@ -287,7 +287,7 @@ class AddressesAsyncModule(GenericAsyncModule):
             response = await client.post(
                 f"/v1/addresses/commands/new-address-from-address-str",
                 headers=self.build_headers(),
-                json=NewAddressFromAddressStrDTO.parse_obj(new_address_data).dict(by_alias=True),
+                json=NewAddressFromAddressStrDTO.parse_obj(new_address_data).dict(by_alias=True, exclude_none=True),
             )
             raise_for_status_improved(response)
             return response.json()["id"]

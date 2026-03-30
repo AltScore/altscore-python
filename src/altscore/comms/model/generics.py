@@ -31,7 +31,7 @@ class GenericSyncModule:
             response = client.post(
                 f"/{self.resource_version}/{self.resource}/{self.altscore_client.partner_id}",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
+                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -60,7 +60,7 @@ class GenericSyncModule:
             response = client.patch(
                 f"/{self.resource_version}/{self.resource}/{self.altscore_client.partner_id}/{resource_id}",
                 headers=self.build_headers(),
-                json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True),
+                json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -144,7 +144,7 @@ class GenericAsyncModule:
             response = await client.post(
                 f"/{self.resource_version}/{self.resource}/{self.altscore_client.partner_id}",
                 headers=self.build_headers(),
-                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True),
+                json=self.create_data_model.parse_obj(new_entity_data).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)
@@ -173,7 +173,7 @@ class GenericAsyncModule:
             response = await client.patch(
                 f"/{self.resource_version}/{self.resource}/{self.altscore_client.partner_id}/{resource_id}",
                 headers=self.build_headers(),
-                json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True),
+                json=self.update_data_model.parse_obj(patch_data).dict(by_alias=True, exclude_none=True),
                 timeout=30
             )
             raise_for_status_improved(response)

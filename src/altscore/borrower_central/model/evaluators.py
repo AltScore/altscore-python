@@ -150,7 +150,7 @@ class EvaluatorSync(GenericSyncResource):
             response = client.post(
                 f"{self.base_url}/{self.resource}/{self.data.id}/evaluate",
                 headers=self._header_builder(),
-                json=evaluator_input.dict(by_alias=True),
+                json=evaluator_input.dict(by_alias=True, exclude_none=True),
                 timeout=300
             )
             raise_for_status_improved(response)
@@ -171,7 +171,7 @@ class EvaluatorAsync(GenericAsyncResource):
             response = await client.post(
                 f"{self.base_url}/{self.resource}/{self.data.id}/evaluate",
                 headers=self._header_builder(),
-                json=evaluator_input.dict(by_alias=True),
+                json=evaluator_input.dict(by_alias=True, exclude_none=True),
                 timeout=300
             )
             raise_for_status_improved(response)
@@ -223,7 +223,7 @@ class EvaluatorSyncModule(GenericSyncModule):
             response = client.post(
                 url,
                 headers=self.build_headers(),
-                json=EvaluatorInput.parse_obj(evaluator_input).dict(by_alias=True),
+                json=EvaluatorInput.parse_obj(evaluator_input).dict(by_alias=True, exclude_none=True),
                 timeout=120
             )
             raise_for_status_improved(response)
@@ -275,7 +275,7 @@ class EvaluatorAsyncModule(GenericAsyncModule):
             response = await client.post(
                 url,
                 headers=self.build_headers(),
-                json=EvaluatorInput.parse_obj(evaluator_input).dict(by_alias=True),
+                json=EvaluatorInput.parse_obj(evaluator_input).dict(by_alias=True, exclude_none=True),
                 timeout=120
             )
             raise_for_status_improved(response)

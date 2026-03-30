@@ -98,7 +98,7 @@ class CategoryAsyncModule:
             response = await client.post(
                 "/v1/category",
                 headers=self.build_headers(),
-                json=NewCategoryDTO.parse_obj(new_category).dict(by_alias=True),
+                json=NewCategoryDTO.parse_obj(new_category).dict(by_alias=True, exclude_none=True),
                 timeout=120
             )
             raise_for_status_improved(response)
@@ -229,7 +229,7 @@ class CategorySyncModule:
             response = client.post(
                 "/v1/category",
                 headers=self.build_headers(),
-                json=NewCategoryDTO.parse_obj(new_category).dict(by_alias=True),
+                json=NewCategoryDTO.parse_obj(new_category).dict(by_alias=True, exclude_none=True),
                 timeout=120
             )
             raise_for_status_improved(response)
@@ -358,7 +358,7 @@ class CategoryAsync(CategoryBase):
             response = await client.post(
                 self._add_category_value_url(self.data.id),
                 headers=self._header_builder(),
-                json=value.dict(by_alias=True),
+                json=value.dict(by_alias=True, exclude_none=True),
             )
             raise_for_status_improved(response)
 
@@ -401,7 +401,7 @@ class CategorySync(CategoryBase):
             response = client.post(
                 self._add_category_value_url(self.data.id),
                 headers=self._header_builder(),
-                json=value.dict(by_alias=True),
+                json=value.dict(by_alias=True, exclude_none=True),
             )
             raise_for_status_improved(response)
 
