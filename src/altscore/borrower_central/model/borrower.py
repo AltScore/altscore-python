@@ -24,7 +24,7 @@ from altscore.borrower_central.model.metrics import MetricSync, MetricAsync
 from altscore.common.http_errors import raise_for_status_improved, retry_on_401, retry_on_401_async
 from altscore.borrower_central.model.store_packages import PackageSync, PackageAsync
 from altscore.borrower_central.model.executions import ExecutionSync, ExecutionAsync
-from altscore.borrower_central.utils import clean_dict, convert_to_dash_case
+from altscore.borrower_central.utils import clean_dict, convert_to_dash_case, build_test_params
 
 from loguru import logger
 
@@ -212,7 +212,8 @@ class BorrowerBase:
 
     def _authorizations(
             self, borrower_id: str, sort_by: Optional[str] = None, key: Optional[str] = None,
-            per_page: Optional[int] = None, page: Optional[int] = None, sort_direction: Optional[str] = None
+            per_page: Optional[int] = None, page: Optional[int] = None, sort_direction: Optional[str] = None,
+            include_tests: bool = True, test_only: bool = False
     ) -> (str, dict):
         query = {
             "borrower-id": borrower_id,
@@ -222,11 +223,12 @@ class BorrowerBase:
             "page": page,
             "sort-direction": sort_direction
         }
-        return f"{self.base_url}/v1/authorizations", clean_dict(query)
+        return f"{self.base_url}/v1/authorizations", build_test_params(clean_dict(query), include_tests=include_tests, test_only=test_only)
 
     def _addresses(
             self, borrower_id: str, priority: Optional[int] = None, sort_by: Optional[str] = None,
-            per_page: Optional[int] = None, page: Optional[int] = None, sort_direction: Optional[str] = None
+            per_page: Optional[int] = None, page: Optional[int] = None, sort_direction: Optional[str] = None,
+            include_tests: bool = True, test_only: bool = False
     ) -> (str, dict):
         query = {
             "borrower-id": borrower_id,
@@ -236,12 +238,13 @@ class BorrowerBase:
             "page": page,
             "sort-direction": sort_direction
         }
-        return f"{self.base_url}/v1/addresses", clean_dict(query)
+        return f"{self.base_url}/v1/addresses", build_test_params(clean_dict(query), include_tests=include_tests, test_only=test_only)
 
     def _identities(
             self, borrower_id: str, priority: Optional[int] = None, sort_by: Optional[str] = None,
             key: Optional[str] = None, per_page: Optional[int] = None, page: Optional[int] = None,
-            sort_direction: Optional[str] = None
+            sort_direction: Optional[str] = None,
+            include_tests: bool = True, test_only: bool = False
     ) -> (str, dict):
         query = {
             "borrower-id": borrower_id,
@@ -252,12 +255,13 @@ class BorrowerBase:
             "page": page,
             "sort-direction": sort_direction
         }
-        return f"{self.base_url}/v1/identities", clean_dict(query)
+        return f"{self.base_url}/v1/identities", build_test_params(clean_dict(query), include_tests=include_tests, test_only=test_only)
 
     def _metrics(
             self, borrower_id: str, sort_by: Optional[str] = None,
             key: Optional[str] = None, per_page: Optional[int] = None, page: Optional[int] = None,
-            sort_direction: Optional[str] = None
+            sort_direction: Optional[str] = None,
+            include_tests: bool = True, test_only: bool = False
     ) -> (str, dict):
         query = {
             "borrower-id": borrower_id,
@@ -267,11 +271,12 @@ class BorrowerBase:
             "page": page,
             "sort-direction": sort_direction
         }
-        return f"{self.base_url}/v1/metrics", clean_dict(query)
+        return f"{self.base_url}/v1/metrics", build_test_params(clean_dict(query), include_tests=include_tests, test_only=test_only)
 
     def _documents(
             self, borrower_id: str, key: Optional[str] = None, sort_by: Optional[str] = None,
-            per_page: Optional[int] = None, page: Optional[int] = None, sort_direction: Optional[str] = None
+            per_page: Optional[int] = None, page: Optional[int] = None, sort_direction: Optional[str] = None,
+            include_tests: bool = True, test_only: bool = False
     ) -> (str, dict):
         query = {
             "borrower-id": borrower_id,
@@ -281,12 +286,13 @@ class BorrowerBase:
             "page": page,
             "sort-direction": sort_direction
         }
-        return f"{self.base_url}/v1/documents", clean_dict(query)
+        return f"{self.base_url}/v1/documents", build_test_params(clean_dict(query), include_tests=include_tests, test_only=test_only)
 
     def _points_of_contact(
             self, borrower_id: str, contact_method: Optional[str] = None, priority: Optional[int] = None,
             sort_by: Optional[str] = None, per_page: Optional[int] = None, page: Optional[int] = None,
-            sort_direction: Optional[str] = None
+            sort_direction: Optional[str] = None,
+            include_tests: bool = True, test_only: bool = False
     ) -> (str, dict):
         query = {
             "borrower-id": borrower_id,
@@ -297,12 +303,13 @@ class BorrowerBase:
             "page": page,
             "sort-direction": sort_direction
         }
-        return f"{self.base_url}/v1/points-of-contact", clean_dict(query)
+        return f"{self.base_url}/v1/points-of-contact", build_test_params(clean_dict(query), include_tests=include_tests, test_only=test_only)
 
     def _relationships(
             self, borrower_id: str, priority: Optional[int] = None, sort_by: Optional[str] = None,
             per_page: Optional[int] = None, page: Optional[int] = None, sort_direction: Optional[str] = None,
-            is_legal_representative: Optional[bool] = None
+            is_legal_representative: Optional[bool] = None,
+            include_tests: bool = True, test_only: bool = False
     ) -> (str, dict):
         query = {
             "borrower-id": borrower_id,
@@ -313,11 +320,12 @@ class BorrowerBase:
             "sort-direction": sort_direction,
             "is-legal-representative": is_legal_representative
         }
-        return f"{self.base_url}/v1/relationships", clean_dict(query)
+        return f"{self.base_url}/v1/relationships", build_test_params(clean_dict(query), include_tests=include_tests, test_only=test_only)
 
     def _borrower_fields(
             self, borrower_id: str, key: Optional[str] = None, sort_by: Optional[str] = None,
-            per_page: Optional[int] = None, page: Optional[int] = None, sort_direction: Optional[str] = None
+            per_page: Optional[int] = None, page: Optional[int] = None, sort_direction: Optional[str] = None,
+            include_tests: bool = True, test_only: bool = False
     ) -> (str, dict):
         query = {
             "borrower-id": borrower_id,
@@ -327,7 +335,7 @@ class BorrowerBase:
             "page": page,
             "sort-direction": sort_direction
         }
-        return f"{self.base_url}/v1/borrower-fields", clean_dict(query)
+        return f"{self.base_url}/v1/borrower-fields", build_test_params(clean_dict(query), include_tests=include_tests, test_only=test_only)
 
     def _packages(
             self, borrower_id: str, source_id: Optional[str] = None, sort_by: Optional[str] = None,
@@ -1033,9 +1041,10 @@ class BorrowerAsync(BorrowerBase):
             ) for document_data in data]
 
     @retry_on_401_async
-    async def get_identity_by_key(self, key: str) -> Optional[IdentityAsync]:
+    async def get_identity_by_key(self, key: str, include_tests: bool = True,
+                                  test_only: bool = False) -> Optional[IdentityAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
-            url, query = self._identities(self.data.id, key=key)
+            url, query = self._identities(self.data.id, key=key, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 url,
                 headers=self._header_builder(),
@@ -1052,9 +1061,10 @@ class BorrowerAsync(BorrowerBase):
             )
 
     @retry_on_401_async
-    async def get_metric_by_key(self, key: str) -> Optional[MetricAsync]:
+    async def get_metric_by_key(self, key: str, include_tests: bool = True,
+                                test_only: bool = False) -> Optional[MetricAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
-            url, query = self._metrics(self.data.id, key=key)
+            url, query = self._metrics(self.data.id, key=key, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 url,
                 headers=self._header_builder(),
@@ -1071,9 +1081,10 @@ class BorrowerAsync(BorrowerBase):
             )
 
     @retry_on_401_async
-    async def get_borrower_field_by_key(self, key: str) -> Optional[BorrowerFieldAsync]:
+    async def get_borrower_field_by_key(self, key: str, include_tests: bool = True,
+                                        test_only: bool = False) -> Optional[BorrowerFieldAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
-            url, query = self._borrower_fields(self.data.id, key=key)
+            url, query = self._borrower_fields(self.data.id, key=key, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 url,
                 headers=self._header_builder(),
@@ -1090,9 +1101,10 @@ class BorrowerAsync(BorrowerBase):
             )
 
     @retry_on_401_async
-    async def get_document_by_key(self, key: str) -> Optional[DocumentAsync]:
+    async def get_document_by_key(self, key: str, include_tests: bool = True,
+                                  test_only: bool = False) -> Optional[DocumentAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
-            url, query = self._documents(self.data.id, key=key)
+            url, query = self._documents(self.data.id, key=key, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 url,
                 headers=self._header_builder(),
@@ -1620,9 +1632,10 @@ class BorrowerSync(BorrowerBase):
             ) for document_data in data]
 
     @retry_on_401
-    def get_identity_by_key(self, key: str) -> Optional[IdentitySync]:
+    def get_identity_by_key(self, key: str, include_tests: bool = True,
+                            test_only: bool = False) -> Optional[IdentitySync]:
         with httpx.Client(base_url=self.base_url) as client:
-            url, query = self._identities(self.data.id, key=key)
+            url, query = self._identities(self.data.id, key=key, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 url,
                 headers=self._header_builder(),
@@ -1639,9 +1652,10 @@ class BorrowerSync(BorrowerBase):
             )
 
     @retry_on_401
-    def get_metric_by_key(self, key: str) -> Optional[MetricSync]:
+    def get_metric_by_key(self, key: str, include_tests: bool = True,
+                          test_only: bool = False) -> Optional[MetricSync]:
         with httpx.Client(base_url=self.base_url) as client:
-            url, query = self._metrics(self.data.id, key=key)
+            url, query = self._metrics(self.data.id, key=key, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 url,
                 headers=self._header_builder(),
@@ -1658,9 +1672,10 @@ class BorrowerSync(BorrowerBase):
             )
 
     @retry_on_401
-    def get_borrower_field_by_key(self, key: str) -> Optional[BorrowerFieldSync]:
+    def get_borrower_field_by_key(self, key: str, include_tests: bool = True,
+                                  test_only: bool = False) -> Optional[BorrowerFieldSync]:
         with httpx.Client(base_url=self.base_url) as client:
-            url, query = self._borrower_fields(self.data.id, key=key)
+            url, query = self._borrower_fields(self.data.id, key=key, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 url,
                 headers=self._header_builder(),
@@ -1677,9 +1692,10 @@ class BorrowerSync(BorrowerBase):
             )
 
     @retry_on_401
-    def get_document_by_key(self, key) -> Optional[DocumentSync]:
+    def get_document_by_key(self, key: str, include_tests: bool = True,
+                            test_only: bool = False) -> Optional[DocumentSync]:
         with httpx.Client(base_url=self.base_url) as client:
-            url, query = self._documents(self.data.id, key=key)
+            url, query = self._documents(self.data.id, key=key, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 url,
                 headers=self._header_builder(),
