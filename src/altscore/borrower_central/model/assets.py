@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
+from altscore.borrower_central.utils import build_test_params
 
 
 # DTO for assets
@@ -136,26 +137,30 @@ class AssetsSyncModule(GenericSyncModule):
             return None
 
     @retry_on_401
-    def query_by_deal_id(self, deal_id: str, page: int = 1, per_page: int = 10):
+    def query_by_deal_id(self, deal_id: str, page: int = 1, per_page: int = 10,
+                         include_tests: bool = True, test_only: bool = False):
         """
         Find assets by deal ID
-        
+
         Args:
             deal_id: The ID of the deal to filter by
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             Dict with assets and pagination info
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "deal-id": deal_id,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 "/v1/assets",
-                params={
-                    "deal-id": deal_id,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -163,14 +168,18 @@ class AssetsSyncModule(GenericSyncModule):
             return response.json()
 
     @retry_on_401
-    def retrieve_by_external_id(self, external_id: str) -> Optional[AssetSync]:
+    def retrieve_by_external_id(self, external_id: str,
+                                include_tests: bool = True, test_only: bool = False) -> Optional[AssetSync]:
         """
         Retrieve an asset by its external ID
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "external-id": external_id
+            }, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 "/v1/assets",
-                params={"external-id": external_id},
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -186,7 +195,8 @@ class AssetsSyncModule(GenericSyncModule):
             return None
 
     @retry_on_401
-    def query_by_group(self, group: str, page: int = 1, per_page: int = 10):
+    def query_by_group(self, group: str, page: int = 1, per_page: int = 10,
+                       include_tests: bool = True, test_only: bool = False):
         """
         Find assets by group
 
@@ -194,18 +204,21 @@ class AssetsSyncModule(GenericSyncModule):
             group: The group key to filter by
             page: Page number for pagination
             per_page: Number of results per page
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
 
         Returns:
             Dict with assets and pagination info
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "group": group,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 "/v1/assets",
-                params={
-                    "group": group,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -248,26 +261,30 @@ class AssetsAsyncModule(GenericAsyncModule):
             return None
 
     @retry_on_401_async
-    async def query_by_deal_id(self, deal_id: str, page: int = 1, per_page: int = 10):
+    async def query_by_deal_id(self, deal_id: str, page: int = 1, per_page: int = 10,
+                               include_tests: bool = True, test_only: bool = False):
         """
         Find assets by deal ID
-        
+
         Args:
             deal_id: The ID of the deal to filter by
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             Dict with assets and pagination info
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "deal-id": deal_id,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 "/v1/assets",
-                params={
-                    "deal-id": deal_id,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -275,14 +292,18 @@ class AssetsAsyncModule(GenericAsyncModule):
             return response.json()
 
     @retry_on_401_async
-    async def retrieve_by_external_id(self, external_id: str) -> Optional[AssetAsync]:
+    async def retrieve_by_external_id(self, external_id: str,
+                                      include_tests: bool = True, test_only: bool = False) -> Optional[AssetAsync]:
         """
         Retrieve an asset by its external ID
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "external-id": external_id
+            }, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 "/v1/assets",
-                params={"external-id": external_id},
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -298,7 +319,8 @@ class AssetsAsyncModule(GenericAsyncModule):
             return None
 
     @retry_on_401_async
-    async def query_by_group(self, group: str, page: int = 1, per_page: int = 10):
+    async def query_by_group(self, group: str, page: int = 1, per_page: int = 10,
+                             include_tests: bool = True, test_only: bool = False):
         """
         Find assets by group
 
@@ -306,18 +328,21 @@ class AssetsAsyncModule(GenericAsyncModule):
             group: The group key to filter by
             page: Page number for pagination
             per_page: Number of results per page
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
 
         Returns:
             Dict with assets and pagination info
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "group": group,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 "/v1/assets",
-                params={
-                    "group": group,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )

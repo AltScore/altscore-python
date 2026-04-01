@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
+from altscore.borrower_central.utils import build_test_params
 
 
 class HistoricValue(BaseModel):
@@ -102,35 +103,33 @@ class MetricsSyncModule(GenericSyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            if metrics_found_request.status_code == 200:
-                metrics_found_data = metrics_found_request.json()
-                if len(metrics_found_data) == 0:
-                    return None
-                else:
-                    return self.retrieve(metrics_found_data[0]["id"])
-            return None
+            raise_for_status_improved(metrics_found_request)
+            metrics_found_data = metrics_found_request.json()
+            if len(metrics_found_data) == 0:
+                return None
+            return self.retrieve(metrics_found_data[0]["id"])
 
     @retry_on_401
-    def find_borrower_metric_by_key(self, borrower_id: str, key: str):
+    def find_borrower_metric_by_key(self, borrower_id: str, key: str,
+                                    include_tests: bool = True, test_only: bool = False):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "borrower-id": borrower_id,
+                "key": key,
+                "per-page": 1,
+                "page": 1
+            }, include_tests=include_tests, test_only=test_only)
             metrics_found_request = client.get(
                 f"/v1/metrics",
-                params={
-                    "borrower-id": borrower_id,
-                    "key": key,
-                    "per-page": 1,
-                    "page": 1
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
-            if metrics_found_request.status_code == 200:
-                metrics_found_data = metrics_found_request.json()
-                if len(metrics_found_data) == 0:
-                    return None
-                else:
-                    return self.retrieve(metrics_found_data[0]["id"])
-            return None
+            raise_for_status_improved(metrics_found_request)
+            metrics_found_data = metrics_found_request.json()
+            if len(metrics_found_data) == 0:
+                return None
+            return self.retrieve(metrics_found_data[0]["id"])
 
 
 class MetricsAsyncModule(GenericAsyncModule):
@@ -164,16 +163,18 @@ class MetricsAsyncModule(GenericAsyncModule):
                 return await self.retrieve(metrics_found_data[0]["id"])
 
     @retry_on_401_async
-    async def find_borrower_metric_by_key(self, borrower_id: str, key: str):
+    async def find_borrower_metric_by_key(self, borrower_id: str, key: str,
+                                          include_tests: bool = True, test_only: bool = False):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "borrower-id": borrower_id,
+                "key": key,
+                "per-page": 1,
+                "page": 1
+            }, include_tests=include_tests, test_only=test_only)
             metrics_found_request = await client.get(
                 f"/v1/metrics",
-                params={
-                    "borrower-id": borrower_id,
-                    "key": key,
-                    "per-page": 1,
-                    "page": 1
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )

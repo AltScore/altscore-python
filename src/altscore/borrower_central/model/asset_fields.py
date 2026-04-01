@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, root_validator
 from typing import Optional, List, Dict, Any
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
+from altscore.borrower_central.utils import build_test_params
 
 
 class Money(BaseModel):
@@ -60,24 +61,21 @@ class AssetFieldDTO(BaseModel):
         """Parse history values based on the field's data_type"""
         data_type = values.get("data_type")
         history = values.get("history", [])
-        
-        if not history:
-            return values
-        
+
         # Parse current value based on data_type
         current_value = values.get("value")
         if data_type == "money" and isinstance(current_value, dict):
             values["value"] = Money.parse_obj(current_value)
         elif data_type == "money_array" and isinstance(current_value, list):
             values["value"] = [MoneyArrayItemDTO.parse_obj(item) for item in current_value]
-        
+
         # Parse history values based on data_type
         for hist_item in history:
             if data_type == "money" and isinstance(hist_item.value, dict):
                 hist_item.value = Money.parse_obj(hist_item.value)
             elif data_type == "money_array" and isinstance(hist_item.value, list):
                 hist_item.value = [MoneyArrayItemDTO.parse_obj(item) for item in hist_item.value]
-        
+
         return values
 
 
@@ -132,26 +130,30 @@ class AssetFieldsSyncModule(GenericSyncModule):
                          resource="asset-fields")
 
     @retry_on_401
-    def get_by_asset_id(self, asset_id: str, page: int = 1, per_page: int = 100):
+    def get_by_asset_id(self, asset_id: str, page: int = 1, per_page: int = 100,
+                        include_tests: bool = True, test_only: bool = False):
         """
         Get asset fields by asset ID
-        
+
         Args:
             asset_id: The ID of the asset
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[AssetFieldDTO]: List of asset fields
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "asset-id": asset_id,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 "/v1/asset-fields",
-                params={
-                    "asset-id": asset_id,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -159,26 +161,30 @@ class AssetFieldsSyncModule(GenericSyncModule):
             return [AssetFieldDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401
-    def get_by_key(self, asset_id: str, key: str):
+    def get_by_key(self, asset_id: str, key: str,
+                   include_tests: bool = True, test_only: bool = False):
         """
         Get an asset field by its key
 
         Args:
             asset_id: The ID of the asset
             key: The field key
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
 
         Returns:
             List[AssetFieldDTO]: List of asset fields matching the key
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "key": key,
+                "asset-id": asset_id,
+                "per-page": 100,
+                "page": 1
+            }, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 "/v1/asset-fields",
-                params={
-                    "key": key,
-                    "asset-id": asset_id,
-                    "per-page": 100,
-                    "page": 1
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -197,26 +203,30 @@ class AssetFieldsAsyncModule(GenericAsyncModule):
                          resource="asset-fields")
 
     @retry_on_401_async
-    async def get_by_asset_id(self, asset_id: str, page: int = 1, per_page: int = 100):
+    async def get_by_asset_id(self, asset_id: str, page: int = 1, per_page: int = 100,
+                              include_tests: bool = True, test_only: bool = False):
         """
         Get asset fields by asset ID
-        
+
         Args:
             asset_id: The ID of the asset
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[AssetFieldDTO]: List of asset fields
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "asset-id": asset_id,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 "/v1/asset-fields",
-                params={
-                    "asset-id": asset_id,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -224,26 +234,30 @@ class AssetFieldsAsyncModule(GenericAsyncModule):
             return [AssetFieldDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401_async
-    async def get_by_key(self, asset_id: str, key: str):
+    async def get_by_key(self, asset_id: str, key: str,
+                         include_tests: bool = True, test_only: bool = False):
         """
         Get an asset field by its key
-        
+
         Args:
             asset_id: The ID of the asset
             key: The field key
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[AssetFieldDTO]: List of asset fields matching the key
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "key": key,
+                "asset-id": asset_id,
+                "per-page": 100,
+                "page": 1
+            }, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 "/v1/asset-fields",
-                params={
-                    "key": key,
-                    "asset-id": asset_id,
-                    "per-page": 100,
-                    "page": 1
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )

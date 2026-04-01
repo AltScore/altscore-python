@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, root_validator
 from typing import Optional, List, Dict, Any
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
+from altscore.borrower_central.utils import build_test_params
 
 
 class Money(BaseModel):
@@ -142,26 +143,30 @@ class DealFieldsSyncModule(GenericSyncModule):
                          resource="deal-fields")
 
     @retry_on_401
-    def get_by_deal_id(self, deal_id: str, page: int = 1, per_page: int = 100):
+    def get_by_deal_id(self, deal_id: str, page: int = 1, per_page: int = 100,
+                       include_tests: bool = True, test_only: bool = False):
         """
         Get deal fields by deal ID
-        
+
         Args:
             deal_id: The ID of the deal
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[DealFieldDTO]: List of deal fields
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "deal-id": deal_id,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 "/v1/deal-fields",
-                params={
-                    "deal-id": deal_id,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -169,26 +174,30 @@ class DealFieldsSyncModule(GenericSyncModule):
             return [DealFieldDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401
-    def get_by_key(self, deal_id: str, key: str):
+    def get_by_key(self, deal_id: str, key: str,
+                   include_tests: bool = True, test_only: bool = False):
         """
         Get a deal field by its key
 
         Args:
             deal_id: The ID of the deal
             key: The field key
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
 
         Returns:
             List[DealFieldDTO]: List of deal fields matching the key
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "key": key,
+                "deal-id": deal_id,
+                "per-page": 100,
+                "page": 1
+            }, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 "/v1/deal-fields",
-                params={
-                    "key": key,
-                    "deal-id": deal_id,
-                    "per-page": 100,
-                    "page": 1
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -253,26 +262,30 @@ class DealFieldsAsyncModule(GenericAsyncModule):
                          resource="deal-fields")
 
     @retry_on_401_async
-    async def get_by_deal_id(self, deal_id: str, page: int = 1, per_page: int = 100):
+    async def get_by_deal_id(self, deal_id: str, page: int = 1, per_page: int = 100,
+                             include_tests: bool = True, test_only: bool = False):
         """
         Get deal fields by deal ID
-        
+
         Args:
             deal_id: The ID of the deal
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[DealFieldDTO]: List of deal fields
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "deal-id": deal_id,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 "/v1/deal-fields",
-                params={
-                    "deal-id": deal_id,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -280,26 +293,30 @@ class DealFieldsAsyncModule(GenericAsyncModule):
             return [DealFieldDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401_async
-    async def get_by_key(self, deal_id: str, key: str):
+    async def get_by_key(self, deal_id: str, key: str,
+                         include_tests: bool = True, test_only: bool = False):
         """
         Get a deal field by its key
-        
+
         Args:
             deal_id: The ID of the deal
             key: The field key
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[DealFieldDTO]: List of deal fields matching the key
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "key": key,
+                "deal-id": deal_id,
+                "per-page": 100,
+                "page": 1
+            }, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 "/v1/deal-fields",
-                params={
-                    "key": key,
-                    "deal-id": deal_id,
-                    "per-page": 100,
-                    "page": 1
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )

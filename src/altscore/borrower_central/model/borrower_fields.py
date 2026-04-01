@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, root_validator
 from typing import Optional, List, Dict, Any
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
+from altscore.borrower_central.utils import build_test_params
 import datetime as dt
 
 
@@ -132,16 +133,18 @@ class BorrowerFieldsSyncModule(GenericSyncModule):
                          resource="borrower-fields")
 
     @retry_on_401
-    def find_by_key(self, key: str, borrower_id: str):
+    def find_by_key(self, key: str, borrower_id: str,
+                    include_tests: bool = True, test_only: bool = False):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "key": key,
+                "borrower-id": borrower_id,
+                "per-page": 1,
+                "page": 1
+            }, include_tests=include_tests, test_only=test_only)
             fields_found_req = client.get(
                 f"/v1/borrower-fields",
-                params={
-                    "key": key,
-                    "borrower-id": borrower_id,
-                    "per-page": 1,
-                    "page": 1
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -201,19 +204,31 @@ class BorrowerFieldsSyncModule(GenericSyncModule):
             return
 
     @retry_on_401
-    def get_by_borrower_id(self, borrower_id: str, page: int = 1, per_page: int = 100):
+    def get_by_borrower_id(self, borrower_id: str, page: int = 1, per_page: int = 100,
+                           include_tests: bool = True, test_only: bool = False):
         """
         Get all borrower fields for a specific borrower
-        
+
         Args:
             borrower_id: The ID of the borrower
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[BorrowerFieldSync]: List of borrower fields for the borrower
         """
-        return self.query(borrower_id=borrower_id, page=page, per_page=per_page)
+        query_kwargs = {
+            "borrower_id": borrower_id,
+            "page": page,
+            "per_page": per_page,
+        }
+        if test_only:
+            query_kwargs["test_only"] = True
+        elif include_tests:
+            query_kwargs["include_tests"] = True
+        return self.query(**query_kwargs)
 
 class BorrowerFieldsAsyncModule(GenericAsyncModule):
 
@@ -226,16 +241,18 @@ class BorrowerFieldsAsyncModule(GenericAsyncModule):
                          resource="borrower-fields")
 
     @retry_on_401_async
-    async def find_by_key(self, key: str, borrower_id: str):
+    async def find_by_key(self, key: str, borrower_id: str,
+                          include_tests: bool = True, test_only: bool = False):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "key": key,
+                "borrower-id": borrower_id,
+                "per-page": 1,
+                "page": 1
+            }, include_tests=include_tests, test_only=test_only)
             fields_found_req = await client.get(
                 f"/v1/borrower-fields",
-                params={
-                    "key": key,
-                    "borrower-id": borrower_id,
-                    "per-page": 1,
-                    "page": 1
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -295,16 +312,28 @@ class BorrowerFieldsAsyncModule(GenericAsyncModule):
             raise_for_status_improved(response)
 
     @retry_on_401_async
-    async def get_by_borrower_id(self, borrower_id: str, page: int = 1, per_page: int = 100):
+    async def get_by_borrower_id(self, borrower_id: str, page: int = 1, per_page: int = 100,
+                                 include_tests: bool = True, test_only: bool = False):
         """
         Get all borrower fields for a specific borrower
-        
+
         Args:
             borrower_id: The ID of the borrower
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[BorrowerFieldAsync]: List of borrower fields for the borrower
         """
-        return await self.query(borrower_id=borrower_id, page=page, per_page=per_page)
+        query_kwargs = {
+            "borrower_id": borrower_id,
+            "page": page,
+            "per_page": per_page,
+        }
+        if test_only:
+            query_kwargs["test_only"] = True
+        elif include_tests:
+            query_kwargs["include_tests"] = True
+        return await self.query(**query_kwargs)

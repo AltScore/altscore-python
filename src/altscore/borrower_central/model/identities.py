@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
+from altscore.borrower_central.utils import build_test_params
 
 
 class IdentityAPIDTO(BaseModel):
@@ -102,16 +103,18 @@ class IdentitiesSyncModule(GenericSyncModule):
                          resource="identities")
 
     @retry_on_401
-    def find_by_key(self, key: str, borrower_id: str):
+    def find_by_key(self, key: str, borrower_id: str,
+                    include_tests: bool = True, test_only: bool = False):
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "key": key,
+                "borrower-id": borrower_id,
+                "per-page": 1,
+                "page": 1
+            }, include_tests=include_tests, test_only=test_only)
             identities_found_req = client.get(
                 "/v1/identities",
-                params={
-                    "key": key,
-                    "borrower-id": borrower_id,
-                    "per-page": 1,
-                    "page": 1
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -150,16 +153,18 @@ class IdentitiesAsyncModule(GenericAsyncModule):
                          resource="identities")
 
     @retry_on_401_async
-    async def find_by_key(self, key: str, borrower_id: str):
+    async def find_by_key(self, key: str, borrower_id: str,
+                          include_tests: bool = True, test_only: bool = False):
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "key": key,
+                "borrower-id": borrower_id,
+                "per-page": 1,
+                "page": 1
+            }, include_tests=include_tests, test_only=test_only)
             identities_found_req = await client.get(
                 "/v1/identities",
-                params={
-                    "key": key,
-                    "borrower-id": borrower_id,
-                    "per-page": 1,
-                    "page": 1
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )

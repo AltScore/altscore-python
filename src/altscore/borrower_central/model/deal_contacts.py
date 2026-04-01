@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, Dict
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
+from altscore.borrower_central.utils import build_test_params
 
 
 # DTO for deal contacts
@@ -70,26 +71,30 @@ class DealContactsSyncModule(GenericSyncModule):
                          resource="deal-contacts")
 
     @retry_on_401
-    def get_by_deal_id(self, deal_id: str, page: int = 1, per_page: int = 100):
+    def get_by_deal_id(self, deal_id: str, page: int = 1, per_page: int = 100,
+                       include_tests: bool = True, test_only: bool = False):
         """
         Get all contacts for a specific deal
-        
+
         Args:
             deal_id: The ID of the deal
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[DealContactDTO]: List of contacts for the deal
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "deal-id": deal_id,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 "/v1/deal-contacts",
-                params={
-                    "deal-id": deal_id,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -97,26 +102,30 @@ class DealContactsSyncModule(GenericSyncModule):
             return [DealContactDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401
-    def get_by_borrower_id(self, borrower_id: str, page: int = 1, per_page: int = 100):
+    def get_by_borrower_id(self, borrower_id: str, page: int = 1, per_page: int = 100,
+                           include_tests: bool = True, test_only: bool = False):
         """
         Get all deal contacts for a specific borrower
-        
+
         Args:
             borrower_id: The ID of the borrower
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[DealContactDTO]: List of deal contacts for the borrower
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "borrower-id": borrower_id,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 "/v1/deal-contacts",
-                params={
-                    "borrower-id": borrower_id,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -124,55 +133,63 @@ class DealContactsSyncModule(GenericSyncModule):
             return [DealContactDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401
-    def get_by_deal_and_borrower(self, deal_id: str, borrower_id: str, page: int = 1, per_page: int = 100):
+    def get_by_deal_and_borrower(self, deal_id: str, borrower_id: str, page: int = 1, per_page: int = 100,
+                                 include_tests: bool = True, test_only: bool = False):
         """
         Get all contacts for a specific deal and borrower
-        
+
         Args:
             deal_id: The ID of the deal
             borrower_id: The ID of the borrower
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[DealContactDTO]: List of contacts for the deal and borrower
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "deal-id": deal_id,
+                "borrower-id": borrower_id,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 "/v1/deal-contacts",
-                params={
-                    "deal-id": deal_id,
-                    "borrower-id": borrower_id,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
             raise_for_status_improved(response)
             return [DealContactDTO.parse_obj(data) for data in response.json()]
-    
+
     @retry_on_401
-    def get_by_role_key(self, role_key: str, page: int = 1, per_page: int = 100):
+    def get_by_role_key(self, role_key: str, page: int = 1, per_page: int = 100,
+                        include_tests: bool = True, test_only: bool = False):
         """
         Get all contacts with a specific role
-        
+
         Args:
             role_key: The role key to filter by
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[DealContactDTO]: List of contacts with the specified role
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "role-key": role_key,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 "/v1/deal-contacts",
-                params={
-                    "role-key": role_key,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -191,26 +208,30 @@ class DealContactsAsyncModule(GenericAsyncModule):
                          resource="deal-contacts")
 
     @retry_on_401_async
-    async def get_by_deal_id(self, deal_id: str, page: int = 1, per_page: int = 100):
+    async def get_by_deal_id(self, deal_id: str, page: int = 1, per_page: int = 100,
+                             include_tests: bool = True, test_only: bool = False):
         """
         Get all contacts for a specific deal
-        
+
         Args:
             deal_id: The ID of the deal
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[DealContactDTO]: List of contacts for the deal
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "deal-id": deal_id,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 "/v1/deal-contacts",
-                params={
-                    "deal-id": deal_id,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -218,26 +239,30 @@ class DealContactsAsyncModule(GenericAsyncModule):
             return [DealContactDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401_async
-    async def get_by_borrower_id(self, borrower_id: str, page: int = 1, per_page: int = 100):
+    async def get_by_borrower_id(self, borrower_id: str, page: int = 1, per_page: int = 100,
+                                 include_tests: bool = True, test_only: bool = False):
         """
         Get all deal contacts for a specific borrower
-        
+
         Args:
             borrower_id: The ID of the borrower
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[DealContactDTO]: List of deal contacts for the borrower
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "borrower-id": borrower_id,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 "/v1/deal-contacts",
-                params={
-                    "borrower-id": borrower_id,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -245,55 +270,63 @@ class DealContactsAsyncModule(GenericAsyncModule):
             return [DealContactDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401_async
-    async def get_by_deal_and_borrower(self, deal_id: str, borrower_id: str, page: int = 1, per_page: int = 100):
+    async def get_by_deal_and_borrower(self, deal_id: str, borrower_id: str, page: int = 1, per_page: int = 100,
+                                       include_tests: bool = True, test_only: bool = False):
         """
         Get all contacts for a specific deal and borrower
-        
+
         Args:
             deal_id: The ID of the deal
             borrower_id: The ID of the borrower
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[DealContactDTO]: List of contacts for the deal and borrower
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "deal-id": deal_id,
+                "borrower-id": borrower_id,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 "/v1/deal-contacts",
-                params={
-                    "deal-id": deal_id,
-                    "borrower-id": borrower_id,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
             raise_for_status_improved(response)
             return [DealContactDTO.parse_obj(data) for data in response.json()]
-    
+
     @retry_on_401_async
-    async def get_by_role_key(self, role_key: str, page: int = 1, per_page: int = 100):
+    async def get_by_role_key(self, role_key: str, page: int = 1, per_page: int = 100,
+                              include_tests: bool = True, test_only: bool = False):
         """
         Get all contacts with a specific role
-        
+
         Args:
             role_key: The role key to filter by
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[DealContactDTO]: List of contacts with the specified role
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "role-key": role_key,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 "/v1/deal-contacts",
-                params={
-                    "role-key": role_key,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
