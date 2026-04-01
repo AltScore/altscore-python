@@ -61,24 +61,21 @@ class AssetFieldDTO(BaseModel):
         """Parse history values based on the field's data_type"""
         data_type = values.get("data_type")
         history = values.get("history", [])
-        
-        if not history:
-            return values
-        
+
         # Parse current value based on data_type
         current_value = values.get("value")
         if data_type == "money" and isinstance(current_value, dict):
             values["value"] = Money.parse_obj(current_value)
         elif data_type == "money_array" and isinstance(current_value, list):
             values["value"] = [MoneyArrayItemDTO.parse_obj(item) for item in current_value]
-        
+
         # Parse history values based on data_type
         for hist_item in history:
             if data_type == "money" and isinstance(hist_item.value, dict):
                 hist_item.value = Money.parse_obj(hist_item.value)
             elif data_type == "money_array" and isinstance(hist_item.value, list):
                 hist_item.value = [MoneyArrayItemDTO.parse_obj(item) for item in hist_item.value]
-        
+
         return values
 
 

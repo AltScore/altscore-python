@@ -103,13 +103,11 @@ class MetricsSyncModule(GenericSyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            if metrics_found_request.status_code == 200:
-                metrics_found_data = metrics_found_request.json()
-                if len(metrics_found_data) == 0:
-                    return None
-                else:
-                    return self.retrieve(metrics_found_data[0]["id"])
-            return None
+            raise_for_status_improved(metrics_found_request)
+            metrics_found_data = metrics_found_request.json()
+            if len(metrics_found_data) == 0:
+                return None
+            return self.retrieve(metrics_found_data[0]["id"])
 
     @retry_on_401
     def find_borrower_metric_by_key(self, borrower_id: str, key: str,
@@ -127,13 +125,11 @@ class MetricsSyncModule(GenericSyncModule):
                 headers=self.build_headers(),
                 timeout=120,
             )
-            if metrics_found_request.status_code == 200:
-                metrics_found_data = metrics_found_request.json()
-                if len(metrics_found_data) == 0:
-                    return None
-                else:
-                    return self.retrieve(metrics_found_data[0]["id"])
-            return None
+            raise_for_status_improved(metrics_found_request)
+            metrics_found_data = metrics_found_request.json()
+            if len(metrics_found_data) == 0:
+                return None
+            return self.retrieve(metrics_found_data[0]["id"])
 
 
 class MetricsAsyncModule(GenericAsyncModule):
