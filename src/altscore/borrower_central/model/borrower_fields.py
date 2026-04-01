@@ -219,8 +219,16 @@ class BorrowerFieldsSyncModule(GenericSyncModule):
         Returns:
             List[BorrowerFieldSync]: List of borrower fields for the borrower
         """
-        return self.query(borrower_id=borrower_id, page=page, per_page=per_page,
-                          include_tests=include_tests, test_only=test_only)
+        query_kwargs = {
+            "borrower_id": borrower_id,
+            "page": page,
+            "per_page": per_page,
+        }
+        if test_only:
+            query_kwargs["test_only"] = True
+        elif include_tests:
+            query_kwargs["include_tests"] = True
+        return self.query(**query_kwargs)
 
 class BorrowerFieldsAsyncModule(GenericAsyncModule):
 
@@ -319,5 +327,13 @@ class BorrowerFieldsAsyncModule(GenericAsyncModule):
         Returns:
             List[BorrowerFieldAsync]: List of borrower fields for the borrower
         """
-        return await self.query(borrower_id=borrower_id, page=page, per_page=per_page,
-                                include_tests=include_tests, test_only=test_only)
+        query_kwargs = {
+            "borrower_id": borrower_id,
+            "page": page,
+            "per_page": per_page,
+        }
+        if test_only:
+            query_kwargs["test_only"] = True
+        elif include_tests:
+            query_kwargs["include_tests"] = True
+        return await self.query(**query_kwargs)
