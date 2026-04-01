@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any, Union
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
+from altscore.borrower_central.utils import build_test_params
 
 
 # DTO for deal steps
@@ -71,26 +72,30 @@ class DealStepsSyncModule(GenericSyncModule):
                          resource="deal-steps")
 
     @retry_on_401
-    def get_by_deal_id(self, deal_id: str, page: int = 1, per_page: int = 100):
+    def get_by_deal_id(self, deal_id: str, page: int = 1, per_page: int = 100,
+                       include_tests: bool = True, test_only: bool = False):
         """
         Get all steps for a specific deal
-        
+
         Args:
             deal_id: The ID of the deal
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[DealStepDTO]: List of steps for the deal
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "deal-id": deal_id,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 "/v1/deal-steps",
-                params={
-                    "deal-id": deal_id,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -125,26 +130,30 @@ class DealStepsSyncModule(GenericSyncModule):
             )
 
     @retry_on_401
-    def get_by_key(self, deal_id: str, key: str, page: int = 1, per_page: int = 100):
+    def get_by_key(self, deal_id: str, key: str, page: int = 1, per_page: int = 100,
+                   include_tests: bool = True, test_only: bool = False):
         """
         Get all steps with a specific key for a deal
-        
+
         Args:
             deal_id: The ID of the deal
             key: The step key
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[DealStepDTO]: List of steps matching the key
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 f"/v1/deal-steps/by-key/{deal_id}/{key}",
-                params={
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -163,26 +172,30 @@ class DealStepsAsyncModule(GenericAsyncModule):
                          resource="deal-steps")
 
     @retry_on_401_async
-    async def get_by_deal_id(self, deal_id: str, page: int = 1, per_page: int = 100):
+    async def get_by_deal_id(self, deal_id: str, page: int = 1, per_page: int = 100,
+                             include_tests: bool = True, test_only: bool = False):
         """
         Get all steps for a specific deal
-        
+
         Args:
             deal_id: The ID of the deal
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[DealStepDTO]: List of steps for the deal
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "deal-id": deal_id,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 "/v1/deal-steps",
-                params={
-                    "deal-id": deal_id,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -217,26 +230,30 @@ class DealStepsAsyncModule(GenericAsyncModule):
             )
 
     @retry_on_401_async
-    async def get_by_key(self, deal_id: str, key: str, page: int = 1, per_page: int = 100):
+    async def get_by_key(self, deal_id: str, key: str, page: int = 1, per_page: int = 100,
+                         include_tests: bool = True, test_only: bool = False):
         """
         Get all steps with a specific key for a deal
-        
+
         Args:
             deal_id: The ID of the deal
             key: The step key
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             List[DealStepDTO]: List of steps matching the key
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 f"/v1/deal-steps/by-key/{deal_id}/{key}",
-                params={
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )

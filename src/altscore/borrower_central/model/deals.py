@@ -6,7 +6,7 @@ from typing import Optional, List, Dict
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
 from altscore.borrower_central.model.deal_fields import DealFieldSync, DealFieldAsync
-from altscore.borrower_central.utils import clean_dict
+from altscore.borrower_central.utils import clean_dict, build_test_params
 
 
 # DTO for current step in a deal
@@ -117,7 +117,8 @@ class DealSync(GenericSyncResource):
 
     def _deal_fields(
             self, deal_id: str, key: Optional[str] = None, sort_by: Optional[str] = None,
-            per_page: Optional[int] = None, page: Optional[int] = None, sort_direction: Optional[str] = None
+            per_page: Optional[int] = None, page: Optional[int] = None, sort_direction: Optional[str] = None,
+            include_tests: bool = True, test_only: bool = False
     ) -> (str, dict):
         query = {
             "deal-id": deal_id,
@@ -127,13 +128,15 @@ class DealSync(GenericSyncResource):
             "page": page,
             "sort-direction": sort_direction
         }
-        return f"{self.base_url}/v1/deal-fields", clean_dict(query)
+        return f"{self.base_url}/v1/deal-fields", build_test_params(
+            clean_dict(query), include_tests=include_tests, test_only=test_only
+        )
 
     @retry_on_401
     def get_current_step(self):
         """
         Get the current step for a deal
-        
+
         Returns:
             DealStepDTO: The current step
         """
@@ -156,11 +159,11 @@ class DealSync(GenericSyncResource):
     def set_current_step(self, key: str, comment: Optional[str] = None):
         """
         Set the current step for a deal
-        
+
         Args:
             key: The key of the step to set as current
             comment: Optional comment for the step change
-            
+
         Returns:
             None
         """
@@ -177,7 +180,7 @@ class DealSync(GenericSyncResource):
     def get_steps(self):
         """
         Get all steps for this deal
-        
+
         Returns:
             List[DealStepDTO]: List of all steps for this deal
         """
@@ -192,18 +195,22 @@ class DealSync(GenericSyncResource):
             return [DealStepDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401
-    def get_deal_field_by_key(self, key: str) -> Optional[DealFieldSync]:
+    def get_deal_field_by_key(self, key: str, include_tests: bool = True,
+                              test_only: bool = False) -> Optional[DealFieldSync]:
         """
         Get a deal field by its key
-        
+
         Args:
             key: The field key
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             Optional[DealFieldSync]: The deal field if found, None otherwise
         """
         with httpx.Client(base_url=self.base_url) as client:
-            url, query = self._deal_fields(self.data.id, key=key)
+            url, query = self._deal_fields(self.data.id, key=key,
+                                           include_tests=include_tests, test_only=test_only)
             response = client.get(
                 url,
                 headers=self._header_builder(),
@@ -224,10 +231,11 @@ class DealSync(GenericSyncResource):
     def get_deal_fields(self, **kwargs) -> List[DealFieldSync]:
         """
         Get all deal fields for this deal
-        
+
         Args:
-            **kwargs: Optional query parameters (sort_by, per_page, page, sort_direction)
-            
+            **kwargs: Optional query parameters (sort_by, per_page, page, sort_direction,
+                      include_tests, test_only)
+
         Returns:
             List[DealFieldSync]: List of deal fields
         """
@@ -303,7 +311,8 @@ class DealAsync(GenericAsyncResource):
 
     def _deal_fields(
             self, deal_id: str, key: Optional[str] = None, sort_by: Optional[str] = None,
-            per_page: Optional[int] = None, page: Optional[int] = None, sort_direction: Optional[str] = None
+            per_page: Optional[int] = None, page: Optional[int] = None, sort_direction: Optional[str] = None,
+            include_tests: bool = True, test_only: bool = False
     ) -> (str, dict):
         query = {
             "deal-id": deal_id,
@@ -313,13 +322,15 @@ class DealAsync(GenericAsyncResource):
             "page": page,
             "sort-direction": sort_direction
         }
-        return f"{self.base_url}/v1/deal-fields", clean_dict(query)
+        return f"{self.base_url}/v1/deal-fields", build_test_params(
+            clean_dict(query), include_tests=include_tests, test_only=test_only
+        )
 
     @retry_on_401_async
     async def get_current_step(self):
         """
         Get the current step for a deal
-        
+
         Returns:
             DealStepDTO: The current step
         """
@@ -342,11 +353,11 @@ class DealAsync(GenericAsyncResource):
     async def set_current_step(self, key: str, comment: Optional[str] = None):
         """
         Set the current step for a deal
-        
+
         Args:
             key: The key of the step to set as current
             comment: Optional comment for the step change
-            
+
         Returns:
             None
         """
@@ -363,7 +374,7 @@ class DealAsync(GenericAsyncResource):
     async def get_steps(self):
         """
         Get all steps for this deal
-        
+
         Returns:
             List[DealStepDTO]: List of all steps for this deal
         """
@@ -378,18 +389,22 @@ class DealAsync(GenericAsyncResource):
             return [DealStepDTO.parse_obj(data) for data in response.json()]
 
     @retry_on_401_async
-    async def get_deal_field_by_key(self, key: str) -> Optional[DealFieldAsync]:
+    async def get_deal_field_by_key(self, key: str, include_tests: bool = True,
+                                    test_only: bool = False) -> Optional[DealFieldAsync]:
         """
         Get a deal field by its key
-        
+
         Args:
             key: The field key
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             Optional[DealFieldAsync]: The deal field if found, None otherwise
         """
         async with httpx.AsyncClient(base_url=self.base_url) as client:
-            url, query = self._deal_fields(self.data.id, key=key)
+            url, query = self._deal_fields(self.data.id, key=key,
+                                           include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 url,
                 headers=self._header_builder(),
@@ -410,10 +425,11 @@ class DealAsync(GenericAsyncResource):
     async def get_deal_fields(self, **kwargs) -> List[DealFieldAsync]:
         """
         Get all deal fields for this deal
-        
+
         Args:
-            **kwargs: Optional query parameters (sort_by, per_page, page, sort_direction)
-            
+            **kwargs: Optional query parameters (sort_by, per_page, page, sort_direction,
+                      include_tests, test_only)
+
         Returns:
             List[DealFieldAsync]: List of deal fields
         """
@@ -505,26 +521,30 @@ class DealsSyncModule(GenericSyncModule):
             return None
 
     @retry_on_401
-    def query_by_borrower_id(self, borrower_id: str, page: int = 1, per_page: int = 10):
+    def query_by_borrower_id(self, borrower_id: str, page: int = 1, per_page: int = 10,
+                             include_tests: bool = True, test_only: bool = False):
         """
         Find deals by borrower ID
-        
+
         Args:
             borrower_id: The ID of the borrower to filter by
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             Dict with deals and pagination info
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "borrower-id": borrower_id,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 "/v1/deals",
-                params={
-                    "borrower-id": borrower_id,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -532,26 +552,30 @@ class DealsSyncModule(GenericSyncModule):
             return response.json()
 
     @retry_on_401
-    def query_by_status(self, status: str, page: int = 1, per_page: int = 10):
+    def query_by_status(self, status: str, page: int = 1, per_page: int = 10,
+                        include_tests: bool = True, test_only: bool = False):
         """
         Find deals by status
-        
+
         Args:
             status: The status to filter by
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             Dict with deals and pagination info
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "status": status,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 "/v1/deals",
-                params={
-                    "status": status,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -559,14 +583,18 @@ class DealsSyncModule(GenericSyncModule):
             return response.json()
 
     @retry_on_401
-    def retrieve_by_external_id(self, external_id: str) -> Optional[DealSync]:
+    def retrieve_by_external_id(self, external_id: str,
+                                include_tests: bool = True, test_only: bool = False) -> Optional[DealSync]:
         """
         Retrieve a deal by its external ID
         """
         with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "external-id": external_id
+            }, include_tests=include_tests, test_only=test_only)
             response = client.get(
                 "/v1/deals",
-                params={"external-id": external_id},
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -617,26 +645,30 @@ class DealsAsyncModule(GenericAsyncModule):
             return None
 
     @retry_on_401_async
-    async def query_by_borrower_id(self, borrower_id: str, page: int = 1, per_page: int = 10):
+    async def query_by_borrower_id(self, borrower_id: str, page: int = 1, per_page: int = 10,
+                                   include_tests: bool = True, test_only: bool = False):
         """
         Find deals by borrower ID
-        
+
         Args:
             borrower_id: The ID of the borrower to filter by
             page: Page number for pagination
             per_page: Number of results per page
-            
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
+
         Returns:
             Dict with deals and pagination info
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "borrower-id": borrower_id,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 "/v1/deals",
-                params={
-                    "borrower-id": borrower_id,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -644,7 +676,8 @@ class DealsAsyncModule(GenericAsyncModule):
             return response.json()
 
     @retry_on_401_async
-    async def query_by_status(self, status: str, page: int = 1, per_page: int = 10):
+    async def query_by_status(self, status: str, page: int = 1, per_page: int = 10,
+                              include_tests: bool = True, test_only: bool = False):
         """
         Find deals by status
 
@@ -652,18 +685,21 @@ class DealsAsyncModule(GenericAsyncModule):
             status: The status to filter by
             page: Page number for pagination
             per_page: Number of results per page
+            include_tests: Include test entities in results (default True)
+            test_only: Return only test entities (default False)
 
         Returns:
             Dict with deals and pagination info
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "status": status,
+                "page": page,
+                "per-page": per_page
+            }, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 "/v1/deals",
-                params={
-                    "status": status,
-                    "page": page,
-                    "per-page": per_page
-                },
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
@@ -671,14 +707,18 @@ class DealsAsyncModule(GenericAsyncModule):
             return response.json()
 
     @retry_on_401_async
-    async def retrieve_by_external_id(self, external_id: str) -> Optional[DealAsync]:
+    async def retrieve_by_external_id(self, external_id: str,
+                                      include_tests: bool = True, test_only: bool = False) -> Optional[DealAsync]:
         """
         Retrieve a deal by its external ID
         """
         async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            params = build_test_params({
+                "external-id": external_id
+            }, include_tests=include_tests, test_only=test_only)
             response = await client.get(
                 "/v1/deals",
-                params={"external-id": external_id},
+                params=params,
                 headers=self.build_headers(),
                 timeout=120,
             )
