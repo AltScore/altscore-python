@@ -1069,7 +1069,7 @@ class BorrowerAsync(BorrowerBase):
 
     @retry_on_401_async
     async def get_metric_by_key(self, key: str, include_tests: bool = True,
-                                test_only: bool = False, timeout: int = 120) -> Optional[MetricAsync]:
+                                test_only: bool = False, timeout: int = 30) -> Optional[MetricAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._metrics(self.data.id, key=key, include_tests=include_tests, test_only=test_only)
             response = await client.get(
@@ -1198,7 +1198,7 @@ class BorrowerAsync(BorrowerBase):
             ) for borrower_field_data in data]
 
     @retry_on_401_async
-    async def get_metrics(self, timeout: int = 120, **kwargs) -> List[MetricAsync]:
+    async def get_metrics(self, timeout: int = 30, **kwargs) -> List[MetricAsync]:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             url, query = self._metrics(self.data.id, **kwargs)
             response = await client.get(
@@ -1662,7 +1662,7 @@ class BorrowerSync(BorrowerBase):
 
     @retry_on_401
     def get_metric_by_key(self, key: str, include_tests: bool = True,
-                          test_only: bool = False, timeout: int = 120) -> Optional[MetricSync]:
+                          test_only: bool = False, timeout: int = 30) -> Optional[MetricSync]:
         with httpx.Client(base_url=self.base_url) as client:
             url, query = self._metrics(self.data.id, key=key, include_tests=include_tests, test_only=test_only)
             response = client.get(
@@ -1791,7 +1791,7 @@ class BorrowerSync(BorrowerBase):
             ) for borrower_field_data in data]
 
     @retry_on_401
-    def get_metrics(self, timeout: int = 120, **kwargs) -> List[MetricSync]:
+    def get_metrics(self, timeout: int = 30, **kwargs) -> List[MetricSync]:
         with httpx.Client(base_url=self.base_url) as client:
             url, query = self._metrics(self.data.id, **kwargs)
             response = client.get(
