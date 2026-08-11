@@ -1335,7 +1335,7 @@ class BorrowerAsync(BorrowerBase):
     @retry_on_401_async
     async def get_main_point_of_contact(self, contact_method: str) -> Optional[PointOfContactAsync]:
         points_of_contact = await self.get_points_of_contact(
-            contact_method=contact_method, sort_by="priority", per_page=1
+            contact_method=contact_method, sort_by="priority", per_page=1, sort_direction="asc"
         )
         if len(points_of_contact) == 0:
             return None
@@ -1928,7 +1928,7 @@ class BorrowerSync(BorrowerBase):
     @retry_on_401
     def get_main_point_of_contact(self, contact_method: str) -> Optional[PointOfContactSync]:
         points_of_contact = self.get_points_of_contact(
-            contact_method=contact_method, sort_by="priority", per_page=1
+            contact_method=contact_method, sort_by="priority", per_page=1, sort_direction="asc"
         )
         if len(points_of_contact) == 0:
             return None
