@@ -20,6 +20,8 @@ from altscore.borrower_central.model.store_packages import PackagesAsyncModule, 
 from altscore.borrower_central.model.store_sources import SourcesAsyncModule, SourcesSyncModule
 from altscore.borrower_central.model.store_secrets import SecretsAsyncModule, SecretsSyncModule
 from altscore.borrower_central.model.workflows import WorkflowsAsyncModule, WorkflowsSyncModule
+from altscore.borrower_central.model.workflows_v2 import WorkflowsV2AsyncModule, WorkflowsV2SyncModule
+from altscore.borrower_central.model.hub_settings import HubSettingsAsyncModule, HubSettingsSyncModule
 from altscore.borrower_central.model.evaluators import EvaluatorAsyncModule, EvaluatorSyncModule
 from altscore.borrower_central.model.forms import FormsAsyncModule, FormsSyncModule
 from altscore.borrower_central.model.policy_alerts import AlertsAsyncModule, AlertsSyncModule
@@ -81,6 +83,8 @@ class BorrowerCentralAsync:
         self.executions = ExecutionAsyncModule(altscore_client)
         self.identities = IdentitiesAsyncModule(altscore_client)
         self.workflows = WorkflowsAsyncModule(altscore_client)
+        self.workflows_v2 = WorkflowsV2AsyncModule(altscore_client)
+        self.hub_settings = HubSettingsAsyncModule(altscore_client)
         self.points_of_contact = PointOfContactAsyncModule(altscore_client)
         self.relationships = RelationshipsAsyncModule(altscore_client)
         self.report_generator = ReportGeneratorAsyncModule(altscore_client)
@@ -142,6 +146,8 @@ class BorrowerCentralSync:
         self.risk_ratings = RiskRatingsSyncModule(altscore_client)
         self.executions = ExecutionSyncModule(altscore_client)
         self.workflows = WorkflowsSyncModule(altscore_client)
+        self.workflows_v2 = WorkflowsV2SyncModule(altscore_client)
+        self.hub_settings = HubSettingsSyncModule(altscore_client)
         self.identities = IdentitiesSyncModule(altscore_client)
         self.points_of_contact = PointOfContactSyncModule(altscore_client)
         self.relationships = RelationshipsSyncModule(altscore_client)
