@@ -33,7 +33,7 @@ class BorrowerFieldAPIDTO(BaseModel):
     id: str = Field(alias="id")
     borrower_id: str = Field(alias="borrowerId")
     key: str = Field(alias="key")
-    label: str = Field(alias="label")
+    label: Optional[str] = Field(alias="label", default=None)
     value: Any = Field(alias="value")
     data_type: str = Field(alias="dataType")
     history: List[HistoricValue] = Field(alias="history")
