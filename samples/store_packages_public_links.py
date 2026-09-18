@@ -4,8 +4,6 @@ The links are meant to be opened from an AltScore front end: the public endpoint
 require an Origin or Referer header on the altscore.ai domain (or localhost), so the
 url printed here cannot be consumed with curl or from this SDK.
 """
-import datetime as dt
-
 from altscore import AltScore
 from decouple import config
 
@@ -26,8 +24,8 @@ package_id = altscore.borrower_central.store_packages.create({
 })
 package = altscore.borrower_central.store_packages.retrieve(package_id)
 # %%
-# Create a link valid for one day. Without ttl the backend defaults to 7 days.
-public_link = package.create_public_link(ttl=dt.timedelta(days=1), purpose="download")
+# Create a link valid for one day. Without ttl_seconds the backend defaults to 7 days.
+public_link = package.create_public_link(ttl_seconds=24 * 60 * 60, purpose="download")
 print(public_link.url, public_link.expires_at)
 # %%
 # The listing includes expired and revoked links, so check the flags.
@@ -54,7 +52,7 @@ print("revoked at", revoked_link.revoked_at)
 # The same three operations are available at the module level, taking the package id,
 # which avoids the retrieve call above.
 module_link = altscore.borrower_central.store_packages.create_public_link(
-    package_id, ttl=dt.timedelta(days=1), purpose="download"
+    package_id, ttl_seconds=24 * 60 * 60, purpose="download"
 )
 print(module_link.url, module_link.expires_at)
 altscore.borrower_central.store_packages.revoke_public_link(module_link.token)
