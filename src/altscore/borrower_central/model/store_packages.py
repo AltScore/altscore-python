@@ -1,5 +1,5 @@
 import os
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 import httpx
 from altscore.altdata.model.data_request import RequestResult
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
@@ -91,6 +91,80 @@ class UploadSignedURLAPIDTO(BaseModel):
         allow_population_by_alias = True
 
 
+PUBLIC_ACCESS_TOKEN_PURPOSES = ("upload", "download", "all")
+
+
+class CreatePublicAccessTokenDTO(BaseModel):
+    ttl: Optional[int] = Field(default=None)
+    purpose: str = Field(default="all")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class PublicAccessTokenAPIDTO(BaseModel):
+    token: str = Field(alias="token")
+    url: str = Field(alias="url")
+    expires_at: str = Field(alias="expiresAt")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class PublicAccessTokenSummaryAPIDTO(BaseModel):
+    id: str = Field(alias="id")
+    created_at: str = Field(alias="createdAt")
+    expires_at: str = Field(alias="expiresAt")
+    purpose: str = Field(alias="purpose")
+    view_count: int = Field(alias="viewCount", default=0)
+    is_expired: bool = Field(alias="isExpired")
+    is_revoked: bool = Field(alias="isRevoked")
+    revoked_at: Optional[str] = Field(alias="revokedAt", default=None)
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+def build_public_access_token_payload(
+        ttl: Optional[Union[int, dt.timedelta]] = None, purpose: str = "all"
+) -> Dict[str, Any]:
+    """Validate the public link options and build the body of a create request.
+
+    The backend does not validate these values: a negative ttl silently creates an already
+    expired token, and an unknown purpose creates a token that can neither upload nor
+    download. Both are rejected here instead.
+
+    The ttl key is omitted when no lifetime was requested: the backend feeds it straight
+    into datetime.timedelta, so an explicit null fails with a 500, while leaving the key
+    out makes it apply its own default of 604800 seconds (7 days).
+
+    Args:
+        ttl: Lifetime of the link, in seconds or as a timedelta.
+        purpose: One of "upload", "download" or "all".
+
+    Returns:
+        The request body, with plain (not camelCase) keys and no null values.
+    """
+    if purpose not in PUBLIC_ACCESS_TOKEN_PURPOSES:
+        raise ValueError(
+            f"purpose must be one of {PUBLIC_ACCESS_TOKEN_PURPOSES}, got '{purpose}'"
+        )
+    if isinstance(ttl, dt.timedelta):
+        ttl_seconds = int(ttl.total_seconds())
+    else:
+        ttl_seconds = ttl
+    if ttl_seconds is not None and ttl_seconds <= 0:
+        raise ValueError(f"ttl must be a positive number of seconds, got {ttl_seconds}")
+    payload = CreatePublicAccessTokenDTO(ttl=ttl_seconds, purpose=purpose)
+    return payload.dict(exclude_none=True)
+
+
 class PackageSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
@@ -156,6 +230,97 @@ class PackageSync(GenericSyncResource):
                 label=label,
                 metadata=metadata
             )
+
+
+
+    @retry_on_401
+    def create_public_link(
+            self,
+            ttl: Optional[Union[int, dt.timedelta]] = None,
+            purpose: str = "all",
+            timeout: int = 120
+    ) -> PublicAccessTokenAPIDTO:
+        """
+        Create a public access link for this package.
+
+        Args:
+            ttl: Lifetime of the link, either in seconds (int) or as a timedelta.
+                When omitted the backend applies its own default of 7 days.
+            purpose: One of "upload", "download" or "all".
+            timeout: Request timeout in seconds.
+
+        Returns:
+            The token, the public url built by the backend and the expiration date.
+            The url is returned as built by the backend from its own SERVICE_URL config,
+            it must not be rebuilt on the client side.
+
+        There is no way to extend a link: to change its lifetime, revoke it and create
+        a new one. Requires the bc.private.write permission, a 403 here means the API
+        key of the tenant does not have it.
+        """
+        payload = build_public_access_token_payload(ttl=ttl, purpose=purpose)
+        url = f"/v1/stores/packages/{self.data.id}/public-access-token"
+        with httpx.Client(base_url=self.base_url) as client:
+            headers = self._header_builder()
+            response = client.post(
+                url,
+                json=payload,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
+            return PublicAccessTokenAPIDTO.parse_obj(response.json())
+
+    @retry_on_401
+    def get_public_links(self, timeout: int = 120) -> List[PublicAccessTokenSummaryAPIDTO]:
+        """
+        List every public access link ever created for this package.
+
+        Args:
+            timeout: Request timeout in seconds.
+
+        Returns:
+            All the links of the package, including the expired and the revoked ones:
+            check is_expired and is_revoked on each summary instead of assuming the
+            list only holds usable links.
+
+        Requires the bc.private.read permission, a 403 here means the API key of the
+        tenant does not have it.
+        """
+        url = f"/v1/stores/packages/{self.data.id}/public-access-tokens"
+        with httpx.Client(base_url=self.base_url) as client:
+            headers = self._header_builder()
+            response = client.get(
+                url,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
+            return [PublicAccessTokenSummaryAPIDTO.parse_obj(item) for item in response.json()]
+
+    @retry_on_401
+    def revoke_public_link(self, token: str, timeout: int = 120) -> None:
+        """
+        Revoke a public access link, making it unusable immediately.
+
+        Args:
+            token: The token exactly as returned by create_public_link (its token field)
+                or get_public_links (their id field): 32 hex chars without dashes. It must
+                not be reformatted, a dashed uuid is rejected with a 404.
+            timeout: Request timeout in seconds.
+
+        Requires the bc.private.write permission, a 403 here means the API key of the
+        tenant does not have it.
+        """
+        url = f"/v1/stores/packages/public-access-token/{token}"
+        with httpx.Client(base_url=self.base_url) as client:
+            headers = self._header_builder()
+            response = client.delete(
+                url,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
 
 
 class PackageAsync(GenericAsyncResource):
@@ -224,6 +389,97 @@ class PackageAsync(GenericAsyncResource):
                 label=label,
                 metadata=metadata
             )
+
+
+
+    @retry_on_401_async
+    async def create_public_link(
+            self,
+            ttl: Optional[Union[int, dt.timedelta]] = None,
+            purpose: str = "all",
+            timeout: int = 120
+    ) -> PublicAccessTokenAPIDTO:
+        """
+        Create a public access link for this package.
+
+        Args:
+            ttl: Lifetime of the link, either in seconds (int) or as a timedelta.
+                When omitted the backend applies its own default of 7 days.
+            purpose: One of "upload", "download" or "all".
+            timeout: Request timeout in seconds.
+
+        Returns:
+            The token, the public url built by the backend and the expiration date.
+            The url is returned as built by the backend from its own SERVICE_URL config,
+            it must not be rebuilt on the client side.
+
+        There is no way to extend a link: to change its lifetime, revoke it and create
+        a new one. Requires the bc.private.write permission, a 403 here means the API
+        key of the tenant does not have it.
+        """
+        payload = build_public_access_token_payload(ttl=ttl, purpose=purpose)
+        url = f"/v1/stores/packages/{self.data.id}/public-access-token"
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            headers = self._header_builder()
+            response = await client.post(
+                url,
+                json=payload,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
+            return PublicAccessTokenAPIDTO.parse_obj(response.json())
+
+    @retry_on_401_async
+    async def get_public_links(self, timeout: int = 120) -> List[PublicAccessTokenSummaryAPIDTO]:
+        """
+        List every public access link ever created for this package.
+
+        Args:
+            timeout: Request timeout in seconds.
+
+        Returns:
+            All the links of the package, including the expired and the revoked ones:
+            check is_expired and is_revoked on each summary instead of assuming the
+            list only holds usable links.
+
+        Requires the bc.private.read permission, a 403 here means the API key of the
+        tenant does not have it.
+        """
+        url = f"/v1/stores/packages/{self.data.id}/public-access-tokens"
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            headers = self._header_builder()
+            response = await client.get(
+                url,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
+            return [PublicAccessTokenSummaryAPIDTO.parse_obj(item) for item in response.json()]
+
+    @retry_on_401_async
+    async def revoke_public_link(self, token: str, timeout: int = 120) -> None:
+        """
+        Revoke a public access link, making it unusable immediately.
+
+        Args:
+            token: The token exactly as returned by create_public_link (its token field)
+                or get_public_links (their id field): 32 hex chars without dashes. It must
+                not be reformatted, a dashed uuid is rejected with a 404.
+            timeout: Request timeout in seconds.
+
+        Requires the bc.private.write permission, a 403 here means the API key of the
+        tenant does not have it.
+        """
+        url = f"/v1/stores/packages/public-access-token/{token}"
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            headers = self._header_builder()
+            response = await client.delete(
+                url,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
 
 
 class PackagesSyncModule(GenericSyncModule):
@@ -325,6 +581,98 @@ class PackagesSyncModule(GenericSyncModule):
                 json=body,
                 headers=self.build_headers(),
                 timeout=120
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401
+    def create_public_link(
+            self,
+            package_id: str,
+            ttl: Optional[Union[int, dt.timedelta]] = None,
+            purpose: str = "all",
+            timeout: int = 120
+    ) -> PublicAccessTokenAPIDTO:
+        """
+        Create a public access link for a package, without retrieving it first.
+
+        Args:
+            package_id: The ID of the package to expose.
+            ttl: Lifetime of the link, either in seconds (int) or as a timedelta.
+                When omitted the backend applies its own default of 7 days.
+            purpose: One of "upload", "download" or "all".
+            timeout: Request timeout in seconds.
+
+        Returns:
+            The token, the public url built by the backend and the expiration date.
+            The url is returned as built by the backend from its own SERVICE_URL config,
+            it must not be rebuilt on the client side.
+
+        There is no way to extend a link: to change its lifetime, revoke it and create
+        a new one. Requires the bc.private.write permission, a 403 here means the API
+        key of the tenant does not have it.
+        """
+        payload = build_public_access_token_payload(ttl=ttl, purpose=purpose)
+        url = f"/v1/stores/packages/{package_id}/public-access-token"
+        headers = self.build_headers()
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.post(
+                url,
+                json=payload,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
+            return PublicAccessTokenAPIDTO.parse_obj(response.json())
+
+    @retry_on_401
+    def get_public_links(self, package_id: str, timeout: int = 120) -> List[PublicAccessTokenSummaryAPIDTO]:
+        """
+        List every public access link ever created for a package.
+
+        Args:
+            package_id: The ID of the package.
+            timeout: Request timeout in seconds.
+
+        Returns:
+            All the links of the package, including the expired and the revoked ones:
+            check is_expired and is_revoked on each summary instead of assuming the
+            list only holds usable links.
+
+        Requires the bc.private.read permission, a 403 here means the API key of the
+        tenant does not have it.
+        """
+        url = f"/v1/stores/packages/{package_id}/public-access-tokens"
+        headers = self.build_headers()
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                url,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
+            return [PublicAccessTokenSummaryAPIDTO.parse_obj(item) for item in response.json()]
+
+    @retry_on_401
+    def revoke_public_link(self, token: str, timeout: int = 120) -> None:
+        """
+        Revoke a public access link, making it unusable immediately.
+
+        Args:
+            token: The token exactly as returned by create_public_link (its token field)
+                or get_public_links (their id field): 32 hex chars without dashes. It must
+                not be reformatted, a dashed uuid is rejected with a 404.
+            timeout: Request timeout in seconds.
+
+        Requires the bc.private.write permission, a 403 here means the API key of the
+        tenant does not have it.
+        """
+        url = f"/v1/stores/packages/public-access-token/{token}"
+        headers = self.build_headers()
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.delete(
+                url,
+                headers=headers,
+                timeout=timeout
             )
             raise_for_status_improved(response)
 
@@ -466,6 +814,98 @@ class PackagesAsyncModule(GenericAsyncModule):
                 json=body,
                 headers=self.build_headers(),
                 timeout=120
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401_async
+    async def create_public_link(
+            self,
+            package_id: str,
+            ttl: Optional[Union[int, dt.timedelta]] = None,
+            purpose: str = "all",
+            timeout: int = 120
+    ) -> PublicAccessTokenAPIDTO:
+        """
+        Create a public access link for a package, without retrieving it first.
+
+        Args:
+            package_id: The ID of the package to expose.
+            ttl: Lifetime of the link, either in seconds (int) or as a timedelta.
+                When omitted the backend applies its own default of 7 days.
+            purpose: One of "upload", "download" or "all".
+            timeout: Request timeout in seconds.
+
+        Returns:
+            The token, the public url built by the backend and the expiration date.
+            The url is returned as built by the backend from its own SERVICE_URL config,
+            it must not be rebuilt on the client side.
+
+        There is no way to extend a link: to change its lifetime, revoke it and create
+        a new one. Requires the bc.private.write permission, a 403 here means the API
+        key of the tenant does not have it.
+        """
+        payload = build_public_access_token_payload(ttl=ttl, purpose=purpose)
+        url = f"/v1/stores/packages/{package_id}/public-access-token"
+        headers = self.build_headers()
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.post(
+                url,
+                json=payload,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
+            return PublicAccessTokenAPIDTO.parse_obj(response.json())
+
+    @retry_on_401_async
+    async def get_public_links(self, package_id: str, timeout: int = 120) -> List[PublicAccessTokenSummaryAPIDTO]:
+        """
+        List every public access link ever created for a package.
+
+        Args:
+            package_id: The ID of the package.
+            timeout: Request timeout in seconds.
+
+        Returns:
+            All the links of the package, including the expired and the revoked ones:
+            check is_expired and is_revoked on each summary instead of assuming the
+            list only holds usable links.
+
+        Requires the bc.private.read permission, a 403 here means the API key of the
+        tenant does not have it.
+        """
+        url = f"/v1/stores/packages/{package_id}/public-access-tokens"
+        headers = self.build_headers()
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                url,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
+            return [PublicAccessTokenSummaryAPIDTO.parse_obj(item) for item in response.json()]
+
+    @retry_on_401_async
+    async def revoke_public_link(self, token: str, timeout: int = 120) -> None:
+        """
+        Revoke a public access link, making it unusable immediately.
+
+        Args:
+            token: The token exactly as returned by create_public_link (its token field)
+                or get_public_links (their id field): 32 hex chars without dashes. It must
+                not be reformatted, a dashed uuid is rejected with a 404.
+            timeout: Request timeout in seconds.
+
+        Requires the bc.private.write permission, a 403 here means the API key of the
+        tenant does not have it.
+        """
+        url = f"/v1/stores/packages/public-access-token/{token}"
+        headers = self.build_headers()
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.delete(
+                url,
+                headers=headers,
+                timeout=timeout
             )
             raise_for_status_improved(response)
 
