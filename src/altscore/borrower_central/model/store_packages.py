@@ -1,5 +1,5 @@
 import os
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Literal
 import httpx
 from altscore.altdata.model.data_request import RequestResult
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
@@ -91,6 +91,55 @@ class UploadSignedURLAPIDTO(BaseModel):
         allow_population_by_alias = True
 
 
+PublicAccessTokenPurpose = Literal["upload", "download", "all"]
+
+
+class CreatePublicAccessTokenDTO(BaseModel):
+    ttl: Optional[int] = Field(default=None)
+    purpose: PublicAccessTokenPurpose = Field(default="all")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class PublicAccessTokenAPIDTO(BaseModel):
+    token: str = Field(alias="token")
+    url: str = Field(alias="url")
+    expires_at: str = Field(alias="expiresAt")
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+class PublicAccessTokenSummaryAPIDTO(BaseModel):
+    id: str = Field(alias="id")
+    created_at: str = Field(alias="createdAt")
+    expires_at: str = Field(alias="expiresAt")
+    purpose: str = Field(alias="purpose")
+    view_count: int = Field(alias="viewCount", default=0)
+    is_expired: bool = Field(alias="isExpired")
+    is_revoked: bool = Field(alias="isRevoked")
+    revoked_at: Optional[str] = Field(alias="revokedAt", default=None)
+
+    class Config:
+        populate_by_name = True
+        allow_population_by_field_name = True
+        allow_population_by_alias = True
+
+
+def build_public_access_token_payload(
+        ttl_seconds: Optional[int] = None, purpose: PublicAccessTokenPurpose = "all"
+) -> Dict[str, Any]:
+    if ttl_seconds is not None and ttl_seconds <= 0:
+        raise ValueError(f"ttl must be a positive number of seconds, got {ttl_seconds}")
+    payload = CreatePublicAccessTokenDTO(ttl=ttl_seconds, purpose=purpose)
+    return payload.dict(exclude_none=True)
+
+
 class PackageSync(GenericSyncResource):
 
     def __init__(self, base_url, header_builder, renew_token, data: Dict):
@@ -156,6 +205,53 @@ class PackageSync(GenericSyncResource):
                 label=label,
                 metadata=metadata
             )
+
+
+
+    @retry_on_401
+    def create_public_link(
+            self,
+            ttl_seconds: Optional[int] = None,
+            purpose: PublicAccessTokenPurpose = "all",
+            timeout: int = 120
+    ) -> PublicAccessTokenAPIDTO:
+        payload = build_public_access_token_payload(ttl_seconds=ttl_seconds, purpose=purpose)
+        url = f"/v1/stores/packages/{self.data.id}/public-access-token"
+        with httpx.Client(base_url=self.base_url) as client:
+            headers = self._header_builder()
+            response = client.post(
+                url,
+                json=payload,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
+            return PublicAccessTokenAPIDTO.parse_obj(response.json())
+
+    @retry_on_401
+    def get_public_links(self, timeout: int = 120) -> List[PublicAccessTokenSummaryAPIDTO]:
+        url = f"/v1/stores/packages/{self.data.id}/public-access-tokens"
+        with httpx.Client(base_url=self.base_url) as client:
+            headers = self._header_builder()
+            response = client.get(
+                url,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
+            return [PublicAccessTokenSummaryAPIDTO.parse_obj(item) for item in response.json()]
+
+    @retry_on_401
+    def revoke_public_link(self, token: str, timeout: int = 120) -> None:
+        url = f"/v1/stores/packages/public-access-token/{token}"
+        with httpx.Client(base_url=self.base_url) as client:
+            headers = self._header_builder()
+            response = client.delete(
+                url,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
 
 
 class PackageAsync(GenericAsyncResource):
@@ -224,6 +320,53 @@ class PackageAsync(GenericAsyncResource):
                 label=label,
                 metadata=metadata
             )
+
+
+
+    @retry_on_401_async
+    async def create_public_link(
+            self,
+            ttl_seconds: Optional[int] = None,
+            purpose: PublicAccessTokenPurpose = "all",
+            timeout: int = 120
+    ) -> PublicAccessTokenAPIDTO:
+        payload = build_public_access_token_payload(ttl_seconds=ttl_seconds, purpose=purpose)
+        url = f"/v1/stores/packages/{self.data.id}/public-access-token"
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            headers = self._header_builder()
+            response = await client.post(
+                url,
+                json=payload,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
+            return PublicAccessTokenAPIDTO.parse_obj(response.json())
+
+    @retry_on_401_async
+    async def get_public_links(self, timeout: int = 120) -> List[PublicAccessTokenSummaryAPIDTO]:
+        url = f"/v1/stores/packages/{self.data.id}/public-access-tokens"
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            headers = self._header_builder()
+            response = await client.get(
+                url,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
+            return [PublicAccessTokenSummaryAPIDTO.parse_obj(item) for item in response.json()]
+
+    @retry_on_401_async
+    async def revoke_public_link(self, token: str, timeout: int = 120) -> None:
+        url = f"/v1/stores/packages/public-access-token/{token}"
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            headers = self._header_builder()
+            response = await client.delete(
+                url,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
 
 
 class PackagesSyncModule(GenericSyncModule):
@@ -325,6 +468,52 @@ class PackagesSyncModule(GenericSyncModule):
                 json=body,
                 headers=self.build_headers(),
                 timeout=120
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401
+    def create_public_link(
+            self,
+            package_id: str,
+            ttl_seconds: Optional[int] = None,
+            purpose: PublicAccessTokenPurpose = "all",
+            timeout: int = 120
+    ) -> PublicAccessTokenAPIDTO:
+        payload = build_public_access_token_payload(ttl_seconds=ttl_seconds, purpose=purpose)
+        url = f"/v1/stores/packages/{package_id}/public-access-token"
+        headers = self.build_headers()
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.post(
+                url,
+                json=payload,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
+            return PublicAccessTokenAPIDTO.parse_obj(response.json())
+
+    @retry_on_401
+    def get_public_links(self, package_id: str, timeout: int = 120) -> List[PublicAccessTokenSummaryAPIDTO]:
+        url = f"/v1/stores/packages/{package_id}/public-access-tokens"
+        headers = self.build_headers()
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.get(
+                url,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
+            return [PublicAccessTokenSummaryAPIDTO.parse_obj(item) for item in response.json()]
+
+    @retry_on_401
+    def revoke_public_link(self, token: str, timeout: int = 120) -> None:
+        url = f"/v1/stores/packages/public-access-token/{token}"
+        headers = self.build_headers()
+        with httpx.Client(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = client.delete(
+                url,
+                headers=headers,
+                timeout=timeout
             )
             raise_for_status_improved(response)
 
@@ -466,6 +655,52 @@ class PackagesAsyncModule(GenericAsyncModule):
                 json=body,
                 headers=self.build_headers(),
                 timeout=120
+            )
+            raise_for_status_improved(response)
+
+    @retry_on_401_async
+    async def create_public_link(
+            self,
+            package_id: str,
+            ttl_seconds: Optional[int] = None,
+            purpose: PublicAccessTokenPurpose = "all",
+            timeout: int = 120
+    ) -> PublicAccessTokenAPIDTO:
+        payload = build_public_access_token_payload(ttl_seconds=ttl_seconds, purpose=purpose)
+        url = f"/v1/stores/packages/{package_id}/public-access-token"
+        headers = self.build_headers()
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.post(
+                url,
+                json=payload,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
+            return PublicAccessTokenAPIDTO.parse_obj(response.json())
+
+    @retry_on_401_async
+    async def get_public_links(self, package_id: str, timeout: int = 120) -> List[PublicAccessTokenSummaryAPIDTO]:
+        url = f"/v1/stores/packages/{package_id}/public-access-tokens"
+        headers = self.build_headers()
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.get(
+                url,
+                headers=headers,
+                timeout=timeout
+            )
+            raise_for_status_improved(response)
+            return [PublicAccessTokenSummaryAPIDTO.parse_obj(item) for item in response.json()]
+
+    @retry_on_401_async
+    async def revoke_public_link(self, token: str, timeout: int = 120) -> None:
+        url = f"/v1/stores/packages/public-access-token/{token}"
+        headers = self.build_headers()
+        async with httpx.AsyncClient(base_url=self.altscore_client._borrower_central_base_url) as client:
+            response = await client.delete(
+                url,
+                headers=headers,
+                timeout=timeout
             )
             raise_for_status_improved(response)
 
