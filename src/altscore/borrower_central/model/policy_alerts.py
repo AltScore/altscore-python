@@ -10,7 +10,9 @@ class AlertAPIDTO(BaseModel):
     id: str = Field(alias="id")
     rule_id: str = Field(alias="ruleId")
     rule_code: Optional[str] = Field(alias="ruleCode", default=None)
-    borrower_id: str = Field(alias="borrowerId")
+    # An alert belongs to a borrower, a deal, or both; a deal-only alert has no borrowerId
+    borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
+    deal_id: Optional[str] = Field(alias="dealId", default=None)
     level: int = Field(alias="level")
     message: str = Field(alias="message")
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
@@ -28,7 +30,9 @@ class AlertAPIDTO(BaseModel):
 
 
 class CreateAlert(BaseModel):
-    borrower_id: str = Field(alias="borrowerId")
+    # borrowerId, dealId or both; Borrower Central rejects neither
+    borrower_id: Optional[str] = Field(alias="borrowerId", default=None)
+    deal_id: Optional[str] = Field(alias="dealId", default=None)
     rule_id: Optional[str] = Field(alias="ruleId", default=None)
     rule_code: Optional[str] = Field(alias="ruleCode", default=None)
     reference_id: Optional[str] = Field(alias="referenceId", default=None)
