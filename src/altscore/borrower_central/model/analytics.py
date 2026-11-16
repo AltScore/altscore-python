@@ -19,7 +19,7 @@ class Filter(BaseModel):
     key: str = Field(alias="key")
     entity_type: str = Field(alias="entityType")
     operator: str = Field(alias="operator")
-    value: Union[str | List[str]] = Field(alias="value")
+    value: Union[str, List[str]] = Field(alias="value")
 
     class Config:
         allow_population_by_field_name = True
