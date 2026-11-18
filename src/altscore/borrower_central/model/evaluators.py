@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 import httpx
 from altscore.borrower_central.model.generics import GenericSyncResource, GenericAsyncResource, \
     GenericSyncModule, GenericAsyncModule
@@ -145,7 +145,7 @@ class EvaluatorSync(GenericSyncResource):
         super().__init__(base_url, "evaluators", header_builder, renew_token, EvaluatorAPIDTO.parse_obj(data))
 
     @retry_on_401
-    def evaluate(self, evaluator_input: EvaluatorInput) -> EvaluatorOutput | EvaluatorOutputError:
+    def evaluate(self, evaluator_input: EvaluatorInput) -> Union[EvaluatorOutput, EvaluatorOutputError]:
         with httpx.Client() as client:
             response = client.post(
                 f"{self.base_url}/{self.resource}/{self.data.id}/evaluate",
@@ -166,7 +166,7 @@ class EvaluatorAsync(GenericAsyncResource):
         super().__init__(base_url, "evaluators", header_builder, renew_token, EvaluatorAPIDTO.parse_obj(data))
 
     @retry_on_401_async
-    async def evaluate(self, evaluator_input: EvaluatorInput) -> EvaluatorOutput | EvaluatorOutputError:
+    async def evaluate(self, evaluator_input: EvaluatorInput) -> Union[EvaluatorOutput, EvaluatorOutputError]:
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"{self.base_url}/{self.resource}/{self.data.id}/evaluate",
@@ -210,7 +210,7 @@ class EvaluatorSyncModule(GenericSyncModule):
     def evaluate(
             self, evaluator_input: Dict, evaluator_id: Optional[str] = None,
             evaluator_alias: Optional[str] = None, evaluator_version: Optional[str] = None
-    ) -> EvaluatorOutput | EvaluatorOutputError:
+    ) -> Union[EvaluatorOutput, EvaluatorOutputError]:
 
         if evaluator_id is not None:
             url = f"{self.altscore_client._borrower_central_base_url}/v1/evaluators/{evaluator_id}/evaluate"
@@ -262,7 +262,7 @@ class EvaluatorAsyncModule(GenericAsyncModule):
     async def evaluate(
             self, evaluator_input: Dict, evaluator_id: Optional[str] = None,
             evaluator_alias: Optional[str] = None, evaluator_version: Optional[str] = None
-    ) -> EvaluatorOutput | EvaluatorOutputError:
+    ) -> Union[EvaluatorOutput, EvaluatorOutputError]:
 
         if evaluator_id is not None:
             url = f"{self.altscore_client._borrower_central_base_url}/v1/evaluators/{evaluator_id}/evaluate"
